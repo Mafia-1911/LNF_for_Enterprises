@@ -1,0 +1,14 @@
+# Git hooks. Installed by `pnpm install` (root "prepare" script).
+pre-commit:
+  parallel: false
+  commands:
+    lint-staged:
+      run: pnpm exec lint-staged
+    typecheck-changed:
+      # Typecheck only the workspace packages touched by this commit (and their dependents).
+      run: bash scripts/typecheck-changed.sh
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: bash scripts/check-commit-msg.sh {1}

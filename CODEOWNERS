@@ -1,0 +1,33 @@
+# Paths that always need a human reviewer (plan §12.5).
+# Replace @nsu-lost-found/maintainers with the real GitHub team or user before enabling
+# "Require review from Code Owners" on the main branch.
+
+# Platform pieces every module depends on
+/apps/server/src/platform/db/            @nsu-lost-found/maintainers
+/apps/server/src/platform/clock/         @nsu-lost-found/maintainers
+/apps/server/src/platform/crypto/        @nsu-lost-found/maintainers
+/apps/server/src/platform/tenancy/       @nsu-lost-found/maintainers
+
+# Modules with security or legal weight
+/apps/server/src/modules/identity/       @nsu-lost-found/maintainers
+/apps/server/src/modules/audit/          @nsu-lost-found/maintainers
+/apps/server/src/modules/dispatch/       @nsu-lost-found/maintainers
+/packages/domain/                        @nsu-lost-found/maintainers
+
+# Private details, claim answers, pickup codes, crypto
+**/*private-detail*                      @nsu-lost-found/maintainers
+**/*claim-answer*                        @nsu-lost-found/maintainers
+**/*pickup-code*                         @nsu-lost-found/maintainers
+**/*crypto*                              @nsu-lost-found/maintainers
+
+# All migrations and dependency changes
+/apps/server/migrations/                 @nsu-lost-found/maintainers
+**/package.json                          @nsu-lost-found/maintainers
+/pnpm-lock.yaml                          @nsu-lost-found/maintainers
+/pnpm-workspace.yaml                     @nsu-lost-found/maintainers
+
+# The rules agents follow
+/AGENTS.md                               @nsu-lost-found/maintainers
+/.agents/                                @nsu-lost-found/maintainers
+/eslint/                                 @nsu-lost-found/maintainers
+/docs/adr/                               @nsu-lost-found/maintainers

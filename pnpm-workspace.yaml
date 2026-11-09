@@ -1,0 +1,35 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Only these dependencies may run install scripts (pnpm blocks the rest).
+allowBuilds:
+  esbuild: true
+  lefthook: true
+
+# pnpm refuses releases younger than its minimum age. These were the current
+# stable versions on 2026-11-09 (vite shipped security patches that day), so
+# they are allowed explicitly. Remove an entry once it is older than a day.
+minimumReleaseAgeExclude:
+  - '@hookform/resolvers@7.0.5'
+  - '@rolldown/binding-android-arm-eabi@1.2.18'
+  - '@rolldown/binding-android-arm64@1.2.18'
+  - '@rolldown/binding-darwin-arm64@1.2.18'
+  - '@rolldown/binding-darwin-x64@1.2.18'
+  - '@rolldown/binding-freebsd-x64@1.2.18'
+  - '@rolldown/binding-linux-arm-gnueabihf@1.2.18'
+  - '@rolldown/binding-linux-arm64-gnu@1.2.18'
+  - '@rolldown/binding-linux-arm64-musl@1.2.18'
+  - '@rolldown/binding-linux-ppc64-gnu@1.2.18'
+  - '@rolldown/binding-linux-s390x-gnu@1.2.18'
+  - '@rolldown/binding-linux-x64-gnu@1.2.18'
+  - '@rolldown/binding-linux-x64-musl@1.2.18'
+  - '@rolldown/binding-openharmony-arm64@1.2.18'
+  - '@rolldown/binding-win32-arm64-msvc@1.2.18'
+  - '@rolldown/binding-win32-x64-msvc@1.2.18'
+  - '@vitejs/plugin-react@6.3.0'
+  - rolldown@1.2.18
+  - vite@8.3.7
+
+# Exact versions only: `pnpm add` writes "1.2.3", never "^1.2.3".
+saveExact: true

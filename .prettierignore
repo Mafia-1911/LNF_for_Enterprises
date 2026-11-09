@@ -1,0 +1,17 @@
+pnpm-lock.yaml
+node_modules
+dist
+coverage
+reports
+apps/server/migrations/meta
+apps/web/src/api/schema.d.ts
+packages/ui/src/tokens/tokens.css
+packages/ui/src/tokens/tokens.ts
+docs/design/figma-ref
+docs/plan/archive
+docs/source
+.stryker-tmp
+test-results
+playwright-report
+Prompts and Attachments
+docs/plan/Lost-and-Found-Build-Plan-v0.3.md

@@ -1,0 +1,332 @@
+# Campus Lost & Found Portal - SRS excerpt for UI design (YAML in a .txt file)
+# Source: lost-and-found-srs.yaml v0.1. Dropped: market review, data model, metrics, releases, open questions.
+
+document:
+  title: Campus Lost & Found Portal (working name)
+  purpose: UI-relevant excerpt of the SRS v0.1 for design generation. Full SRS kept separately.
+assumptions:
+- id: A1
+  assumption: All found items go to the L&F office. Finders do not hand items directly to owners.
+- id: A2
+  assumption: Students and staff sign in with university email (OTP or SSO). Visitors use phone OTP.
+- id: A6
+  assumption: Proxy pickup is allowed only if the authority agrees. Some universities forbid it.
+language: English only.
+roles:
+- role: Student / Staff
+  can: [report lost, report found, browse gallery, claim, track status, nominate proxy]
+- role: Visitor
+  can: [report lost, claim]
+  note: Phone OTP account. Shows national ID at pickup. Cannot browse the full gallery.
+- role: Desk Officer
+  can: [log intake, tag and shelve, review claims, verify and hand over, act for walk-in students]
+- role: L&F Supervisor
+  can: [all Desk Officer actions, approve high-value handovers, approve disposal, set policies, view reports, manage staff]
+- role: System Admin (IT)
+  can: [integrations, backups, role assignment]
+  note: No access to item or claim decisions.
+identifiers:
+  format: <TYPE>-<YYMM>-<SEQ><CHECK>
+  example: FND-2611-0042K
+  types:
+    FND: found item
+    LST: lost report
+    CLM: claim
+    DSP: dispatch (handover) record
+  rules:
+  - IDs are never reused or deleted. Records created in error get status VOID and keep their ID.
+  - Each FND ID prints on a label with a QR code and the shelf bin code.
+  - Search accepts IDs with or without dashes, any letter case.
+lifecycles:
+  found_item:
+    states:
+      REPORTED_BY_FINDER: Posted by a student, not yet at the desk. Visible to matching only, not claimable.
+      IN_CUSTODY: Received, condition noted, tagged, shelved. Listed in the gallery.
+      CLAIM_PENDING: One or more claims under review.
+      READY_FOR_PICKUP: Claim approved, pickup code issued, window open.
+      DISPATCHED: Handed over with a DSP record. Final.
+      NOT_RECEIVED: Finder never brought it in. Final, can be reopened.
+      EXPIRED: Retention over, waiting for supervisor decision.
+      DONATED / DISPOSED / TRANSFERRED: Final, with reason and approver.
+      VOID: Created in error. Final, kept for audit.
+    transitions:
+    - REPORTED_BY_FINDER -> IN_CUSTODY | NOT_RECEIVED
+    - IN_CUSTODY -> CLAIM_PENDING -> READY_FOR_PICKUP -> DISPATCHED
+    - CLAIM_PENDING -> IN_CUSTODY (all claims rejected)
+    - READY_FOR_PICKUP -> IN_CUSTODY (pickup window lapsed)
+    - IN_CUSTODY -> EXPIRED -> DONATED | DISPOSED | TRANSFERRED
+  lost_report:
+    transitions:
+    - OPEN -> POSSIBLE_MATCH -> CLAIMED -> RESOLVED
+    - OPEN -> EXPIRED (30 days, one-tap renew up to twice)
+    - OPEN -> WITHDRAWN (owner found it)
+user_stories:
+- id: US-01
+  story: As a student who lost something, I want to post a report with optional photos, a description, and the likely place and time, so that it can be matched to found items.
+  acceptance:
+  - Submits with zero photos. Accepts up to 5.
+  - Place picked as building > floor > room/zone, or "not sure".
+  - Time entered as a range (from-to), not a single moment.
+  - On submit, shows the LST ID and any similar items already in custody.
+- id: US-02
+  story: As a student who found something, I want to post it and see if someone already reported losing something similar, so the owner hears quickly.
+  acceptance:
+  - A side panel updates as the form is filled, showing up to 5 similar open lost reports (category, colour, zone, date, owner-approved photo).
+  - The "This might be theirs" button notifies the owner. Neither side sees the other's name or contact.
+  - Finder gets an FND ID, a QR code, desk location and hours, and a hand-in deadline (48 h).
+- id: US-03
+  story: As a desk officer, I want to log a walk-in item and print its tag in under a minute.
+- id: US-04
+  story: As an owner, I want an alert when a likely match is logged, so I don't have to keep checking.
+- id: US-05
+  story: As an owner, I want to claim an item by answering questions only I could answer, and get a pickup code.
+- id: US-06
+  story: As a desk officer, I want to verify the claimant and record the handover in a few guided steps.
+- id: US-07
+  story: As a supervisor, I want to look up any past handover with full details, to settle disputes.
+- id: US-08
+  story: As a supervisor, I want a list of items past retention and to approve donation or disposal with a record.
+- id: US-09
+  story: As a student who lost an ID card, I want a direct email when it's handed in.
+- id: US-10
+  story: As a desk officer, I want to file a lost report or claim for a student who walks in without a phone.
+- id: US-11
+  story: As a finder, I want to know the item reached its owner.
+- id: US-12
+  story: As an owner, I want to close my report if I find the item myself.
+- id: US-13
+  story: As a supervisor, I want to bring the existing paper register into the system so no history is lost.
+workflows:
+  WF-01:
+    name: Report a lost item
+    stories: [US-01, US-04]
+    steps:
+    - Student signs in and taps "I lost something".
+    - Picks category from icons, adds colour, brand, photos (optional) and private details (hidden from everyone but staff).
+    - Picks place and time range.
+    - System shows similar IN_CUSTODY items. If one fits, jump to WF-04.
+    - Otherwise submit. Report stays OPEN 30 days and alerts the owner on new matches.
+  WF-02:
+    name: Student reports a found item
+    stories: [US-02, US-11]
+    steps:
+    - Student taps "I found something", adds photo, category, where and when found, private details.
+    - Live panel shows similar lost reports. Optional "This might be theirs" ping.
+    - Submit. Gets FND ID and QR. State is REPORTED_BY_FINDER.
+    - At the desk, officer scans the QR, notes condition, assigns a bin. State becomes IN_CUSTODY. Pinged owners are told it has arrived.
+    - If not handed in, reminder at 24 h. At 48 h it becomes NOT_RECEIVED and pinged owners are told.
+  WF-03:
+    name: Desk intake (walk-in)
+    stories: [US-03, US-09, US-10]
+    steps:
+    - Officer taps "Log a found item". Photo, category, where found (defaults to desk's building), private-details checklist.
+    - Sensitive categories (ID cards, bank cards, cash, documents) hide the photo automatically.
+    - For a university ID card, officer types the ID number. Owner gets an email at once. Card is never listed publicly.
+    - Save. Label prints. Item goes in the bin shown on screen.
+    - Matching runs. Owners of likely lost reports get alerts.
+  WF-04:
+    name: Claim, verify, hand over
+    stories: [US-05, US-06, US-11]
+    steps:
+    - Owner opens the item or match alert and taps "This is mine".
+    - Answers 2-3 questions built from the private details (contents, marks, lock screen, amount). Optional proof photo or receipt.
+    - Officer sees answers next to the recorded details, marks each Pass/Fail, then Approve, Reject or Ask for more. Target 2 working days.
+    - Approved claim gets a 6-digit pickup code and a 3-working-day pickup window.
+    - At the desk, officer enters the code. Screen shows the bin, the claimant's name and photo from the account.
+    - Officer checks the physical university ID (or national ID for visitors). High-value items need a second check (device unlock, serial/IMEI, or supervisor approval).
+    - Claimant signs on screen. DSP record is created, item DISPATCHED, lost report RESOLVED, finder notified.
+  WF-05:
+    name: Retention and disposal
+    stories: [US-08]
+    steps:
+    - Owners with similar open reports get a last-chance alert 7 days before expiry.
+    - Daily job moves items past retention to EXPIRED.
+    - Supervisor picks donate, dispose or transfer per item or in bulk, with a note.
+  WF-06:
+    name: Dispute or wrong handover
+    stories: [US-07]
+    steps:
+    - Raised when a second claimant appears after dispatch, or an owner reports a wrong handover.
+    - Supervisor opens the DSP record and its audit trail.
+    - Dispute is logged on the record. Outcome is appended. Records are never edited, only added to.
+  WF-07:
+    name: Paper register migration
+    stories: [US-13]
+    steps:
+    - Supervisor uploads the spreadsheet template or types rows into a fast table view.
+    - Each row gets an FND ID marked "migrated". A one-time shelf audit tags the physical items.
+functional_requirements:
+  reporting:
+  - id: FR-03
+    p: P0
+    req: Lost and found forms per US-01 and US-02. Drafts save automatically.
+  - id: FR-04
+    p: P0
+    req: Category-specific fields (phone has brand and case colour; bag has contents).
+  - id: FR-05
+    p: P0
+    req: Up to 5 images per post. Compressed to 500 KB or less. Location metadata stripped.
+  - id: FR-06
+    p: P0
+    req: Private details are stored encrypted and shown only to desk staff during claim review.
+  matching:
+  - id: FR-07
+    p: P0
+    req: Rule-based score from category (must match), colour, brand, keywords, same building or zone, and overlapping time. Shows top 5 with plain reasons, e.g. same building, same colour.
+  - id: FR-08
+    p: P1
+    req: Image similarity added to the score.
+  - id: FR-09
+    p: P0
+    req: Alerts by email and in-app. SMS is P1.
+  gallery:
+  - id: FR-10
+    p: P0
+    req: Signed-in users browse IN_CUSTODY items by category, date and zone. Sensitive items show an icon only.
+  claims:
+  - id: FR-11
+    p: P0
+    req: A claim requires verification answers. Max 3 active claims per user. One claim per user per item.
+  - id: FR-12
+    p: P0
+    req: Multiple claims on one item are reviewed side by side.
+  custody:
+  - id: FR-13
+    p: P0
+    req: Bin location per item. Printed label with QR. Scanning a QR opens the record.
+  - id: FR-14
+    p: P0
+    req: Every state change is logged with who, when, old state, new state and note. The log is append-only.
+  - id: FR-15
+    p: P1
+    req: Daily shelf check lists items expected in each bin. Officer ticks present or missing.
+  dispatch_directory:
+  - id: FR-16
+    p: P0
+    req: DSP records searchable by DSP ID, FND ID, claimant name, university ID, date range and category.
+  - id: FR-17
+    p: P0
+    req: DSP records lock 24 h after creation. Later corrections are amendments with a reason.
+  - id: FR-18
+    p: P0
+    req: CSV and PDF export for audits.
+novel_features:
+- id: NF-01
+  p: P0
+  name: Live "someone lost this?" panel
+  what: Finder sees matching lost reports while posting and can ping the owner anonymously.
+- id: NF-02
+  p: P0
+  name: ID card fast lane
+  what: Logged ID cards email the owner instantly and never appear in the gallery.
+- id: NF-03
+  p: P0
+  name: Hidden-detail claims
+  what: Details only the owner would know are recorded at intake and turned into claim questions. Stops gallery browsing for free valuables.
+- id: NF-04
+  p: P0
+  name: Outage label sheets
+  what: Pre-reserved FND IDs printed in advance. During power or internet loss, items are tagged on paper and entered later under the same ID. No second ID series.
+- id: NF-05
+  p: P0
+  name: Paper register import
+  what: Template and fast table entry for old logbook items. The office keeps its history, which lowers resistance to switching.
+- id: NF-06
+  p: P1
+  name: Finder closure note
+  what: Finder is told when the item is returned. Owner can send a short thank-you through the system. No contacts shared.
+- id: NF-07
+  p: P1
+  name: Loss hotspot report
+  what: Losses by building, floor and hour. Helps the authority place notices and drop boxes.
+- id: NF-08
+  p: P1
+  name: Photo-assisted intake
+  what: One photo suggests category, colour and visible brand. Officer confirms. Less typing at the desk.
+- id: NF-09
+  p: P1
+  name: Holiday pause
+  what: Retention countdown pauses during official closures and semester breaks.
+- id: NF-10
+  p: P2
+  name: Extra drop points
+  what: Security posts and department offices log items under their own drop-point code and transfer to the main desk with a custody entry.
+authority_interface:
+  principle: The desk screen should feel like a few labelled buttons, not an admin dashboard.
+  requirements:
+  - Home screen shows four large buttons only. "Log a found item", "Hand an item back", "Check claims", "Find an item". Everything else sits under "More".
+  - Each task is a guided flow of at most 4 screens, one main question per screen, with "Step 2 of 4" shown.
+  - Pre-filled defaults (current date and time, this desk's building, officer name).
+  - Categories picked from large icons, not dropdowns.
+  - Private details use tick boxes plus one optional short note.
+  - A "Today" list shows items to shelve, claims to review, pickups due and items expiring this week.
+  - Any action can be undone for 10 minutes. After that, changes need a reason.
+  - Errors say what happened and what to do next in one sentence. No error codes.
+  - A help button on every screen opens a 30-second how-to.
+  - Practice mode with sample data for training without touching real records.
+  - Text 16 px minimum, buttons at least 44 px tall.
+corner_cases:
+- id: CC-01
+  case: Two or more people claim the same item
+  handling: Claims reviewed side by side. Losing claimants are told the item went to a verified owner and can dispute within 7 days.
+- id: CC-02
+  case: Look-alike items (black umbrellas, chargers, bottles)
+  handling: Claim must name a distinguishing mark. If none exists, supervisor decides. Shorter retention.
+- id: CC-03
+  case: Finder posts but never hands the item in
+  handling: Reminder at 24 h. NOT_RECEIVED at 48 h. Pinged owners informed. Repeat cases flagged to the supervisor.
+- id: CC-04
+  case: Same item posted twice (two finders or finder plus desk)
+  handling: Intake warns on same category and zone and same day. Officer merges. The old ID redirects.
+- id: CC-05
+  case: Owner reports loss after the item is already in custody
+  handling: Match shown immediately on submit.
+- id: CC-06
+  case: ID cards, bank cards, documents
+  handling: Photo hidden. Numbers masked to the last 4 digits. Routed per FR-20.
+- id: CC-07
+  case: Cash or wallet with cash
+  handling: Amount counted with a second staff witness and recorded. Never public. Claimant must state the amount. Recounted in front of the claimant at handover.
+- id: CC-08
+  case: Locked phone or laptop
+  handling: Claimant unlocks in front of the officer or gives a matching serial or IMEI. Staff never browse device contents.
+- id: CC-09
+  case: Owner can't come in person
+  handling: If A6 allows, owner nominates a proxy by university ID in-app. Proxy shows own ID plus the pickup code. DSP records both people.
+- id: CC-10
+  case: Visitor or recent graduate without university email
+  handling: Phone OTP account. National ID checked at the desk. High-value items need supervisor approval.
+- id: CC-11
+  case: Pickup window missed
+  handling: One reminder. Claim lapses and the item returns to IN_CUSTODY. Owner can re-request once.
+- id: CC-12
+  case: Weapons, drugs, university keys, hazardous items
+  handling: Not shelved. Logged and TRANSFERRED to security or facilities the same day.
+- id: CC-13
+  case: Item damaged when found
+  handling: Condition photo and note at intake to prevent later blame.
+- id: CC-14
+  case: Wrong item handed over
+  handling: WF-06. Supervisor contacts both parties. Wrong recipient's account flagged.
+- id: CC-15
+  case: Someone fishing for valuables with many claims
+  handling: 3 active-claim cap. 3 failed verifications pause claim rights for 7 days pending review.
+- id: CC-16
+  case: Owner finds the item on their own
+  handling: One-tap withdraw. Open claims and alerts cancelled.
+- id: CC-17
+  case: Desk offline
+  handling: NF-04 label sheets. Data entered after recovery keeps the original intake time.
+ui_constraints:
+- id: NFR-01
+  area: Usability
+  req: A new officer completes intake and handover unaided after one 15-minute session. Any core task starts within 3 taps of home.
+- id: NFR-02
+  area: Performance
+  req: Pages load in under 3 s on a slow mobile connection. Search under 1 s across 50k records.
+- id: NFR-06
+  area: Accessibility
+  req: WCAG 2.1 AA.
+- id: NFR-07
+  area: Devices
+  req: Works on mid-range Android phones and a desk PC or tablet. Labels print on A4 label sheets. Thermal printer optional.

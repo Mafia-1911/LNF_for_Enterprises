@@ -1,0 +1,69 @@
+{
+  "name": "lost-and-found",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @lf/server --filter @lf/web dev",
+    "build": "pnpm --filter @lf/web build",
+    "start": "pnpm --filter @lf/server start",
+    "typecheck": "pnpm -r --parallel typecheck && tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm test:unit && pnpm test:api",
+    "test:unit": "vitest run --project unit --project unit-dom",
+    "test:api": "vitest run --project api",
+    "test:e2e": "playwright test",
+    "test:mutation": "pnpm --filter @lf/domain test:mutation",
+    "db:generate": "pnpm --filter @lf/server db:generate",
+    "db:migrate": "pnpm --filter @lf/server db:migrate",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:verify-audit": "tsx scripts/verify-audit.ts",
+    "gen:api": "tsx scripts/gen-api.ts",
+    "check:routes": "tsx scripts/check-route-coverage.ts",
+    "verify": "bash scripts/verify.sh",
+    "prepare": "lefthook install",
+    "test:coverage": "vitest run --project unit --coverage.enabled packages/domain"
+  },
+  "dependencies": {
+    "@lf/server": "workspace:*"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.65.0",
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "@vitest/coverage-v8": "5.1.0",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-boundaries": "7.4.2",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "lefthook": "2.2.2",
+    "lint-staged": "17.6.0",
+    "pg": "8.23.1",
+    "prettier": "3.9.10",
+    "squawk-cli": "2.72.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --max-warnings 0 --no-warn-ignored --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css,html}": [
+      "prettier --write"
+    ]
+  }
+}

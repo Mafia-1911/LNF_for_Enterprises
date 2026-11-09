@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "e2e/**/*.ts",
+    "*.config.ts",
+    "eslint/**/*.ts",
+    "eslint/**/*.js",
+    "eslint.config.js"
+  ],
+  "exclude": ["eslint/fixtures"]
+}

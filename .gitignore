@@ -1,0 +1,37 @@
+# dependencies and tool caches
+node_modules/
+.pnpm-store/
+.tools/
+.cache/
+
+# build output
+dist/
+coverage/
+reports/
+.stryker-tmp/
+apps/server/.route-coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# local environment (copy .env.example to .env)
+.env
+.env.*
+!.env.example
+
+# backups and keys never belong in git
+*.age
+*.dump
+*.sql.gz
+backups/
+age-identity*.txt
+
+# editors and OS
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Local working notes kept next to the repo, not part of it
+Prompts and Attachments/
