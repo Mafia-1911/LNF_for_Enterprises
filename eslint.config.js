@@ -69,6 +69,23 @@ export default tseslint.config(
     files: ['apps/web/src/**/*.tsx', 'packages/ui/src/**/*.tsx'],
     ...jsxA11y.flatConfigs.recommended,
   },
+  // TanStack Router redirects by throwing its Redirect object (`throw redirect({ to })`), which is
+  // the router's documented control flow, not an error. Allow exactly that type; everything else
+  // must still throw Error objects.
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        { allow: [{ from: 'package', package: '@tanstack/router-core', name: 'Redirect' }] },
+      ],
+    },
+  },
+  // Plain scripts served from apps/web/public run in the browser before the app loads.
+  {
+    files: ['apps/web/public/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
   // packages/domain is pure TypeScript with no I/O: no imports outside the package.
   {
     files: ['packages/domain/src/**/*.ts'],

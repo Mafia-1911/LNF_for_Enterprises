@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@import '@lf/ui/styles.css';
+@source '../../../packages/ui/src';
+
+/* Desktop-only hero photo on the sign-in page: phones never download it. */
+@media (min-width: 1024px) {
+  .lf-campus-photo {
+    background-image: url('/campus.webp');
+    background-size: cover;
+    background-position: 40% center;
+  }
+}
