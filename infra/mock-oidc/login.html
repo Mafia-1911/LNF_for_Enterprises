@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NSU single sign-on (local mock)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #0a1718;
+        color: #e6f0ee;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+      }
+      main {
+        width: min(440px, calc(100vw - 32px));
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #9db4b1;
+        margin: 0 0 20px;
+        font-size: 16px;
+      }
+      .quick {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      button {
+        font: inherit;
+        font-size: 16px;
+        min-height: 48px;
+        border-radius: 12px;
+        border: 1px solid #5d7877;
+        background: #102122;
+        color: #e6f0ee;
+        cursor: pointer;
+        text-align: left;
+        padding: 0 16px;
+      }
+      button.primary {
+        background: #5cc8c2;
+        color: #0a1718;
+        border: 0;
+        font-weight: 600;
+        text-align: center;
+        width: 100%;
+      }
+      button small {
+        color: #9db4b1;
+        margin-left: 6px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin: 12px 0 6px;
+      }
+      input {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 48px;
+        border-radius: 12px;
+        border: 1px solid #5d7877;
+        background: #102122;
+        color: #e6f0ee;
+        font: inherit;
+        padding: 0 14px;
+      }
+      :focus-visible {
+        outline: 3px solid #f2cc94;
+        outline-offset: 2px;
+      }
+      .note {
+        font-size: 14px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>NSU single sign-on</h1>
+      <p>
+        Local stand-in for Microsoft Entra ID. Pick a seeded account or type any university email.
+      </p>
+      <div class="quick" aria-label="Seeded accounts">
+        <button type="button" data-email="rafiq.ahmed@northsouth.edu" data-name="Rafiq Ahmed">
+          Rafiq Ahmed<small>Student</small>
+        </button>
+        <button type="button" data-email="nusrat.jahan@northsouth.edu" data-name="Nusrat Jahan">
+          Nusrat Jahan<small>Desk officer</small>
+        </button>
+        <button type="button" data-email="farhana.islam@northsouth.edu" data-name="Farhana Islam">
+          Farhana Islam<small>Supervisor</small>
+        </button>
+        <button type="button" data-email="tanvir.alam@northsouth.edu" data-name="Tanvir Alam">
+          Tanvir Alam<small>IT admin</small>
+        </button>
+      </div>
+      <form method="post" id="login">
+        <label for="username">University email</label>
+        <input
+          id="username"
+          name="username"
+          type="email"
+          autocomplete="username"
+          required
+          placeholder="name@northsouth.edu"
+        />
+        <label for="display-name">Name (optional)</label>
+        <input id="display-name" type="text" autocomplete="name" />
+        <input type="hidden" name="claims" id="claims" />
+        <p></p>
+        <button class="primary" type="submit">Sign in</button>
+      </form>
+      <p class="note">The token's <code>email</code> claim is the email you sign in with.</p>
+    </main>
+    <script>
+      const form = document.getElementById('login');
+      const fill = (email, name) => {
+        document.getElementById('username').value = email;
+        document.getElementById('display-name').value = name || '';
+      };
+      form.addEventListener('submit', () => {
+        const name = document.getElementById('display-name').value.trim();
+        document.getElementById('claims').value = JSON.stringify(name ? { name } : {});
+      });
+      document.querySelectorAll('[data-email]').forEach((b) =>
+        b.addEventListener('click', () => {
+          fill(b.dataset.email, b.dataset.name);
+          form.requestSubmit();
+        }),
+      );
+    </script>
+  </body>
+</html>

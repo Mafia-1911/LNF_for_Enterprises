@@ -1,0 +1,169 @@
+// The Hono app: security headers, request ids and logs, tenant, Better-Auth at /api/auth/*,
+// module routes, /healthz, /api/openapi.json and the built SPA with a history fallback.
+import { randomUUID } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { getConnInfo } from '@hono/node-server/conninfo';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { bodyLimit } from 'hono/body-limit';
+import { cors } from 'hono/cors';
+import { csrf } from 'hono/csrf';
+import { requestId } from 'hono/request-id';
+import { secureHeaders } from 'hono/secure-headers';
+import { devRoutes } from './dev-routes';
+import { CLIENT_IP_HEADER } from './platform/auth';
+import { pingDatabase } from './platform/db/pool';
+import { AppError, toErrorBody } from './platform/errors';
+import type { AppEnv } from './platform/http/context';
+import {
+  createGuards,
+  requestLogging,
+  sessionContext,
+  tenantContext,
+} from './platform/http/middleware';
+import { auditRoutes } from './modules/audit/routes';
+import { catalogRoutes } from './modules/catalog/routes';
+import { createSessionUserResolver } from './modules/identity';
+import { identityRoutes } from './modules/identity/routes';
+import { itemsRoutes } from './modules/items/routes';
+import type { Services } from './services';
+
+export type AppOptions = {
+  /** Built SPA (apps/web/dist) to serve; null in development, where Vite serves it. */
+  webDist: string | null;
+  /** True while pg-boss is running (for /healthz). */
+  jobsRunning: () => boolean;
+};
+
+export const API_INFO = {
+  openapi: '3.1.0',
+  info: {
+    title: 'NSU Lost & Found API',
+    version: '0.1.0',
+    description: 'Campus Lost & Found portal. All routes except /api/tenant need a session cookie.',
+  },
+} as const;
+
+export function createApp(services: Services, options: AppOptions) {
+  const { config, logger, clock, db } = services;
+  const production = config.nodeEnv === 'production';
+  const app = new OpenAPIHono<AppEnv>();
+
+  app.use('*', requestId({ generator: () => randomUUID() }));
+  app.use('*', requestLogging(logger, clock));
+  app.use(
+    '*',
+    secureHeaders({
+      contentSecurityPolicy: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'blob:', new URL(config.storage.endpoint).origin],
+        fontSrc: ["'self'"],
+        connectSrc: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        objectSrc: ["'none'"],
+      },
+      strictTransportSecurity: production ? 'max-age=31536000; includeSubDomains' : false,
+      xFrameOptions: 'DENY',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+  app.use('/api/*', cors({ origin: config.appOrigin, credentials: true }));
+  app.use('/api/*', csrf({ origin: config.appOrigin }));
+  app.use(
+    '/api/*',
+    bodyLimit({
+      maxSize: 1024 * 1024,
+      onError: () => {
+        throw new AppError(
+          'validation',
+          'That request is too large; shorten the text and try again.',
+        );
+      },
+    }),
+  );
+
+  app.get('/healthz', async (c) => {
+    const [database, storage] = await Promise.all([
+      pingDatabase(db),
+      services.storage.healthCheck(),
+    ]);
+    const jobs = options.jobsRunning();
+    const ok = database && jobs;
+    return c.json({ status: ok ? 'ok' : 'unavailable', database, jobs, storage }, ok ? 200 : 503);
+  });
+
+  // Everything under /api knows its tenant (from the Host header) before anything else runs.
+  app.use('/api/*', tenantContext(services.tenants));
+  app.on(['GET', 'POST'], '/api/auth/*', (c) => {
+    const headers = new Headers(c.req.raw.headers);
+    headers.delete(CLIENT_IP_HEADER);
+    const address = getConnInfo(c).remote.address;
+    if (address) headers.set(CLIENT_IP_HEADER, address);
+    return services.auth
+      .handler(new Request(c.req.raw, { headers }))
+      .then((res) => ssoErrorRedirect(c.req.path, res, config.appOrigin));
+  });
+
+  const resolveUser = createSessionUserResolver({ db, clock }, (headers) =>
+    services.auth.api.getSession({ headers }),
+  );
+  app.use('/api/*', sessionContext(resolveUser));
+
+  const guards = createGuards({ clock, db });
+  app.route('/', identityRoutes(guards));
+  app.route('/', catalogRoutes(guards, { clock, db }));
+  app.route('/', itemsRoutes(guards, { boss: services.boss, crypto: services.crypto }));
+  app.route('/', auditRoutes(guards));
+  if (config.devTools && services.devClock)
+    app.route('/', devRoutes(guards, { clock: services.devClock, sms: services.sms }));
+
+  app.doc31('/api/openapi.json', API_INFO);
+
+  if (options.webDist) mountSpa(app, options.webDist);
+
+  app.notFound((c) => c.json(toErrorBody(new AppError('not_found')).body, 404));
+  app.onError((err, c) => {
+    if (!(err instanceof AppError)) logger.error({ err }, 'Unhandled error');
+    const { status, body } = toErrorBody(err);
+    return c.json(body, status as 400);
+  });
+
+  return app;
+}
+
+/**
+ * A refused SSO sign-in ends on Better-Auth's callback with a JSON error, which a browser would
+ * show as raw text. Send people back to the sign-in page with a fixed code instead; the page maps
+ * the code to its own message, so nothing from the URL is ever displayed.
+ */
+function ssoErrorRedirect(path: string, res: Response, appOrigin: string): Response {
+  if (!path.startsWith('/api/auth/callback/') || res.status < 400) return res;
+  const code = res.status === 403 ? 'sso_refused' : 'sso_failed';
+  return new Response(null, {
+    status: 302,
+    headers: { location: `${appOrigin}/sign-in?error=${code}` },
+  });
+}
+
+/** Serves the built SPA; any non-API path without a file gets index.html (history routing). */
+function mountSpa(app: OpenAPIHono<AppEnv>, webDist: string) {
+  const indexFile = path.join(webDist, 'index.html');
+  if (!existsSync(indexFile)) return;
+  const indexHtml = readFileSync(indexFile, 'utf8');
+  const root = path.relative(process.cwd(), webDist);
+  app.use(
+    '/assets/*',
+    serveStatic({
+      root,
+      onFound: (_p, c) => c.header('Cache-Control', 'public, max-age=31536000, immutable'),
+    }),
+  );
+  app.use('*', serveStatic({ root }));
+  app.get('*', (c) => (c.req.path.startsWith('/api/') ? c.notFound() : c.html(indexHtml)));
+}

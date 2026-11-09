@@ -1,0 +1,22 @@
+{
+  "interactiveLogin": true,
+  "httpServer": "NettyWrapper",
+  "loginPagePath": "/config/login.html",
+  "tokenCallbacks": [
+    {
+      "issuerId": "nsu",
+      "tokenExpiry": 3600,
+      "requestMappings": [
+        {
+          "requestParam": "subject",
+          "match": ".*",
+          "claims": {
+            "email": "${subject}",
+            "email_verified": true,
+            "preferred_username": "${subject}"
+          }
+        }
+      ]
+    }
+  ]
+}

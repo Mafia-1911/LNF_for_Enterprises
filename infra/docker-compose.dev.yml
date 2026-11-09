@@ -1,0 +1,105 @@
+# Local stand-ins for every external service (ADR-0009). Development only.
+#   docker compose -f infra/docker-compose.dev.yml up -d --wait
+# Ports bind to 127.0.0.1 only. Host ports can be changed with the LF_* variables.
+name: lost-and-found
+
+x-minio-image:
+  &minio-image # Official MinIO images are no longer published; Chainguard builds MinIO from source (free, no sign-up).
+  image: cgr.dev/chainguard/minio@sha256:fb12bc679011c5edef11b044eec8d1c27dc73da1494330f7c6f69301f72ce4eb
+
+services:
+  postgres:
+    image: postgres:16.15-alpine3.24
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-dev-only
+      POSTGRES_DB: postgres
+      LF_OWNER_PASSWORD: owner-dev-only
+      LF_APP_PASSWORD: app-dev-only
+      TZ: UTC
+    command: ['postgres', '-c', 'timezone=UTC', '-c', 'log_min_duration_statement=500']
+    ports:
+      - '127.0.0.1:${LF_PG_PORT:-54320}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d lostfound']
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  minio:
+    <<: *minio-image
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: lf-dev-minio
+      MINIO_ROOT_PASSWORD: minio-dev-only-password
+    ports:
+      - '127.0.0.1:${LF_MINIO_PORT:-9100}:9000'
+      - '127.0.0.1:${LF_MINIO_CONSOLE_PORT:-9101}:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - sh
+        - -c
+        - mc alias set local http://127.0.0.1:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null && mc ready local
+      interval: 3s
+      timeout: 5s
+      retries: 40
+
+  # One-shot: creates the buckets the app and the backup script use, then exits.
+  minio-init:
+    <<: *minio-image
+    entrypoint: ['sh', '-c']
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
+        mc mb --ignore-existing local/lostfound-dev &&
+        mc mb --ignore-existing local/lostfound-backups &&
+        mc anonymous set none local/lostfound-dev &&
+        echo buckets-ready
+    environment:
+      MINIO_ROOT_USER: lf-dev-minio
+      MINIO_ROOT_PASSWORD: minio-dev-only-password
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: 'no'
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: '1'
+      MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+      MP_MAX_MESSAGES: '5000'
+    ports:
+      - '127.0.0.1:${LF_SMTP_PORT:-1025}:1025'
+      - '127.0.0.1:${LF_MAILPIT_PORT:-8025}:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  # Stands in for Microsoft Entra ID. Issuer: http://localhost:8090/nsu
+  mock-oidc:
+    image: ghcr.io/navikt/mock-oauth2-server:6.1.5
+    environment:
+      JSON_CONFIG_PATH: /config/config.json
+      LOG_LEVEL: WARN
+    ports:
+      - '127.0.0.1:${LF_OIDC_PORT:-8090}:8080'
+    volumes:
+      - ./mock-oidc:/config:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/isalive']
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+volumes:
+  pgdata:
+  minio-data:
