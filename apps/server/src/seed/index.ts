@@ -12,7 +12,7 @@ import { ensureQueues } from '../platform/jobs';
 import { createLogger } from '../platform/logger';
 import { upsertTenant } from '../platform/tenancy';
 import { seedCatalog } from '../modules/catalog';
-import { seedMember } from '../modules/identity';
+import { seedMember, type MemberSeed } from '../modules/identity';
 import { listMyLostReports, submitLostReport } from '../modules/items';
 import { createServices } from '../services';
 import { NSU_CATALOG, NSU_HOLIDAYS, NSU_MEMBERS, NSU_PRACTICE_TENANT, NSU_TENANT } from './data';
@@ -23,6 +23,7 @@ export async function seedTenant(
   db: DatabaseHandle,
   clock: RequestCtx['clock'],
   tenant: SeedTenant,
+  people: readonly MemberSeed[] = NSU_MEMBERS,
 ): Promise<{ tenantId: string; members: Map<string, string> }> {
   const tenantId = await upsertTenant(db, tenant);
   const ctx: RequestCtx = {
@@ -35,14 +36,14 @@ export async function seedTenant(
   const members = new Map<string, string>();
   await withTx(ctx, async (tx) => {
     await seedCatalog(tx, NSU_CATALOG);
-    for (const m of NSU_MEMBERS) members.set(m.email, await seedMember(tx, m, randomUUID));
+    for (const m of people) members.set(m.email, await seedMember(tx, m, randomUUID));
     for (const h of NSU_HOLIDAYS) await insertHolidayIfMissing(tx, h);
   });
   return { tenantId, members };
 }
 
 /** Sample lost reports for practice mode, filed through the real service (audit + jobs included). */
-const PRACTICE_REPORTS: Omit<CreateLostReportParsed, 'timeFrom' | 'timeTo'>[] = [
+export const PRACTICE_REPORTS: Omit<CreateLostReportParsed, 'timeFrom' | 'timeTo'>[] = [
   {
     category: 'bag',
     colour: 'black',

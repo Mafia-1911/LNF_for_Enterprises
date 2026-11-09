@@ -6,9 +6,11 @@ import path from 'node:path';
 import { getConnInfo } from '@hono/node-server/conninfo';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { OpenAPIHono } from '@hono/zod-openapi';
+import type { Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { csrf } from 'hono/csrf';
+import { HTTPException } from 'hono/http-exception';
 import { requestId } from 'hono/request-id';
 import { secureHeaders } from 'hono/secure-headers';
 import { devRoutes } from './dev-routes';
@@ -19,6 +21,7 @@ import type { AppEnv } from './platform/http/context';
 import {
   createGuards,
   requestLogging,
+  type RequestObserver,
   sessionContext,
   tenantContext,
 } from './platform/http/middleware';
@@ -34,6 +37,8 @@ export type AppOptions = {
   webDist: string | null;
   /** True while pg-boss is running (for /healthz). */
   jobsRunning: () => boolean;
+  /** Called after every request; the API test harness uses it to record which routes were tested. */
+  observe?: RequestObserver;
 };
 
 export const API_INFO = {
@@ -51,7 +56,7 @@ export function createApp(services: Services, options: AppOptions) {
   const app = new OpenAPIHono<AppEnv>();
 
   app.use('*', requestId({ generator: () => randomUUID() }));
-  app.use('*', requestLogging(logger, clock));
+  app.use('*', requestLogging(logger, clock, options.observe));
   app.use(
     '*',
     secureHeaders({
@@ -103,7 +108,7 @@ export function createApp(services: Services, options: AppOptions) {
   app.on(['GET', 'POST'], '/api/auth/*', (c) => {
     const headers = new Headers(c.req.raw.headers);
     headers.delete(CLIENT_IP_HEADER);
-    const address = getConnInfo(c).remote.address;
+    const address = clientAddress(c);
     if (address) headers.set(CLIENT_IP_HEADER, address);
     return services.auth
       .handler(new Request(c.req.raw, { headers }))
@@ -129,12 +134,33 @@ export function createApp(services: Services, options: AppOptions) {
 
   app.notFound((c) => c.json(toErrorBody(new AppError('not_found')).body, 404));
   app.onError((err, c) => {
-    if (!(err instanceof AppError)) logger.error({ err }, 'Unhandled error');
-    const { status, body } = toErrorBody(err);
+    const appError = err instanceof HTTPException ? fromHttpException(err) : err;
+    if (!(appError instanceof AppError)) logger.error({ err }, 'Unhandled error');
+    const { status, body } = toErrorBody(appError);
     return c.json(body, status as 400);
   });
 
   return app;
+}
+
+/** Hono middleware (csrf, body limit) throws HTTPException; give it our one-sentence messages. */
+function fromHttpException(err: HTTPException): AppError {
+  if (err.status === 403)
+    return new AppError(
+      'forbidden',
+      'That request came from another site; open Lost & Found directly and try again.',
+    );
+  if (err.status === 401) return new AppError('unauthenticated');
+  if (err.status === 404) return new AppError('not_found');
+  if (err.status === 429) return new AppError('rate_limited');
+  if (err.status >= 400 && err.status < 500) return new AppError('validation');
+  return new AppError('internal', undefined, { cause: err });
+}
+
+/** The TCP peer address; undefined for in-process requests (tests use app.request without a socket). */
+function clientAddress(c: Context<AppEnv>): string | undefined {
+  const env = c.env as { incoming?: unknown } | undefined;
+  return env?.incoming ? getConnInfo(c).remote.address : undefined;
 }
 
 /**

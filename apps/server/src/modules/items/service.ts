@@ -16,7 +16,7 @@ import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
 import { Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
-import type { PgBoss } from '../../platform/jobs';
+import type { JobSender } from '../../platform/jobs';
 import { bindTransition } from '../audit';
 import { resolvePlaceNames, resolveReportPlace } from '../catalog';
 import { MATCH_LOST_REPORT_JOB, type MatchLostReportData } from '../matching';
@@ -32,7 +32,7 @@ import {
 } from './repo';
 
 export type ItemsDeps = {
-  boss: Pick<PgBoss, 'send'>;
+  boss: JobSender;
   crypto: PrivateDetailsCrypto;
 };
 

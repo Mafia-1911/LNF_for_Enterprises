@@ -1,10 +1,15 @@
 // pg-boss setup (ADR-0002). The migration owner installs pg-boss's schema (platform/db/migrate.ts);
 // the app connects as lf_app with migrate and createSchema off. Jobs are sent inside withTx:
 //   await boss.send('match-lost-report', data, { db: tx.jobs });
-import { PgBoss, type Job, type QueueOptions } from 'pg-boss';
+import { PgBoss, type Job, type QueueOptions, type SendOptions } from 'pg-boss';
 import type { Logger } from '../logger';
 
 export { PgBoss, type Job } from 'pg-boss';
+
+/** What a service needs to queue jobs: pg-boss's send, inside the caller's transaction ({ db: tx.jobs }). */
+export type JobSender = {
+  send(name: string, data: object, options: SendOptions): Promise<string | null>;
+};
 
 export const BOSS_SCHEMA = 'pgboss';
 

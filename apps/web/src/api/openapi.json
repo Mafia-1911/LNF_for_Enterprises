@@ -1,0 +1,1399 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NSU Lost & Found API",
+    "version": "0.1.0",
+    "description": "Campus Lost & Found portal. All routes except /api/tenant need a session cookie."
+  },
+  "components": {
+    "schemas": {
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "me": {
+            "$ref": "#/components/schemas/Me"
+          }
+        },
+        "required": [
+          "me"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contact": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "title",
+          "contact"
+        ]
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "student",
+          "visitor",
+          "desk_officer",
+          "supervisor",
+          "it_admin"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "validation",
+                  "unauthenticated",
+                  "forbidden",
+                  "not_found",
+                  "invalid_transition",
+                  "conflict",
+                  "rate_limited",
+                  "unavailable",
+                  "internal"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "TenantInfo": {
+        "type": "object",
+        "properties": {
+          "tenant": {
+            "$ref": "#/components/schemas/TenantSummary"
+          },
+          "appearance": {
+            "$ref": "#/components/schemas/Appearance"
+          },
+          "office": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "hours": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "location",
+              "hours"
+            ]
+          }
+        },
+        "required": [
+          "tenant",
+          "appearance",
+          "office"
+        ]
+      },
+      "TenantSummary": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "shortName": {
+            "type": "string"
+          },
+          "emailDomain": {
+            "type": "string"
+          },
+          "isPractice": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "shortName",
+          "emailDomain",
+          "isPractice"
+        ]
+      },
+      "Appearance": {
+        "type": "object",
+        "properties": {
+          "preset": {
+            "type": "string",
+            "enum": [
+              "navy",
+              "forest",
+              "indigo",
+              "teal"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "light",
+              "dark",
+              "system"
+            ]
+          },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "light": {
+                "type": "object",
+                "properties": {
+                  "brand/primary": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/primary-strong": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/on-primary": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/primary-soft": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/accent": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/accent-strong": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/on-accent": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/accent-soft": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  }
+                },
+                "required": [
+                  "brand/primary",
+                  "brand/primary-strong",
+                  "brand/on-primary",
+                  "brand/primary-soft",
+                  "brand/accent",
+                  "brand/accent-strong",
+                  "brand/on-accent",
+                  "brand/accent-soft"
+                ]
+              },
+              "dark": {
+                "type": "object",
+                "properties": {
+                  "brand/primary": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/primary-strong": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/on-primary": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/primary-soft": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/accent": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/accent-strong": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/on-accent": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  },
+                  "brand/accent-soft": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-f]{6}$"
+                  }
+                },
+                "required": [
+                  "brand/primary",
+                  "brand/primary-strong",
+                  "brand/on-primary",
+                  "brand/primary-soft",
+                  "brand/accent",
+                  "brand/accent-strong",
+                  "brand/on-accent",
+                  "brand/accent-soft"
+                ]
+              }
+            },
+            "required": [
+              "light",
+              "dark"
+            ]
+          }
+        },
+        "required": [
+          "preset",
+          "mode",
+          "custom"
+        ]
+      },
+      "Catalog": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          "colours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Colour"
+            }
+          },
+          "buildings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Building"
+            }
+          }
+        },
+        "required": [
+          "categories",
+          "colours",
+          "buildings"
+        ]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "laptop",
+              "tablet",
+              "bag",
+              "wallet",
+              "university_id",
+              "bank_card",
+              "cash",
+              "documents",
+              "keys",
+              "bottle",
+              "umbrella",
+              "charger",
+              "headphones",
+              "clothing",
+              "glasses",
+              "watch",
+              "jewellery",
+              "books_notes",
+              "calculator",
+              "other",
+              "weapon",
+              "drugs",
+              "university_keys",
+              "hazardous"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "restricted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "sensitive",
+          "restricted"
+        ]
+      },
+      "Colour": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "black",
+              "white",
+              "grey",
+              "silver",
+              "blue",
+              "navy",
+              "red",
+              "green",
+              "yellow",
+              "orange",
+              "pink",
+              "purple",
+              "brown",
+              "beige",
+              "gold",
+              "multi"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "swatch": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "swatch"
+        ]
+      },
+      "Building": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "floors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Floor"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "floors"
+        ]
+      },
+      "Floor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Zone"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "zones"
+        ]
+      },
+      "Zone": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "LostReportCreated": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/LostReport"
+          },
+          "similarInCustody": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "shortName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "shortName"
+              ]
+            }
+          }
+        },
+        "required": [
+          "report",
+          "similarInCustody"
+        ]
+      },
+      "LostReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LostReportState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "place": {
+            "type": "object",
+            "properties": {
+              "buildingCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "buildingName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zoneName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "buildingCode",
+              "buildingName",
+              "floorName",
+              "zoneName"
+            ]
+          },
+          "timeFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeTo": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hasPrivateDetails": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "colour",
+          "shortName",
+          "brand",
+          "publicDescription",
+          "place",
+          "timeFrom",
+          "timeTo",
+          "expiresAt",
+          "createdAt",
+          "hasPrivateDetails"
+        ]
+      },
+      "LostReportState": {
+        "type": "string",
+        "enum": [
+          "OPEN",
+          "POSSIBLE_MATCH",
+          "CLAIMED",
+          "RESOLVED",
+          "EXPIRED",
+          "WITHDRAWN"
+        ]
+      },
+      "CreateLostReport": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "laptop",
+              "tablet",
+              "bag",
+              "wallet",
+              "university_id",
+              "bank_card",
+              "cash",
+              "documents",
+              "keys",
+              "bottle",
+              "umbrella",
+              "charger",
+              "headphones",
+              "clothing",
+              "glasses",
+              "watch",
+              "jewellery",
+              "books_notes",
+              "calculator",
+              "other"
+            ]
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "black",
+              "white",
+              "grey",
+              "silver",
+              "blue",
+              "navy",
+              "red",
+              "green",
+              "yellow",
+              "orange",
+              "pink",
+              "purple",
+              "brown",
+              "beige",
+              "gold",
+              "multi",
+              null
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "privateNote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "place": {
+            "$ref": "#/components/schemas/LostReportPlace"
+          },
+          "timeFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeTo": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "category",
+          "colour",
+          "shortName",
+          "brand",
+          "publicDescription",
+          "privateNote",
+          "place",
+          "timeFrom",
+          "timeTo"
+        ]
+      },
+      "LostReportPlace": {
+        "type": "object",
+        "properties": {
+          "buildingCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 10
+          },
+          "floorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "zoneId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "buildingCode",
+          "floorId",
+          "zoneId"
+        ]
+      },
+      "LostReportList": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LostReport"
+            }
+          }
+        },
+        "required": [
+          "reports"
+        ]
+      },
+      "AuditEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "event": {
+            "type": "string"
+          },
+          "fromState": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "toState": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "actorKind": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "event",
+          "fromState",
+          "toState",
+          "actorId",
+          "actorKind",
+          "note",
+          "at"
+        ]
+      },
+      "DevClock": {
+        "type": "object",
+        "properties": {
+          "now": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "offsetMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "now",
+          "offsetMs"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/me": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "The signed-in person and their role in this university",
+        "responses": {
+          "200": {
+            "description": "The signed-in person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "University name, theme and office details (no sign-in needed)",
+        "responses": {
+          "200": {
+            "description": "Public tenant information.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Categories, colours and places this person may pick",
+        "responses": {
+          "200": {
+            "description": "The catalog.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/appearance": {
+      "put": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Set the theme for everyone in this university (IT admin only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Appearance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated public tenant information.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lost-reports": {
+      "post": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Submit a lost report (US-01)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLostReport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The report was created and matching was queued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LostReportCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "My lost reports, newest first",
+        "responses": {
+          "200": {
+            "description": "Reports owned by the signed-in person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LostReportList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lost-reports/{id}": {
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "One lost report (owner or desk staff)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The report, without private details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LostReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit/{recordType}/{recordId}": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Audit trail of one record",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "lost_report",
+                "found_item",
+                "claim",
+                "dispatch",
+                "policy"
+              ]
+            },
+            "required": true,
+            "name": "recordType",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "required": true,
+            "name": "recordId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Events, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AuditEntry"
+                      }
+                    }
+                  },
+                  "required": [
+                    "events"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dev/clock": {
+      "get": {
+        "tags": [
+          "dev"
+        ],
+        "summary": "Dev only: the server clock",
+        "responses": {
+          "200": {
+            "description": "Server time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevClock"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "dev"
+        ],
+        "summary": "Dev only: move the server clock forward, or reset it",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "advanceMs": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 31622400000
+                      }
+                    },
+                    "required": [
+                      "advanceMs"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reset": {
+                        "type": "boolean",
+                        "enum": [
+                          true
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reset"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server time after the change.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevClock"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dev/sms": {
+      "get": {
+        "tags": [
+          "dev"
+        ],
+        "summary": "Dev only: text messages the dev SMS adapter would have sent",
+        "responses": {
+          "200": {
+            "description": "Newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "to": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "to",
+                          "body",
+                          "at"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "messages"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

@@ -67,10 +67,12 @@ export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
     },
 
     beforeUserCreate(email, method, tenant) {
-      if (method === 'sso' && domainOf(email) !== tenant.emailDomain)
-        throw new SignInRefused(MSG.ssoWrongDomain(tenant.emailDomain));
-      if (method === 'email_otp' && domainOf(email) !== tenant.emailDomain)
-        throw new SignInRefused(MSG.wrongDomain(tenant.emailDomain));
+      // Returns a rejected promise (never throws synchronously), like the other policy checks.
+      const wrongDomain = domainOf(email) !== tenant.emailDomain;
+      if (method === 'sso' && wrongDomain)
+        return Promise.reject(new SignInRefused(MSG.ssoWrongDomain(tenant.emailDomain)));
+      if (method === 'email_otp' && wrongDomain)
+        return Promise.reject(new SignInRefused(MSG.wrongDomain(tenant.emailDomain)));
       return Promise.resolve();
     },
 

@@ -1,5 +1,6 @@
 // Middleware shared by every route: request id + logs, tenant from Host, signed-in user, roles.
 import type { Role } from '@lf/domain';
+import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { Clock } from '../clock';
 import type { DatabaseHandle } from '../db/types';
@@ -8,19 +9,26 @@ import { withLogContext, type Logger } from '../logger';
 import type { TenantResolver } from '../tenancy';
 import { runInRequestScope, type AppEnv, type SessionUser } from './context';
 
+/** The route pattern that handled the request, e.g. "/api/lost-reports/:id" (not the middleware's "*"). */
+export function matchedRoute(c: Context<AppEnv>): string {
+  const handlers = c.req.matchedRoutes.filter((r) => r.method !== 'ALL');
+  return handlers.at(-1)?.path ?? c.req.routePath;
+}
+
+export type RequestObserver = (info: { method: string; route: string; status: number }) => void;
+
 /** Runs the rest of the request with the request id on every log line, and logs one access line. */
-export function requestLogging(logger: Logger, clock: Clock) {
+export function requestLogging(logger: Logger, clock: Clock, observe?: RequestObserver) {
   return createMiddleware<AppEnv>(async (c, next) => {
     const requestId = c.var.requestId;
     await withLogContext({ requestId }, async () => {
       const started = clock.now().getTime();
       await next();
       const ms = clock.now().getTime() - started;
+      const route = matchedRoute(c);
       const level = c.res.status >= 500 ? 'error' : c.res.status >= 400 ? 'warn' : 'info';
-      logger[level](
-        { method: c.req.method, route: c.req.routePath, status: c.res.status, ms },
-        'request',
-      );
+      logger[level]({ method: c.req.method, route, status: c.res.status, ms }, 'request');
+      observe?.({ method: c.req.method, route, status: c.res.status });
     });
   });
 }
