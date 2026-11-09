@@ -1,5 +1,5 @@
 // Per-tenant, per-type, per-month sequence counters for record IDs (ADR-0012).
-import { integer, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import { bigint, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { tenants } from '../tenancy/schema';
 
 export const idCounters = pgTable(
@@ -11,7 +11,7 @@ export const idCounters = pgTable(
     type: text('type').notNull(),
     /** Dhaka year-month, e.g. "2611". */
     yymm: text('yymm').notNull(),
-    lastSeq: integer('last_seq').notNull(),
+    lastSeq: bigint('last_seq', { mode: 'number' }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.tenantId, t.type, t.yymm] })],
 );

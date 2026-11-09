@@ -3,6 +3,8 @@
 // Stored format: base64(iv[12] | tag[16] | ciphertext) plus the key version used.
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
+const TAG_LENGTH = 16;
+
 export type Encrypted = { ciphertext: string; keyVersion: number };
 
 export type PrivateDetailsCrypto = {
@@ -22,7 +24,9 @@ export function createPrivateDetailsCrypto(
   return {
     encrypt(plaintext, aad) {
       const iv = randomBytes(12);
-      const cipher = createCipheriv('aes-256-gcm', keyFor(activeVersion), iv);
+      const cipher = createCipheriv('aes-256-gcm', keyFor(activeVersion), iv, {
+        authTagLength: TAG_LENGTH,
+      });
       cipher.setAAD(Buffer.from(aad, 'utf8'));
       const body = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
       return {
@@ -32,10 +36,16 @@ export function createPrivateDetailsCrypto(
     },
     decrypt({ ciphertext, keyVersion }, aad) {
       const raw = Buffer.from(ciphertext, 'base64');
-      const decipher = createDecipheriv('aes-256-gcm', keyFor(keyVersion), raw.subarray(0, 12));
+      // Pin the tag length so a truncated tag is rejected, not accepted with weaker integrity.
+      const decipher = createDecipheriv('aes-256-gcm', keyFor(keyVersion), raw.subarray(0, 12), {
+        authTagLength: TAG_LENGTH,
+      });
       decipher.setAAD(Buffer.from(aad, 'utf8'));
-      decipher.setAuthTag(raw.subarray(12, 28));
-      return Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8');
+      decipher.setAuthTag(raw.subarray(12, 12 + TAG_LENGTH));
+      return Buffer.concat([
+        decipher.update(raw.subarray(12 + TAG_LENGTH)),
+        decipher.final(),
+      ]).toString('utf8');
     },
   };
 }

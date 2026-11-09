@@ -1,8 +1,8 @@
 // Catalog: places, desks, bins, categories, colours and tenant policies (FR-04).
 import {
+  bigint,
   boolean,
   index,
-  integer,
   jsonb,
   pgTable,
   primaryKey,
@@ -27,7 +27,7 @@ export const buildings = pgTable(
     /** Short code shown on cards and labels, e.g. NAC. */
     code: text('code').notNull(),
     name: text('name').notNull(),
-    sort: integer('sort').notNull().default(0),
+    sort: bigint('sort', { mode: 'number' }).notNull().default(0),
   },
   (t) => [unique('buildings_tenant_code_uq').on(t.tenantId, t.code)],
 );
@@ -41,7 +41,7 @@ export const floors = pgTable(
       .notNull()
       .references(() => buildings.id),
     name: text('name').notNull(),
-    sort: integer('sort').notNull().default(0),
+    sort: bigint('sort', { mode: 'number' }).notNull().default(0),
   },
   (t) => [
     index('floors_tenant_building_idx').on(t.tenantId, t.buildingId),
@@ -58,7 +58,7 @@ export const zones = pgTable(
       .notNull()
       .references(() => floors.id),
     name: text('name').notNull(),
-    sort: integer('sort').notNull().default(0),
+    sort: bigint('sort', { mode: 'number' }).notNull().default(0),
   },
   (t) => [
     index('zones_tenant_floor_idx').on(t.tenantId, t.floorId),
@@ -107,7 +107,7 @@ export const categories = pgTable(
     sensitive: boolean('sensitive').notNull(),
     restricted: boolean('restricted').notNull(),
     enabled: boolean('enabled').notNull().default(true),
-    sort: integer('sort').notNull().default(0),
+    sort: bigint('sort', { mode: 'number' }).notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.tenantId, t.code] })],
 );
@@ -119,7 +119,7 @@ export const colours = pgTable(
     code: text('code').notNull(),
     label: text('label').notNull(),
     swatch: text('swatch').notNull(),
-    sort: integer('sort').notNull().default(0),
+    sort: bigint('sort', { mode: 'number' }).notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.tenantId, t.code] })],
 );

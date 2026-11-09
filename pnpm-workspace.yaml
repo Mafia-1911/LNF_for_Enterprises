@@ -7,6 +7,15 @@ allowBuilds:
   esbuild: true
   lefthook: true
 
+# Supply-chain guards (also checked by semgrep): refuse releases younger than a day and never
+# install dependencies from git/tarball URLs deep in the tree.
+# OPEN DECISION for the maintainer (docs/todo.md#supply-chain): semgrep also recommends
+#   minimumReleaseAge: 10080   (7 days; today's pinned "current stable" versions are younger)
+#   trustPolicy: no-downgrade   (rejects undici-types@6.21.0, required by @types/node@22)
+# Both need a policy choice (wait, add reviewed exceptions, or accept the finding); not decided here.
+minimumReleaseAge: 1440
+blockExoticSubdeps: true
+
 # pnpm refuses releases younger than its minimum age. These were the current
 # stable versions on 2026-11-09 (vite shipped security patches that day), so
 # they are allowed explicitly. Remove an entry once it is older than a day.

@@ -1,5 +1,9 @@
 -- The audit log is insert-only (FR-14, plan §5.4, ADR-0006): the app role can only INSERT and
 -- SELECT, and triggers reject UPDATE, DELETE and TRUNCATE for every role, including the owner.
+SET lock_timeout = '5s';
+--> statement-breakpoint
+SET statement_timeout = '60s';
+--> statement-breakpoint
 REVOKE UPDATE, DELETE, TRUNCATE ON audit_events, audit_checkpoints, audit_checkpoint_events FROM lf_app;
 --> statement-breakpoint
 CREATE TRIGGER audit_events_insert_only BEFORE UPDATE OR DELETE ON audit_events

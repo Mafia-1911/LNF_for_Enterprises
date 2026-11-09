@@ -1,0 +1,15 @@
+# Generated or third-party material that is not app code.
+node_modules/
+dist/
+coverage/
+reports/
+.stryker-tmp/
+docs/design/figma-ref/
+docs/design/assets/
+eslint/fixtures/
+apps/web/src/api/schema.d.ts
+apps/web/src/api/openapi.json
+apps/server/migrations/meta/
+playwright-report/
+test-results/
+Prompts and Attachments/

@@ -1,21 +1,12 @@
 // Insert-only audit tables (plan §5.4, ADR-0006). Triggers in the audit migration reject UPDATE,
 // DELETE and TRUNCATE, and the app role only has INSERT and SELECT.
-import {
-  bigint,
-  bigserial,
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { bigint, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { tenants } from '../../platform/tenancy/schema';
 
 export const auditEvents = pgTable(
   'audit_events',
   {
-    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
     tenantId: uuid('tenant_id')
       .notNull()
       .references(() => tenants.id),
@@ -35,10 +26,10 @@ export const auditEvents = pgTable(
 );
 
 export const auditCheckpoints = pgTable('audit_checkpoints', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   prevHash: text('prev_hash').notNull(),
   hash: text('hash').notNull(),
-  eventCount: integer('event_count').notNull(),
+  eventCount: bigint('event_count', { mode: 'number' }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
 

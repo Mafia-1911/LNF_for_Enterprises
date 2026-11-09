@@ -3,8 +3,8 @@
 // items owns lost reports (and, from phase 1, found items) plus their private details.
 // Rules for every table: tenant_id first in the primary key and in every index that serves a query.
 import {
+  bigint,
   index,
-  integer,
   jsonb,
   pgTable,
   primaryKey,
@@ -48,7 +48,7 @@ export const lostReports = pgTable(
     timeFrom: ts('time_from').notNull(),
     timeTo: ts('time_to').notNull(),
     expiresAt: ts('expires_at').notNull(),
-    renewCount: integer('renew_count').notNull().default(0),
+    renewCount: bigint('renew_count', { mode: 'number' }).notNull().default(0),
     createdAt: ts('created_at').notNull(),
     updatedAt: ts('updated_at').notNull(),
   },
@@ -76,7 +76,7 @@ export const privateDetails = pgTable(
     /** Tick-box answers, e.g. ["has_case", "cracked_screen"]. */
     ticks: jsonb('ticks').$type<string[]>().notNull().default([]),
     noteCiphertext: text('note_ciphertext'),
-    keyVersion: integer('key_version'),
+    keyVersion: bigint('key_version', { mode: 'number' }),
     createdAt: ts('created_at').notNull(),
   },
   (t) => [primaryKey({ columns: [t.tenantId, t.recordType, t.recordId] })],

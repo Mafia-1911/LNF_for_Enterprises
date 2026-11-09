@@ -2,16 +2,7 @@
 // Better-Auth's model; columns are snake_case. Ids default to gen_random_uuid() because
 // advanced.database.generateId is 'uuid' (Better-Auth leaves the id to the database). Users are global; their role per tenant lives in
 // modules/identity (role_assignments).
-import {
-  bigint,
-  boolean,
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { bigint, boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
 
@@ -82,7 +73,7 @@ export const verifications = pgTable(
 export const rateLimits = pgTable('rate_limits', {
   id: uuid('id').primaryKey().defaultRandom(),
   key: text('key').notNull().unique(),
-  count: integer('count').notNull(),
+  count: bigint('count', { mode: 'number' }).notNull(),
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
 

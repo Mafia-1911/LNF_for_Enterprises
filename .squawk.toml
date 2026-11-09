@@ -1,0 +1,5 @@
+# squawk (migration linter, run by `pnpm verify`). Drizzle's migrator wraps each run in a
+# transaction, so squawk is told so; that changes which rules apply (for example, CONCURRENTLY
+# can't be used inside a transaction). No rules are excluded here.
+assume_in_transaction = true
+pg_version = "16.0"

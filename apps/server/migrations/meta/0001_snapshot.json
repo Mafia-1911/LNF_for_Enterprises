@@ -1,6 +1,6 @@
 {
-  "id": "2980dc7c-11c3-4f96-bff1-367e9a4c8d71",
-  "prevId": "cb660cd5-f356-45c3-b05c-3712fbc0599d",
+  "id": "aa800785-935c-4975-9dc8-d9aa3969a3b7",
+  "prevId": "6ce4b375-79f6-4ff7-bc59-ad877cb01326",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -145,7 +145,7 @@
         },
         "count": {
           "name": "count",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -505,7 +505,7 @@
         },
         "last_seq": {
           "name": "last_seq",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         }
@@ -687,9 +687,20 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigserial",
+          "type": "bigint",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "audit_checkpoints_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "prev_hash": {
           "name": "prev_hash",
@@ -705,7 +716,7 @@
         },
         "event_count": {
           "name": "event_count",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -730,9 +741,20 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigserial",
+          "type": "bigint",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "audit_events_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -962,7 +984,7 @@
         },
         "sort": {
           "name": "sort",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1042,7 +1064,7 @@
         },
         "sort": {
           "name": "sort",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1108,7 +1130,7 @@
         },
         "sort": {
           "name": "sort",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1267,7 +1289,7 @@
         },
         "sort": {
           "name": "sort",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1448,7 +1470,7 @@
         },
         "sort": {
           "name": "sort",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1742,7 +1764,7 @@
         },
         "renew_count": {
           "name": "renew_count",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1961,7 +1983,7 @@
         },
         "key_version": {
           "name": "key_version",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -2034,7 +2056,7 @@
         },
         "candidates": {
           "name": "candidates",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },

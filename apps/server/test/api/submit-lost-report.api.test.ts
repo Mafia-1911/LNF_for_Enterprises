@@ -95,9 +95,10 @@ describe('POST /api/lost-reports', () => {
     );
     expect(rows).toHaveLength(1);
     expect(rows[0]?.note_ciphertext).not.toContain('PIN-hint');
-    expect(rows[0]?.key_version).toBe(1);
+    // bigint columns come back from raw pg queries as strings.
+    expect(Number(rows[0]?.key_version)).toBe(1);
     const decrypted = ctx.services.crypto.decrypt(
-      { ciphertext: rows[0]?.note_ciphertext ?? '', keyVersion: rows[0]?.key_version ?? 0 },
+      { ciphertext: rows[0]?.note_ciphertext ?? '', keyVersion: Number(rows[0]?.key_version) },
       `${ctx.tenantA}:lost_report:${res.body.report.id}`,
     );
     expect(decrypted).toBe('PIN-hint-7731 sticker');

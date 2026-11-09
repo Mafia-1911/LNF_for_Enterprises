@@ -35,3 +35,6 @@ age-identity*.txt
 
 # Local working notes kept next to the repo, not part of it
 Prompts and Attachments/
+
+# Local backup encryption keys (scripts/backup.sh)
+.backup-keys/

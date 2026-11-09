@@ -137,3 +137,20 @@ describe('looksLikeId', () => {
     },
   );
 });
+
+describe('looksLikeId edges', () => {
+  it('ignores surrounding spaces but not extra characters', () => {
+    expect(looksLikeId('  LST-2611-0219Y  ')).toBe(true);
+    expect(looksLikeId('LST-2611-0219Yz')).toBe(false);
+    expect(looksLikeId('xLST-2611-0219Y')).toBe(false);
+    expect(looksLikeId('LST-2611-02199')).toBe(false);
+  });
+
+  it('rejects inputs with the right shape but invalid parts', () => {
+    expect(parseId('LST-2611-0219y ')).toEqual({ type: 'LST', year: 26, month: 11, seq: 219 });
+    expect(parseId('LST--2611--0219Y')).toEqual({ type: 'LST', year: 26, month: 11, seq: 219 });
+    // FND-2601-0042: 1·1+2·2+6·3+0·4+1·5+0·6+0·7+4·8+2·9 = 78; 78 mod 23 = 9 → 'K'.
+    expect(normaliseId('FND 2601 0042 K')).toBe('FND-2601-0042K');
+    expect(normaliseId('FND 2601 0042 A')).toBeNull();
+  });
+});

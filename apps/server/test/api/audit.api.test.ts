@@ -66,8 +66,14 @@ describe('audit tables are insert-only', () => {
   it.each(['audit_events', 'audit_checkpoints', 'audit_checkpoint_events'])(
     'the app role may not UPDATE, DELETE or TRUNCATE %s',
     async (table) => {
+      // Identity ids can't be assigned at all, so update an ordinary column to test the privilege.
+      const column = {
+        audit_events: 'note',
+        audit_checkpoints: 'hash',
+        audit_checkpoint_events: 'checkpoint_id',
+      }[table];
       for (const sql of [
-        `update ${table} set ${table === 'audit_checkpoint_events' ? 'checkpoint_id = checkpoint_id' : 'id = id'}`,
+        `update ${table} set ${column} = ${column}`,
         `delete from ${table}`,
         `truncate ${table}`,
       ]) {
