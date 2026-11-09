@@ -1,0 +1,140 @@
+/* Design tokens → Tailwind 4 theme. Import after `@import 'tailwindcss'`.
+   Colours are CSS variables switched by <html data-theme data-mode> (ADR-0010).
+   Tailwind's default palette is removed so screens can only use design tokens. */
+@import '../tokens/tokens.css';
+
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  /* Only the type scale below exists, so nothing can be set under 16 px by accident. */
+  --text-*: initial;
+}
+
+@theme inline {
+  --color-canvas: var(--lf-bg-canvas);
+  --color-surface: var(--lf-bg-surface);
+  --color-subtle: var(--lf-bg-muted);
+  --color-hero: var(--lf-bg-hero);
+  --color-line: var(--lf-border-line);
+  --color-control: var(--lf-border-control);
+  --color-ink: var(--lf-text-ink);
+  --color-muted: var(--lf-text-muted);
+  --color-on-hero: var(--lf-text-on-hero);
+  --color-primary: var(--lf-brand-primary);
+  --color-primary-strong: var(--lf-brand-primary-strong);
+  --color-on-primary: var(--lf-brand-on-primary);
+  --color-primary-soft: var(--lf-brand-primary-soft);
+  --color-accent: var(--lf-brand-accent);
+  --color-accent-strong: var(--lf-brand-accent-strong);
+  --color-on-accent: var(--lf-brand-on-accent);
+  --color-accent-soft: var(--lf-brand-accent-soft);
+  --color-success: var(--lf-status-success);
+  --color-success-soft: var(--lf-status-success-soft);
+  --color-on-success: var(--lf-status-on-success);
+  --color-warning: var(--lf-status-warning);
+  --color-warning-soft: var(--lf-status-warning-soft);
+  --color-danger: var(--lf-status-danger);
+  --color-danger-soft: var(--lf-status-danger-soft);
+  --color-on-danger: var(--lf-status-on-danger);
+  --color-info: var(--lf-status-info);
+  --color-info-soft: var(--lf-status-info-soft);
+  --color-neutral-soft: var(--lf-status-neutral-soft);
+  --color-scrim: var(--lf-overlay-scrim);
+  --color-glass: var(--lf-overlay-glass);
+  --color-transparent: transparent;
+  /* For the dev-only prototype toolbar, which keeps Figma's fixed dark bar. */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-toolbar: #0b0f19;
+
+  --shadow-card: var(--lf-shadow-card);
+  --shadow-hover: var(--lf-shadow-hover);
+  --shadow-pop: var(--lf-shadow-pop);
+}
+
+@theme {
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+
+  /* Type scale from Figma text styles. The SRS sets a 16 px minimum, so styles below 16 px
+     in Figma (Body/S, Label/M, Label/S, Caption, Overline) are 16 px here. */
+  --text-display-xl: 52px;
+  --text-display-xl--line-height: 56px;
+  --text-display-xl--letter-spacing: -1px;
+  --text-display-l: 40px;
+  --text-display-l--line-height: 46px;
+  --text-display-l--letter-spacing: -0.5px;
+  --text-display-m: 30px;
+  --text-display-m--line-height: 36px;
+  --text-display-m--letter-spacing: -0.3px;
+  --text-heading-l: 24px;
+  --text-heading-l--line-height: 32px;
+  --text-heading-m: 20px;
+  --text-heading-m--line-height: 28px;
+  --text-heading-s: 18px;
+  --text-heading-s--line-height: 26px;
+  --text-body-l: 18px;
+  --text-body-l--line-height: 28px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-label: 16px;
+  --text-label--line-height: 20px;
+  --text-overline: 16px;
+  --text-overline--line-height: 20px;
+  --text-overline--letter-spacing: 0.7px;
+  --text-mono-l: 28px;
+  --text-mono-l--line-height: 34px;
+  --text-mono-l--letter-spacing: 1px;
+  --text-mono-xl: 36px;
+  --text-mono-xl--line-height: 40px;
+  --text-mono-xl--letter-spacing: 1.8px;
+  /* The logo lockup subtitle keeps Figma's 12 px as part of the logo (docs/design/README.md). */
+  --text-logo-sub: 12px;
+  --text-logo-sub--line-height: 16px;
+  --text-logo-sub--letter-spacing: 0.6px;
+}
+
+@layer base {
+  html {
+    background-color: var(--lf-bg-canvas);
+    color: var(--lf-text-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--lf-bg-canvas);
+  }
+  :focus-visible {
+    outline: 2px solid var(--lf-brand-primary);
+    outline-offset: 2px;
+  }
+  .font-display {
+    font-variation-settings:
+      'SOFT' 0,
+      'WONK' 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .lf-swatch-multi {
+    background: conic-gradient(#d33a2c, #f08a24, #f2c94c, #2f8f4e, #2f6fd6, #7b4fc9, #d33a2c);
+  }
+}
