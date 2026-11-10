@@ -1,6 +1,6 @@
 # Phase 0 + 0.5 implementation plan
 
-Status: in progress · Written 9 Nov 2026 · Scope: plan v0.3 §4 and §14 phases 0 and 0.5, with the local-first rules from the Phase 0 prompt.
+Status: done (10 Nov 2026) · Written 9 Nov 2026 · Scope: plan v0.3 §4 and §14 phases 0 and 0.5, with the local-first rules from the Phase 0 prompt.
 
 ## 1. Milestones and order
 
@@ -21,7 +21,7 @@ Each milestone ends with the parts of `pnpm verify` that exist so far, then a co
 ## 2. Key design decisions (best guesses, all listed in the final report)
 
 1. **Default theme: Teal · Dark.** Every screen in the Figma file uses it (the Figma variable default is Navy · Light). Stored per tenant as the `appearance` policy; only the IT admin role can change it, including custom palettes. No user-facing theme toggle anywhere. The prototype toolbar does not get theme swatches.
-2. **Theme storage:** `policies` table (catalog module), key `appearance` = `{ preset, mode: light|dark|system, custom? }`. `GET /api/theme` is public (the sign-in page needs it); `PUT /api/admin/theme` is IT admin only, validated with Zod including WCAG contrast checks, and audited.
+2. **Theme storage:** `policies` table (catalog module), key `appearance` = `{ preset, mode: light|dark|system, custom? }`. `GET /api/tenant` is public and carries it (the sign-in page needs it); `PUT /api/admin/appearance` is IT admin only, validated with Zod including WCAG contrast checks, and audited.
 3. **Custom palette** = a base preset plus overrides for the 8 brand tokens, for light and dark. The contrast check rejects pairs below AA.
 4. **Accessibility fixes to Figma colours** (prompt rule 7.10): new `border/control` token for input, checkbox and toggle boundaries (3:1); `status/on-danger` / `status/on-success` for dark modes; placeholders at full `text/muted`; success-hero check icon uses `brand/on-primary`. Values in `docs/design/README.md`.
 5. **16 px minimum text** (SRS + prompt): every type style below 16 px is raised to 16 px. The only exception is the logo lockup subtitle, which is part of the logo; the dev-only prototype toolbar keeps its Figma sizes.
@@ -32,7 +32,7 @@ Each milestone ends with the parts of `pnpm verify` that exist so far, then a co
 10. **Reads also go through `withTx(ctx, fn, { readOnly: true })`**, so services never hold the raw `db`.
 11. **Tenant resolution by Host header** (`tenants.hostnames`). Dev maps `localhost` to NSU; API tests use `nsu.test` and `other.test`.
 12. **Match job stub** writes a `match_runs` row (no found items exist yet) in a small `matching` module.
-13. **Holidays table** in a small `retention` module (plan §3.1 says retention owns the holiday calendar).
+13. **Holidays table** in `platform/calendar` (as built), not a `retention` module: working-day maths is needed by several modules and platform code can't import modules. Plan §3.1 puts it in retention; move it when retention exists if that still makes sense.
 14. **Office location** (plan §9.4): Admin Building, Ground floor, Security Room.
 15. **"Claims Resolved within 30 Mins"** (plan §9.5) becomes "48 hours · to hand in a found item".
 16. **Avatars** use initials for seeded users; no stock face photos go into the repo.
