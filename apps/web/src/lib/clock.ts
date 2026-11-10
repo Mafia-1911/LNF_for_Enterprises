@@ -1,5 +1,5 @@
 // The web app's only source of "now" (plan §3.2 rule 4). In development and staging it follows the
-// server clock, so the prototype toolbar's "+1 h / +1 day" moves the whole app.
+// server clock, so the clock buttons on /dev/tools move the whole app.
 import { dhakaParts, dhakaTime } from '@lf/domain';
 
 let offsetMs = 0;

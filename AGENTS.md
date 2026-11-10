@@ -192,7 +192,7 @@ Throw typed errors from `platform/errors`: `ValidationFailed(fields)`, `Unauthen
 - Updating `state` without `transition()`, and UPDATE or DELETE on audit tables.
 - Sending a job outside the transaction that caused it.
 - Hex colours or arbitrary Tailwind colours in components, text under 16 px, touch targets under 44 px, and icon buttons without `aria-label`.
-- Showing dev tools (prototype toolbar, `/dev/*`) outside `__PROTOTYPE__`. `pnpm verify` checks the production bundle.
+- Dev-only UI anywhere except the `/dev/*` pages (nothing on the top bar), or `/dev/*` outside `__PROTOTYPE__`. `pnpm verify` checks the production bundle.
 - Version ranges in `package.json`. Pin exact versions (`saveExact`), check npm for the current stable release first, and never guess a version.
 
 ## Definition of done

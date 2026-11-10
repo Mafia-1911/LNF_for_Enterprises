@@ -1,6 +1,6 @@
 // The only source of "now" on the server (plan §3.4). Lint bans Date.now() and new Date()
-// everywhere else. Development and staging use an adjustable clock that the prototype toolbar
-// can move forward ("+1 h", "+1 day"); production uses the system clock.
+// everywhere else. Development and staging use an adjustable clock that /dev/tools can move
+// forward ("+1 hour", "+1 day"); production uses the system clock.
 
 export interface Clock {
   now(): Date;

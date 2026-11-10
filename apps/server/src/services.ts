@@ -20,7 +20,7 @@ export type Services = {
   config: Config;
   logger: Logger;
   clock: Clock;
-  /** Set when dev tools are on: the clock the prototype toolbar moves. */
+  /** Set when dev tools are on: the clock /dev/tools moves. */
   devClock: AdjustableClock | null;
   db: DatabaseHandle;
   boss: PgBoss;

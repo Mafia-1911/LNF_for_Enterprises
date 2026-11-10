@@ -29,6 +29,7 @@ The first `pnpm dev` creates `.env` from `.env.example`, applies the migrations 
 | Mailpit (email)   | http://localhost:8025                | Every email the app sends, including sign-in codes                              |
 | MinIO console     | http://localhost:9101                | User `lf-dev-minio`, password `minio-dev-only-password` (local only)            |
 | Mock NSU SSO      | http://localhost:8090/nsu            | Stand-in for Microsoft Entra ID. Its sign-in page has a quick pick of the staff |
+| Dev tools         | http://localhost:5173/dev/tools      | Sign in as anyone; move the server clock                                        |
 | Dev SMS inbox     | http://localhost:5173/dev/sms        | Phone sign-in codes (the dev SMS adapter never sends real texts)                |
 | Component gallery | http://localhost:5173/dev/components | Every UI component in every colour mode                                         |
 
@@ -44,7 +45,7 @@ The people from the Figma screens, one per role. All of them are fictional.
 | IT admin     | Tanvir Alam   | **NSU SSO**: `tanvir.alam@northsouth.edu`                                 |
 | Visitor      | Karim Hossain | **Phone code**: `+8801700000001` (or `01700000001`), code from `/dev/sms` |
 
-Staff must use SSO. Email codes only work for `@northsouth.edu` addresses, and phone codes only for visitors. Any other `@northsouth.edu` address can sign in by email code and becomes a new student. In development the **prototype toolbar** at the top of every page also lets you "View as" any role and move the clock forward (`+1 h`, `+1 day`). The toolbar and the `/dev` pages are left out of production builds.
+Staff must use SSO. Email codes only work for `@northsouth.edu` addresses, and phone codes only for visitors. Any other `@northsouth.edu` address can sign in by email code and becomes a new student. In development, **http://localhost:5173/dev/tools** lets you sign in as any seeded person without a code and move the server clock forward (`+1 hour`, `+1 day`, `+1 week`). Nothing dev-only appears on the app's top bar, and the `/dev` pages are left out of production builds.
 
 ## Checks
 

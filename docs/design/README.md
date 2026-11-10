@@ -52,4 +52,4 @@ The SRS sets a 16 px minimum. Figma styles below 16 px (Body/S 15, Label/M 15, L
 
 - §9.4 office location: Admin Building, Ground floor, Security Room (the student home card that says "Library … LIB-012" is wrong).
 - §9.5 "Claims Resolved within 30 Mins": replaced with "48 hours · to hand in a found item".
-- §9.13 prototype toolbar: dev and staging builds only, wired to the server clock; it has no theme switcher because only the IT admin may change themes.
+- §9.13 prototype toolbar: removed from the top bar at the owner's request (10 Nov 2026). Its "sign in as" and clock controls live on the dev-only `/dev/tools` page; there is no theme switcher because only the IT admin may change themes.

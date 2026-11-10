@@ -1,4 +1,4 @@
-// Development only: "View as" in the prototype toolbar signs in as a seeded account without a code.
+// Development only: the /dev/tools page signs in as a seeded account without a code.
 // Registered only when ENABLE_DEV_TOOLS=true, which config refuses in production.
 import type { BetterAuthPlugin } from 'better-auth';
 import { APIError, createAuthEndpoint } from 'better-auth/api';

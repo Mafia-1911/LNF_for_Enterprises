@@ -96,7 +96,6 @@ export function SignInPage() {
 
           <p className="mt-8 text-body text-muted">
             Staff (desk officers, supervisors, IT) sign in with university single sign-on.
-            {__PROTOTYPE__ ? ' In this prototype, use “View as” above to switch roles.' : null}
           </p>
         </div>
       </main>

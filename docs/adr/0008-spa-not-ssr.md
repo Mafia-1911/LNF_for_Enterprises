@@ -13,4 +13,4 @@ The app sits behind sign-in, so SEO does not matter. One Node container should s
 ## Consequences
 
 - No server rendering framework. The design tokens and base components live in `packages/ui`.
-- The prototype toolbar is compiled out of production builds.
+- The `/dev` pages (tools, SMS inbox, component gallery) are compiled out of production builds.

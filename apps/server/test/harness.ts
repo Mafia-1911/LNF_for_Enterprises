@@ -123,7 +123,7 @@ export async function createTestContext() {
       post: <T = unknown>(url: string, body?: unknown) => request<T>('POST', url, body ?? {}),
       put: <T = unknown>(url: string, body?: unknown) => request<T>('PUT', url, body ?? {}),
       request,
-      /** Dev-only "sign in as" (the same endpoint the prototype toolbar uses). */
+      /** Dev-only "sign in as" (the same endpoint /dev/tools uses). */
       async signInAs(email: string) {
         const res = await request('POST', '/api/auth/dev/sign-in-as', { email });
         expect(res.status, `sign in as ${email}`).toBe(200);

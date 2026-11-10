@@ -78,12 +78,12 @@ e2e_tests() {
   pnpm test:e2e
 }
 
-# The prototype toolbar, "View as" and /dev pages must not reach a production build (plan §9.13).
+# The /dev pages (tools, SMS inbox, component gallery) and dev sign-in must not reach a production build.
 production_bundle() {
   pnpm build || return 1
   local hits
   # Source maps are skipped: they carry the original source text (including the gated branch), not code that runs.
-  hits="$(grep -rlE --exclude='*.map' 'data-prototype-toolbar|/api/dev/|/dev/components|View as' apps/web/dist 2>/dev/null || true)"
+  hits="$(grep -rlE --exclude='*.map' '/api/dev/|/dev/components|/dev/tools|sign-in-as' apps/web/dist 2>/dev/null || true)"
   if [[ -n "$hits" ]]; then
     echo "Development-only code is in the production build:" >&2
     echo "$hits" >&2

@@ -18,7 +18,7 @@ for (const file of ['.env', '.env.example']) {
 export const APP = 'http://localhost:5173';
 const MAILPIT = `http://localhost:${process.env['LF_MAILPIT_PORT'] ?? '8025'}`;
 
-/** Dev-only "sign in as" (the endpoint behind the prototype toolbar's "View as"). */
+/** Dev-only "sign in as" (the endpoint behind /dev/tools). */
 export async function signInAs(request: APIRequestContext, email: string): Promise<void> {
   const res = await request.post(`${APP}/api/auth/dev/sign-in-as`, {
     data: { email },
@@ -27,7 +27,7 @@ export async function signInAs(request: APIRequestContext, email: string): Promi
   expect(res.status()).toBe(200);
 }
 
-/** Puts the server clock back to real time (the prototype toolbar may have moved it). */
+/** Puts the server clock back to real time (/dev/tools may have moved it). */
 export async function resetServerClock(request: APIRequestContext): Promise<void> {
   await request.post(`${APP}/api/dev/clock`, { data: { reset: true }, headers: { origin: APP } });
 }
@@ -63,7 +63,6 @@ export async function textedCode(request: APIRequestContext, to: string): Promis
 export async function expectAccessible(page: Page, label: string): Promise<void> {
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .exclude('[data-prototype-toolbar]')
     .analyze();
   const blocking = results.violations.filter(
     (v) => v.impact === 'serious' || v.impact === 'critical',
@@ -90,7 +89,7 @@ export async function query<T extends pg.QueryResultRow>(
   }
 }
 
-/** The server's "now" (it can be moved by the prototype toolbar, so tests ask the server). */
+/** The server's "now" (it can be moved from /dev/tools, so tests ask the server). */
 export async function serverNow(request: APIRequestContext): Promise<Date> {
   const res = await request.get(`${APP}/api/dev/clock`);
   return new Date(((await res.json()) as { now: string }).now);

@@ -15,4 +15,4 @@ description: Frontend conventions for the web app and UI package
 - "Now" comes from `src/lib/clock.ts` (it follows the server's dev clock). `Date.now()`/`new Date()` are banned elsewhere by lint.
 - Error copy is one sentence: what happened and what to do next. Never show error codes.
 - Every new screen gets a Playwright test with an axe check (zero serious or critical violations) at 360 px and 1280 px.
-- Dev-only things (prototype toolbar, `/dev/*` pages) are behind `__PROTOTYPE__` (false in production builds) and must not appear in production builds; `pnpm verify` checks the built bundle.
+- Dev-only things (`/dev/tools`, `/dev/sms`, `/dev/components`; never on the top bar) are behind `__PROTOTYPE__` (false in production builds) and must not appear in production builds; `pnpm verify` checks the built bundle.

@@ -7,7 +7,7 @@ import { defineConfig } from 'vite';
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   define: {
-    // The prototype toolbar and /dev pages exist in development and staging builds only (plan §9.13).
+    // The /dev pages (tools, SMS inbox, component gallery) exist in development and staging builds only.
     __PROTOTYPE__: JSON.stringify(mode !== 'production'),
   },
   server: {

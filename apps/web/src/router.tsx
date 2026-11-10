@@ -11,7 +11,7 @@ import {
   redirect,
   useRouterState,
 } from '@tanstack/react-router';
-import { lazy, Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { meQuery, useTenant } from './api/hooks';
 import { AppShell } from './components/AppShell';
 import { applyAppearance } from './lib/theme';
@@ -29,8 +29,6 @@ declare module '@tanstack/react-router' {
     title?: string;
   }
 }
-
-const PrototypeToolbar = __PROTOTYPE__ ? lazy(() => import('./components/PrototypeToolbar')) : null;
 
 /** Where each role lands after signing in. */
 export function landingFor(role: Me['role']): '/home' | '/desk' | '/supervisor' | '/admin' {
@@ -56,16 +54,7 @@ function RootLayout() {
   useEffect(() => {
     document.title = title ? `${title} · NSU Lost & Found` : 'NSU Lost & Found';
   }, [title]);
-  return (
-    <>
-      {PrototypeToolbar ? (
-        <Suspense fallback={null}>
-          <PrototypeToolbar />
-        </Suspense>
-      ) : null}
-      <Outlet />
-    </>
-  );
+  return <Outlet />;
 }
 
 const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -224,6 +213,12 @@ const devRoutes = __PROTOTYPE__
         path: '/dev/sms',
         staticData: { title: 'Dev SMS' },
         component: lazyRouteComponent(() => import('./routes/dev'), 'DevSmsPage'),
+      }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/dev/tools',
+        staticData: { title: 'Dev tools' },
+        component: lazyRouteComponent(() => import('./routes/dev'), 'DevToolsPage'),
       }),
     ]
   : [];
