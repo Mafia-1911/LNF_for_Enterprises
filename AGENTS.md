@@ -23,12 +23,13 @@ pnpm gen:api           # after changing a route or contract (CI fails if the cli
 apps/server/src
   platform/<part>/        shared plumbing; never imports a module
     auth/                 Better-Auth (3 sign-in methods), dev "sign in as"
-    calendar/ clock/ config/ crypto/ db/ email/ errors/ http/ ids/ jobs/ logger/ sms/ storage/ tenancy/
+    calendar/ clock/ config/ crypto/ db/ email/ errors/ http/ ids/ jobs/ logger/ registrar/ sms/ storage/ tenancy/
   modules/<name>/         one folder per business area
     index.ts              the ONLY file other modules may import
     schema.ts             Drizzle tables (tenant_id first in every key and index)
     repo.ts               the ONLY file that touches this module's tables (tx.db)
-    service.ts            use cases: plain functions (deps, ctx, input)
+    service.ts            use cases: plain functions (deps, ctx, input); a big module may split
+                          them by record type (items/found-items.ts), same rules
     routes.ts             Hono + zod-openapi routes, thin handlers
     jobs.ts               pg-boss queue definitions and workers (optional)
   app.ts                  composition root: middleware + module routes
@@ -47,7 +48,7 @@ packages/contracts        Zod schemas shared by server routes, web forms and Ope
 packages/ui               tokens (8 colour modes) + base components
 ```
 
-Current modules: `identity` (roles, sign-in policy, `/api/me`), `catalog` (places, desks, bins, categories, colours, policies such as appearance), `audit` (insert-only events, `bindTransition`, checkpoints), `items` (lost reports + private details; found items from Phase 1), `matching` (match runs; the job is a stub until Phase 3).
+Current modules: `identity` (roles, sign-in policy, `/api/me`, member lookups), `catalog` (places, desks, bins, categories, colours, policies such as appearance), `audit` (insert-only events, `bindTransition`, checkpoints), `items` (lost reports, found items, private details, finder pings, gallery and desk search, labels, the hand-in timer), `photos` (upload pipeline, permission-checked viewing, cleanup), `notifications` (in-app alerts + emails queued in the transaction), `matching` (match runs; real alerts in Phase 3). The FR-07 match score lives in `packages/domain/src/matching.ts`.
 
 ## Architecture rules (enforced)
 
@@ -149,6 +150,8 @@ Throw typed errors from `platform/errors`: `ValidationFailed(fields)`, `Unauthen
 
 - Private details, claim answers and pickup codes are encrypted with `platform/crypto` (AES-256-GCM; the key version is stored; the AAD is `tenantId:recordType:recordId`). Never return them to students, log them, or put them in errors, snapshots or screenshots.
 - Add every new sensitive field name to `LOG_DENY_LIST` in `platform/logger`.
+- Photos enter only through `modules/photos` (sniffed, re-encoded to WebP, metadata dropped; ADR-0007). Never hand out storage URLs: the browser loads `/api/photos/{id}`, which checks who may see it (uploader, desk staff, or anyone signed in once the record is public). Sensitive and condition photos stay staff-only.
+- University ID and card numbers are encrypted like private notes and shown only as `••••1234` (`maskLast4`).
 - `.env.example` holds obviously fake values (they contain `dev-only`). Production refuses them, and also refuses the dev SMS adapter and dev tools. Never commit real secrets. The pre-commit hook runs gitleaks.
 - No paid services, telemetry or sign-ups. Local stand-ins only (ADR-0009).
 
@@ -167,9 +170,9 @@ Throw typed errors from `platform/errors`: `ValidationFailed(fields)`, `Unauthen
 
 **Add a background job.**
 
-1. In `modules/<m>/jobs.ts`, export a name constant and a `JobDefinition` (`name`, `options` with retry settings, an optional `cron` in Asia/Dhaka, and a `handler` that builds a system `RequestCtx` per job and calls a service).
+1. Add the job name (and its payload type) to `platform/jobs/names.ts`, so a module can queue it without importing the module that handles it. In `modules/<m>/jobs.ts`, export a `JobDefinition` (`name`, `options` with retry settings, an optional `cron` in Asia/Dhaka, and a `handler` that builds a system `RequestCtx` per job and calls a service).
 2. Add it to the `jobs` list in `services.ts`.
-3. Export the name and data type from the module's `index.ts` so other modules can queue it.
+3. Per-tenant timers loop over `listTenantIds(db)` from `platform/tenancy` and build one system `RequestCtx` per tenant (see `modules/items/jobs.ts`).
 4. Queue it only inside `withTx` with `{ db: tx.jobs }`.
 
 **Add a lifecycle.** Write the machine in `packages/domain/src/lifecycles/` with property tests (fast-check) and keep the Stryker score at 80% or above. Then bind it in the owning module with `bindTransition`.

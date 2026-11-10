@@ -1,6 +1,6 @@
 # Phase 1 implementation plan: report and intake
 
-Status: in progress · Written 10 Nov 2026 · Scope: plan v0.3 §14 phase 1 (WF-02, WF-03, photo pipeline, labels and bins, gallery, search, sensitive lane, ID card fast lane), with the zero-cost rules from the Phase 0 prompt.
+Status: done (10 Nov 2026) · Written 10 Nov 2026 · Scope: plan v0.3 §14 phase 1 (WF-02, WF-03, photo pipeline, labels and bins, gallery, search, sensitive lane, ID card fast lane), with the zero-cost rules from the Phase 0 prompt.
 
 ## Screens (Figma, saved in `docs/design/screens/`)
 
