@@ -1,9 +1,10 @@
 // "View my report": the owner's read-only view of one lost report. Private details are never shown.
-import { categoryByCode, colourByCode, dhakaParts } from '@lf/domain';
+import { categoryByCode, colourByCode } from '@lf/domain';
 import { Badge, Card, Notice, type BadgeTone } from '@lf/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import { useLostReport } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
+import { dhakaDateTime } from '../../lib/clock';
 
 const route = getRouteApi('/app/lost/$id');
 
@@ -15,12 +16,6 @@ const STATE_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   EXPIRED: { label: 'Expired', tone: 'warning' },
   WITHDRAWN: { label: 'Withdrawn', tone: 'neutral' },
 };
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export function dhakaDateTime(iso: string): string {
-  const p = dhakaParts(new Date(iso));
-  return `${p.day} ${MONTHS[p.month - 1] ?? ''} ${p.year}, ${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}`;
-}
 
 export function ReportPage() {
   const { id } = route.useParams();

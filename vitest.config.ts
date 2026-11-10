@@ -14,6 +14,7 @@ export default defineConfig({
           include: [
             'packages/domain/src/**/*.test.ts',
             'packages/contracts/src/**/*.test.ts',
+            'packages/ui/src/**/*.test.ts',
             'apps/server/src/**/*.test.ts',
             'eslint/**/*.test.ts',
             'scripts/**/*.test.ts',
@@ -49,6 +50,8 @@ export default defineConfig({
       exclude: ['**/*.test.ts', '**/index.ts'],
       reporter: ['text-summary', 'json-summary'],
       reportsDirectory: 'coverage/domain',
+      // packages/domain is pure rules (no I/O); it sits at 100%. The floor stops silent regressions.
+      thresholds: { statements: 95, branches: 95, functions: 95, lines: 95 },
     },
   },
 });

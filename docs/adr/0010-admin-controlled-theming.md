@@ -9,7 +9,7 @@ The Figma file defines 4 colour themes × light/dark as variables. The product o
 ## Decision
 
 - `docs/design/tokens.json` (exported from Figma) is the source; `packages/ui/scripts/build-tokens.ts` generates CSS variables for all 8 modes plus the accessibility additions (`border/control`, `status/on-danger`, `status/on-success`).
-- The tenant's appearance is the `appearance` policy: `{ preset, mode: light|dark|system, custom? }`. `GET /api/theme` is public; `PUT /api/admin/theme` requires `it_admin`, validates colours and WCAG AA contrast, and writes an audit event.
+- The tenant's appearance is the `appearance` policy: `{ preset, mode: light|dark|system, custom? }`. `GET /api/tenant` (public) returns it with the tenant's name; `PUT /api/admin/appearance` requires `it_admin`, validates colours and WCAG AA contrast, and writes an audit event.
 - Default for NSU: Teal · Dark (every Figma screen uses it).
 - The UI has no theme toggle. The dev-only `/dev/components` page previews every theme locally.
 

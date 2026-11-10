@@ -2,6 +2,8 @@
 pre-commit:
   parallel: false
   commands:
+    secrets:
+      run: bash scripts/check-secrets-staged.sh
     lint-staged:
       run: pnpm exec lint-staged
     typecheck-changed:

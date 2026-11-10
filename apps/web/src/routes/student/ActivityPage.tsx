@@ -4,7 +4,7 @@ import { buttonClasses, Card, Notice } from '@lf/ui';
 import { Link } from '@tanstack/react-router';
 import { useMyLostReports } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
-import { dhakaDateTime } from '../../features/lost-report/ReportPage';
+import { dhakaDateTime } from '../../lib/clock';
 
 export function ActivityPage() {
   const reports = useMyLostReports();

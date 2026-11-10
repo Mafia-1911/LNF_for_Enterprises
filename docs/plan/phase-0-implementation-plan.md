@@ -54,32 +54,32 @@ Each milestone ends with the parts of `pnpm verify` that exist so far, then a co
 
 ## 4. Task list
 
-- [ ] a1 workspace, tsconfig, prettier, editorconfig, nvmrc, gitignore
-- [ ] a2 ESLint flat config with boundaries and §3.2 rules (+ a lint self-test fixture)
-- [ ] a3 lefthook + lint-staged + commit-msg check
-- [ ] a4 AGENTS.md, `.agents/rules/*`, CODEOWNERS, ADRs 0001–0010, docs/todo.md
-- [ ] b1 compose file + Postgres init (roles, DBs) + MinIO bucket init + Mailpit + mock OIDC (custom login page)
-- [ ] b2 config, logger, errors, clock, calendar wrapper
-- [ ] b3 db pool, `withTx`, migrations runner, roles and grants
-- [ ] b4 pg-boss bootstrap + graceful shutdown
-- [ ] b5 Hono app: headers, CORS, body limit, request id, healthz, openapi, SPA
-- [ ] b6 storage, email, SMS adapters
-- [ ] c1 Better-Auth schema + config + three methods
-- [ ] c2 sign-in policy hooks (domain, staff SSO only, visitor phone only)
-- [ ] c3 role middleware, `/api/me`, dev impersonation for "View as"
-- [ ] d1 tenants, policies, catalog schema + seed (NSU + tenant B)
-- [ ] d2 packages/domain: ids, lifecycles, calendar + tests
-- [ ] d3 audit module: tables, triggers, transition, checkpoint job, verify-audit
-- [ ] d4 seed.ts (idempotent), practice dataset, backup.sh, restore-test.sh
-- [ ] e1 token build script → CSS variables for 8 modes (+ a11y additions)
-- [ ] e2 components + `/dev/components`
-- [ ] f1 sign-in, visitor sign-up, code entry, auth client
-- [ ] f2 shell, landing redirect, role placeholders, appearance admin page
-- [ ] f3 prototype toolbar (dev/staging only) + clock endpoint
-- [ ] g1 lost report contracts, schema, repo, machine binding
-- [ ] g2 service + route + job stub + private details encryption
-- [ ] g3 API tests (two tenants, expectNoLeak, auth cases, rollback)
-- [ ] h1 flow screens + drafts + submitted screen
-- [ ] h2 Playwright + axe
-- [ ] i1 Stryker, route-coverage check, squawk, drift check, audit, gitleaks, semgrep
+- [x] a1 workspace, tsconfig, prettier, editorconfig, nvmrc, gitignore
+- [x] a2 ESLint flat config with boundaries and §3.2 rules (+ a lint self-test fixture)
+- [x] a3 lefthook + lint-staged + commit-msg check
+- [x] a4 AGENTS.md, `.agents/rules/*`, CODEOWNERS, ADRs 0001–0010, docs/todo.md
+- [x] b1 compose file + Postgres init (roles, DBs) + MinIO bucket init + Mailpit + mock OIDC (custom login page)
+- [x] b2 config, logger, errors, clock, calendar wrapper
+- [x] b3 db pool, `withTx`, migrations runner, roles and grants
+- [x] b4 pg-boss bootstrap + graceful shutdown
+- [x] b5 Hono app: headers, CORS, body limit, request id, healthz, openapi, SPA
+- [x] b6 storage, email, SMS adapters
+- [x] c1 Better-Auth schema + config + three methods
+- [x] c2 sign-in policy hooks (domain, staff SSO only, visitor phone only)
+- [x] c3 role middleware, `/api/me`, dev impersonation for "View as"
+- [x] d1 tenants, policies, catalog schema + seed (NSU + tenant B)
+- [x] d2 packages/domain: ids, lifecycles, calendar + tests
+- [x] d3 audit module: tables, triggers, transition, checkpoint job, verify-audit
+- [x] d4 seed.ts (idempotent), practice dataset, backup.sh, restore-test.sh
+- [x] e1 token build script → CSS variables for 8 modes (+ a11y additions)
+- [x] e2 components + `/dev/components`
+- [x] f1 sign-in, visitor sign-up, code entry, auth client
+- [x] f2 shell, landing redirect, role placeholders, appearance admin page
+- [x] f3 prototype toolbar (dev/staging only) + clock endpoint
+- [x] g1 lost report contracts, schema, repo, machine binding
+- [x] g2 service + route + job stub + private details encryption
+- [x] g3 API tests (two tenants, expectNoLeak, auth cases, rollback)
+- [x] h1 flow screens + drafts + submitted screen
+- [x] h2 Playwright + axe
+- [x] i1 Stryker, route-coverage check, squawk, drift check, audit, gitleaks, semgrep
 - [ ] i2 CI workflow, README, final report

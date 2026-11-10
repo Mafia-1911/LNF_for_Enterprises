@@ -12,7 +12,7 @@ Use **pg-boss** (pinned 12.x) in the same PostgreSQL database. Jobs are created 
 
 ## Consequences
 
-- A thrown error after `boss.send` leaves no job and no state change (covered by `apps/server/src/modules/items/submit-lost-report.api.test.ts`).
+- A thrown error after `boss.send` leaves no job and no state change (covered by `apps/server/test/api/submit-lost-report.api.test.ts`).
 - pg-boss 12 also offers `fromDrizzle(tx, sql)`; we keep the plan's single-client executor because it needs no wrapper and shares the exact client.
 - Cron schedules run once across instances; the audit checkpoint job also takes an advisory lock.
 - Do not add Redis for jobs (plan §15).

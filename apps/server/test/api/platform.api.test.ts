@@ -77,12 +77,10 @@ describe('security headers and request limits', () => {
   });
 
   it('rejects form posts from another origin (CSRF)', async () => {
-    const res = await ctx
-      .anonymous()
-      .request('POST', '/api/lost-reports', undefined, {
-        origin: 'https://evil.example',
-        'content-type': 'application/x-www-form-urlencoded',
-      });
+    const res = await ctx.anonymous().request('POST', '/api/lost-reports', undefined, {
+      origin: 'https://evil.example',
+      'content-type': 'application/x-www-form-urlencoded',
+    });
     expect(res.status).toBe(403);
   });
 

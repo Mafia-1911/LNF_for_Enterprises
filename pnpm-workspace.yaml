@@ -40,5 +40,11 @@ minimumReleaseAgeExclude:
   - rolldown@1.2.18
   - vite@8.3.7
 
+# Security override: drizzle-kit's old loader (@esbuild-kit/core-utils) pins esbuild 0.18, which has
+# GHSA-67mh-4wv8-2f99 (dev-server CORS; that loader never starts a server). 0.25.12 is the patched
+# version drizzle-kit itself already uses. Remove when drizzle-kit drops @esbuild-kit.
+overrides:
+  '@esbuild-kit/core-utils>esbuild': 0.25.12
+
 # Exact versions only: `pnpm add` writes "1.2.3", never "^1.2.3".
 saveExact: true
