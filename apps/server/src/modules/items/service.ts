@@ -11,15 +11,15 @@ import {
   lostReportMachine,
   type LostReportState,
 } from '@lf/domain';
-import type { PrivateDetailsCrypto } from '../../platform/crypto';
 import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
 import { Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
-import type { JobSender } from '../../platform/jobs';
 import { bindTransition } from '../audit';
 import { resolvePlaceNames, resolveReportPlace } from '../catalog';
-import { MATCH_LOST_REPORT_JOB, type MatchLostReportData } from '../matching';
+import { JOB, type MatchLostReportData } from '../../platform/jobs/names';
+import { attachPhotos, photosForRecords } from '../photos';
+import { similarInCustody, type FoundItemsDeps } from './found-items';
 import {
   findLostReport,
   hasPrivateDetails,
@@ -31,10 +31,7 @@ import {
   type NewLostReport,
 } from './repo';
 
-export type ItemsDeps = {
-  boss: JobSender;
-  crypto: PrivateDetailsCrypto;
-};
+export type ItemsDeps = FoundItemsDeps;
 
 /** The lost-report lifecycle bound to this module's repo (ADR-0011). State changes go only through here. */
 type LostReportRecord = { id: string; state: LostReportState | null };
@@ -84,7 +81,12 @@ type PlaceNames = {
   zoneName: string | null;
 };
 
-function toView(row: LostReportRow, names: PlaceNames, withPrivateDetails: boolean): LostReport {
+function toView(
+  row: LostReportRow,
+  names: PlaceNames,
+  withPrivateDetails: boolean,
+  photoIds: string[],
+): LostReport {
   return {
     id: row.id,
     state: row.state as LostReportState,
@@ -99,6 +101,7 @@ function toView(row: LostReportRow, names: PlaceNames, withPrivateDetails: boole
     expiresAt: row.expiresAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
     hasPrivateDetails: withPrivateDetails,
+    photoIds,
   };
 }
 
@@ -150,10 +153,20 @@ export async function submitLostReport(
       });
     }
 
-    const job: MatchLostReportData = { tenantId: tx.tenantId, reportId: id };
-    await deps.boss.send(MATCH_LOST_REPORT_JOB, job, { db: tx.jobs });
+    await attachPhotos(tx, input.photoIds, {
+      recordType: 'lost_report',
+      recordId: id,
+      purpose: 'item',
+      visibility: 'private',
+    });
 
-    return { report: toView(report, names, input.privateNote !== null), similarInCustody: [] };
+    const job: MatchLostReportData = { tenantId: tx.tenantId, reportId: id };
+    await deps.boss.send(JOB.matchLostReport, job, { db: tx.jobs });
+
+    return {
+      report: toView(report, names, input.privateNote !== null, [...new Set(input.photoIds)]),
+      similarInCustody: await similarInCustody(tx, report),
+    };
   });
 }
 
@@ -173,6 +186,7 @@ async function viewOf(tx: Tx, row: LostReportRow): Promise<LostReport> {
       zoneName: row.zoneId ? (names.floorsAndZones.get(row.zoneId) ?? null) : null,
     },
     await hasPrivateDetails(tx, tx.tenantId, 'lost_report', row.id),
+    ((await photosForRecords(tx, 'lost_report', [row.id])).get(row.id) ?? []).map((p) => p.id),
   );
 }
 

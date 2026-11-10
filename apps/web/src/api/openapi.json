@@ -483,13 +483,58 @@
                 "id": {
                   "type": "string"
                 },
-                "shortName": {
+                "title": {
                   "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "place": {
+                  "type": "object",
+                  "properties": {
+                    "buildingName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "zoneName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "buildingName",
+                    "zoneName"
+                  ]
+                },
+                "foundAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "photoId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               },
               "required": [
                 "id",
-                "shortName"
+                "title",
+                "category",
+                "place",
+                "foundAt",
+                "photoId",
+                "reasons"
               ]
             }
           }
@@ -588,6 +633,12 @@
           },
           "hasPrivateDetails": {
             "type": "boolean"
+          },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -603,7 +654,8 @@
           "timeTo",
           "expiresAt",
           "createdAt",
-          "hasPrivateDetails"
+          "hasPrivateDetails",
+          "photoIds"
         ]
       },
       "LostReportState": {
@@ -702,6 +754,15 @@
           "place": {
             "$ref": "#/components/schemas/LostReportPlace"
           },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "default": []
+          },
           "timeFrom": {
             "type": "string",
             "format": "date-time"
@@ -768,6 +829,1680 @@
         "required": [
           "reports"
         ]
+      },
+      "FoundPost": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "place": {
+            "type": "object",
+            "properties": {
+              "buildingCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "buildingName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zoneName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "buildingCode",
+              "buildingName",
+              "floorName",
+              "zoneName"
+            ]
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "handInDeadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "qrDataUri": {
+            "type": "string"
+          },
+          "desk": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "hours": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "location",
+              "hours"
+            ]
+          },
+          "pinged": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "colour",
+          "title",
+          "shortName",
+          "brand",
+          "model",
+          "publicDescription",
+          "place",
+          "foundAt",
+          "handInDeadline",
+          "createdAt",
+          "photoIds",
+          "qrDataUri",
+          "desk",
+          "pinged"
+        ]
+      },
+      "FoundItemState": {
+        "type": "string",
+        "enum": [
+          "REPORTED_BY_FINDER",
+          "IN_CUSTODY",
+          "CLAIM_PENDING",
+          "READY_FOR_PICKUP",
+          "DISPATCHED",
+          "NOT_RECEIVED",
+          "EXPIRED",
+          "DONATED",
+          "DISPOSED",
+          "TRANSFERRED",
+          "VOID"
+        ]
+      },
+      "CreateFoundPost": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "laptop",
+              "tablet",
+              "bag",
+              "wallet",
+              "university_id",
+              "bank_card",
+              "cash",
+              "documents",
+              "keys",
+              "bottle",
+              "umbrella",
+              "charger",
+              "headphones",
+              "clothing",
+              "glasses",
+              "watch",
+              "jewellery",
+              "books_notes",
+              "calculator",
+              "other"
+            ]
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "black",
+              "white",
+              "grey",
+              "silver",
+              "blue",
+              "navy",
+              "red",
+              "green",
+              "yellow",
+              "orange",
+              "pink",
+              "purple",
+              "brown",
+              "beige",
+              "gold",
+              "multi",
+              null
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "place": {
+            "$ref": "#/components/schemas/FoundPlace"
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "privateTicks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "maxItems": 10,
+            "default": []
+          },
+          "privateNote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "default": []
+          },
+          "pingReportIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "maxItems": 5,
+            "default": []
+          }
+        },
+        "required": [
+          "category",
+          "colour",
+          "shortName",
+          "brand",
+          "model",
+          "publicDescription",
+          "place",
+          "foundAt",
+          "privateNote"
+        ]
+      },
+      "FoundPlace": {
+        "type": "object",
+        "properties": {
+          "buildingCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10
+          },
+          "floorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "zoneId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "buildingCode",
+          "floorId",
+          "zoneId"
+        ]
+      },
+      "FoundPostList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/FoundItemState"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "colour": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "shortName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "brand": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "model": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "publicDescription": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "place": {
+                  "type": "object",
+                  "properties": {
+                    "buildingCode": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "buildingName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "floorName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "zoneName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "buildingCode",
+                    "buildingName",
+                    "floorName",
+                    "zoneName"
+                  ]
+                },
+                "foundAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "handInDeadline": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "photoIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pinged": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "state",
+                "category",
+                "colour",
+                "title",
+                "shortName",
+                "brand",
+                "model",
+                "publicDescription",
+                "place",
+                "foundAt",
+                "handInDeadline",
+                "createdAt",
+                "photoIds",
+                "pinged"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SimilarLostList": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimilarLostReport"
+            }
+          }
+        },
+        "required": [
+          "reports"
+        ]
+      },
+      "SimilarLostReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "place": {
+            "type": "object",
+            "properties": {
+              "buildingCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "buildingName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zoneName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "buildingCode",
+              "buildingName",
+              "floorName",
+              "zoneName"
+            ]
+          },
+          "lostOn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "colour",
+          "title",
+          "place",
+          "lostOn",
+          "reasons"
+        ]
+      },
+      "SimilarLostQuery": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "laptop",
+              "tablet",
+              "bag",
+              "wallet",
+              "university_id",
+              "bank_card",
+              "cash",
+              "documents",
+              "keys",
+              "bottle",
+              "umbrella",
+              "charger",
+              "headphones",
+              "clothing",
+              "glasses",
+              "watch",
+              "jewellery",
+              "books_notes",
+              "calculator",
+              "other",
+              "weapon",
+              "drugs",
+              "university_keys",
+              "hazardous"
+            ]
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "black",
+              "white",
+              "grey",
+              "silver",
+              "blue",
+              "navy",
+              "red",
+              "green",
+              "yellow",
+              "orange",
+              "pink",
+              "purple",
+              "brown",
+              "beige",
+              "gold",
+              "multi",
+              null
+            ],
+            "default": null
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40,
+            "default": null
+          },
+          "words": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "default": null
+          },
+          "buildingCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10,
+            "default": null
+          },
+          "floorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "default": null
+          },
+          "zoneId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "default": null
+          },
+          "foundAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "default": null
+          }
+        },
+        "required": [
+          "category"
+        ]
+      },
+      "GalleryList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GalleryItem"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "GalleryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "place": {
+            "type": "object",
+            "properties": {
+              "buildingCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "buildingName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zoneName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "buildingCode",
+              "buildingName",
+              "floorName",
+              "zoneName"
+            ]
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "photoId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "colour",
+          "title",
+          "place",
+          "foundAt",
+          "sensitive",
+          "photoId"
+        ]
+      },
+      "DeskToday": {
+        "type": "object",
+        "properties": {
+          "toShelve": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          },
+          "claimsToReview": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          },
+          "pickupsDue": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          },
+          "expiringThisWeek": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          }
+        },
+        "required": [
+          "toShelve",
+          "claimsToReview",
+          "pickupsDue",
+          "expiringThisWeek"
+        ]
+      },
+      "DeskItemRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photoId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "due": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "title",
+          "binCode",
+          "photoId",
+          "sensitive",
+          "due"
+        ]
+      },
+      "BinSuggestion": {
+        "type": "object",
+        "properties": {
+          "suggested": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "itemCount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "code",
+                "itemCount"
+              ]
+            }
+          }
+        },
+        "required": [
+          "suggested",
+          "bins"
+        ]
+      },
+      "LoggedFoundItem": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/DeskFoundItem"
+          },
+          "label": {
+            "$ref": "#/components/schemas/FoundItemLabel"
+          }
+        },
+        "required": [
+          "item",
+          "label"
+        ]
+      },
+      "DeskFoundItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "place": {
+            "type": "object",
+            "properties": {
+              "buildingCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "buildingName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zoneName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "buildingCode",
+              "buildingName",
+              "floorName",
+              "zoneName"
+            ]
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "finder",
+              "desk"
+            ]
+          },
+          "sourceLabel": {
+            "type": "string"
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "condition": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "handInDeadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "retentionEndsAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "restricted": {
+            "type": "boolean"
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "idNumberMasked": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "privateDetails": {
+            "type": "object",
+            "properties": {
+              "ticks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "ticks",
+              "note"
+            ]
+          },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conditionPhotoIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "fromState": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "toState": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "by": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "event",
+                "label",
+                "fromState",
+                "toState",
+                "at",
+                "by",
+                "note"
+              ]
+            }
+          },
+          "ownerEmailed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "colour",
+          "title",
+          "shortName",
+          "brand",
+          "model",
+          "publicDescription",
+          "place",
+          "foundAt",
+          "source",
+          "sourceLabel",
+          "binCode",
+          "condition",
+          "handInDeadline",
+          "retentionEndsAt",
+          "restricted",
+          "sensitive",
+          "idNumberMasked",
+          "privateDetails",
+          "photoIds",
+          "conditionPhotoIds",
+          "history",
+          "ownerEmailed"
+        ]
+      },
+      "FoundItemLabel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "categoryLabel": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "qrDataUri": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "binCode",
+          "category",
+          "categoryLabel",
+          "date",
+          "qrDataUri",
+          "url"
+        ]
+      },
+      "LogFoundItem": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "laptop",
+              "tablet",
+              "bag",
+              "wallet",
+              "university_id",
+              "bank_card",
+              "cash",
+              "documents",
+              "keys",
+              "bottle",
+              "umbrella",
+              "charger",
+              "headphones",
+              "clothing",
+              "glasses",
+              "watch",
+              "jewellery",
+              "books_notes",
+              "calculator",
+              "other",
+              "weapon",
+              "drugs",
+              "university_keys",
+              "hazardous"
+            ]
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "black",
+              "white",
+              "grey",
+              "silver",
+              "blue",
+              "navy",
+              "red",
+              "green",
+              "yellow",
+              "orange",
+              "pink",
+              "purple",
+              "brown",
+              "beige",
+              "gold",
+              "multi",
+              null
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "place": {
+            "$ref": "#/components/schemas/FoundPlace"
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "privateTicks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "maxItems": 10,
+            "default": []
+          },
+          "privateNote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "default": []
+          },
+          "condition": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 300
+          },
+          "conditionPhotoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "default": []
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10
+          },
+          "idNumber": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "category",
+          "colour",
+          "shortName",
+          "brand",
+          "model",
+          "publicDescription",
+          "place",
+          "foundAt",
+          "privateNote",
+          "condition",
+          "binCode",
+          "idNumber"
+        ]
+      },
+      "DeskItemList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ReceiveFoundItem": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "laptop",
+              "tablet",
+              "bag",
+              "wallet",
+              "university_id",
+              "bank_card",
+              "cash",
+              "documents",
+              "keys",
+              "bottle",
+              "umbrella",
+              "charger",
+              "headphones",
+              "clothing",
+              "glasses",
+              "watch",
+              "jewellery",
+              "books_notes",
+              "calculator",
+              "other",
+              "weapon",
+              "drugs",
+              "university_keys",
+              "hazardous"
+            ]
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "black",
+              "white",
+              "grey",
+              "silver",
+              "blue",
+              "navy",
+              "red",
+              "green",
+              "yellow",
+              "orange",
+              "pink",
+              "purple",
+              "brown",
+              "beige",
+              "gold",
+              "multi",
+              null
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "publicDescription": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "place": {
+            "$ref": "#/components/schemas/FoundPlace"
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "privateTicks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "maxItems": 10,
+            "default": []
+          },
+          "privateNote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "condition": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 300
+          },
+          "conditionPhotoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "default": []
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10
+          },
+          "idNumber": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "photoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "default": []
+          }
+        },
+        "required": [
+          "category",
+          "colour",
+          "shortName",
+          "brand",
+          "model",
+          "publicDescription",
+          "place",
+          "foundAt",
+          "privateNote",
+          "condition",
+          "binCode",
+          "idNumber"
+        ]
+      },
+      "CorrectFoundItem": {
+        "type": "object",
+        "properties": {
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10
+          },
+          "condition": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 300
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "Reason": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "UploadedPhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "bytes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "width",
+          "height",
+          "bytes"
+        ]
+      },
+      "AlertList": {
+        "type": "object",
+        "properties": {
+          "alerts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            }
+          },
+          "unread": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "alerts",
+          "unread"
+        ]
+      },
+      "Alert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "possible_match",
+              "item_arrived",
+              "item_not_received",
+              "id_card_found",
+              "hand_in_reminder",
+              "claim_update",
+              "general"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "body",
+          "link",
+          "createdAt",
+          "readAt"
+        ]
+      },
+      "MarkAlertsRead": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 100
+          }
+        }
       },
       "AuditEntry": {
         "type": "object",
@@ -1171,6 +2906,1334 @@
           },
           "404": {
             "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/found-items": {
+      "post": {
+        "tags": [
+          "found-items"
+        ],
+        "summary": "Post a found item (WF-02, US-02)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFoundPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The post, its FND ID, QR and hand-in deadline.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundPost"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "found-items"
+        ],
+        "summary": "Items I posted as a finder, newest first",
+        "responses": {
+          "200": {
+            "description": "My posts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundPostList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/found-items/similar": {
+      "post": {
+        "tags": [
+          "found-items"
+        ],
+        "summary": "\"Someone lost this?\": open lost reports like this item (no names, US-02)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimilarLostQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Up to 5 reports with plain reasons.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimilarLostList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/found-items/{id}": {
+      "get": {
+        "tags": [
+          "found-items"
+        ],
+        "summary": "My post (the finder) or any post (desk staff)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The post.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundPost"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/gallery": {
+      "get": {
+        "tags": [
+          "found-items"
+        ],
+        "summary": "Found items at the desk (FR-10). Not for visitors.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "phone",
+                "laptop",
+                "tablet",
+                "bag",
+                "wallet",
+                "university_id",
+                "bank_card",
+                "cash",
+                "documents",
+                "keys",
+                "bottle",
+                "umbrella",
+                "charger",
+                "headphones",
+                "clothing",
+                "glasses",
+                "watch",
+                "jewellery",
+                "books_notes",
+                "calculator",
+                "other",
+                "weapon",
+                "drugs",
+                "university_keys",
+                "hazardous"
+              ]
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 10
+            },
+            "required": false,
+            "name": "building",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "since",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gallery cards, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/today": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "The desk \"Today\" list",
+        "responses": {
+          "200": {
+            "description": "Items to shelve, claims, pickups and items expiring this week.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskToday"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/bins": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "The suggested bin for a category, and every bin with its item count",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "phone",
+                "laptop",
+                "tablet",
+                "bag",
+                "wallet",
+                "university_id",
+                "bank_card",
+                "cash",
+                "documents",
+                "keys",
+                "bottle",
+                "umbrella",
+                "charger",
+                "headphones",
+                "clothing",
+                "glasses",
+                "watch",
+                "jewellery",
+                "books_notes",
+                "calculator",
+                "other",
+                "weapon",
+                "drugs",
+                "university_keys",
+                "hazardous"
+              ]
+            },
+            "required": true,
+            "name": "category",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suggestion and bins.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BinSuggestion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Log a walk-in found item (WF-03)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogFoundItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The item (IN_CUSTODY) and its label.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoggedFoundItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "\"Find an item\": any ID or words",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "phone",
+                "laptop",
+                "tablet",
+                "bag",
+                "wallet",
+                "university_id",
+                "bank_card",
+                "cash",
+                "documents",
+                "keys",
+                "bottle",
+                "umbrella",
+                "charger",
+                "headphones",
+                "clothing",
+                "glasses",
+                "watch",
+                "jewellery",
+                "books_notes",
+                "calculator",
+                "other",
+                "weapon",
+                "drugs",
+                "university_keys",
+                "hazardous"
+              ]
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "all"
+              ],
+              "default": "active"
+            },
+            "required": false,
+            "name": "scope",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskItemList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items/{id}": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "The full record, history and private details (staff only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskFoundItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items/{id}/label": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "The printable label (QR, ID, bin)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Label data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundItemLabel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items/{id}/receive": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "A student post was brought in: confirm, shelve (IN_CUSTODY)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiveFoundItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The item and its label.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoggedFoundItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items/{id}/correct": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Correct a record (a reason is required and kept in the history)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectFoundItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The corrected record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskFoundItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items/{id}/void": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Mark a record created in error as VOID (it keeps its ID)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The record, now VOID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskFoundItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/photos": {
+      "post": {
+        "tags": [
+          "photos"
+        ],
+        "summary": "Upload a photo (re-encoded to WebP ≤ 500 KB, metadata removed)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The clean photo, not yet attached to anything.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "photo": {
+                      "$ref": "#/components/schemas/UploadedPhoto"
+                    }
+                  },
+                  "required": [
+                    "photo"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/photos/{id}": {
+      "get": {
+        "tags": [
+          "photos"
+        ],
+        "summary": "A photo, if you may see it",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The WebP image.",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "My alerts, newest first",
+        "responses": {
+          "200": {
+            "description": "Up to 50 alerts and the unread count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/read": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Mark alerts as read (all of them when no ids are given)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAlertsRead"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Done.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
             "content": {
               "application/json": {
                 "schema": {

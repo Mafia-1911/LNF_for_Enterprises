@@ -6,3 +6,14 @@ export {
   submitLostReport,
   type ItemsDeps,
 } from './service';
+export {
+  binSuggestion,
+  countFoundItems,
+  foundItemTransition,
+  itemTitle,
+  logFoundItem,
+  postFoundItem,
+  receiveFoundItem,
+  runHandInTimer,
+  type FoundItemsDeps,
+} from './found-items';

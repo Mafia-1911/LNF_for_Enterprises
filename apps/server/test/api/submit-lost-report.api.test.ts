@@ -243,7 +243,12 @@ describe('POST /api/lost-reports', () => {
     const ids: string[] = [];
     for (const at of ['2026-10-31T17:59:00.000Z', '2026-10-31T18:00:00.000Z']) {
       const created = await submitLostReport(
-        { boss: ctx.services.boss, crypto: ctx.services.crypto },
+        {
+          boss: ctx.services.boss,
+          crypto: ctx.services.crypto,
+          registrar: ctx.services.registrar,
+          appOrigin: ctx.services.config.appOrigin,
+        },
         {
           tenantId: ctx.tenantA,
           actor: { kind: 'user', userId, role: 'student', name: 'Sadia Rahman' },
@@ -291,7 +296,12 @@ describe('transactions: report and job commit or roll back together (plan §3.3)
 
     await expect(
       submitLostReport(
-        { boss: failingBoss, crypto: ctx.services.crypto },
+        {
+          boss: failingBoss,
+          crypto: ctx.services.crypto,
+          registrar: ctx.services.registrar,
+          appOrigin: ctx.services.config.appOrigin,
+        },
         {
           tenantId: ctx.tenantA,
           actor: { kind: 'user', userId, role: 'student', name: 'Sadia Rahman' },

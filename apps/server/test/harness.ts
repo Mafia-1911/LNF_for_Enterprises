@@ -20,7 +20,13 @@ import { HOST_A, HOST_B, ORIGIN, TENANT_B, TENANT_B_MARKER, TEST_NOW } from './f
 
 export const COVERAGE_DIR = path.join(import.meta.dirname, '../.route-coverage');
 
-export type ApiResponse<T = unknown> = { status: number; body: T; text: string; headers: Headers };
+export type ApiResponse<T = unknown> = {
+  status: number;
+  body: T;
+  text: string;
+  bytes: Uint8Array;
+  headers: Headers;
+};
 
 /**
  * Fails if anything that belongs only to tenant B appears in a response given to tenant A:
@@ -92,11 +98,12 @@ export async function createTestContext() {
     ): Promise<ApiResponse<T>> {
       const h: Record<string, string> = { host, origin: ORIGIN, ...headers };
       if (jar.size) h['cookie'] = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
-      if (body !== undefined) h['content-type'] = 'application/json';
+      const multipart = body instanceof FormData;
+      if (body !== undefined && !multipart) h['content-type'] = 'application/json';
       const res = await app.request(url, {
         method,
         headers: h,
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        ...(body === undefined ? {} : { body: multipart ? body : JSON.stringify(body) }),
       });
       for (const cookie of res.headers.getSetCookie()) {
         const [pair = ''] = cookie.split(';');
@@ -106,7 +113,8 @@ export async function createTestContext() {
         if (/max-age=0/i.test(cookie) || value === '') jar.delete(name);
         else jar.set(name, value);
       }
-      const text = await res.text();
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      const text = new TextDecoder().decode(bytes);
       if (host === HOST_A) expectNoLeak(text, markersB);
       let parsed: unknown = text;
       try {
@@ -114,7 +122,7 @@ export async function createTestContext() {
       } catch {
         // Not JSON (for example a redirect); keep the text.
       }
-      return { status: res.status, body: parsed as T, text, headers: res.headers };
+      return { status: res.status, body: parsed as T, text, bytes, headers: res.headers };
     }
 
     return {

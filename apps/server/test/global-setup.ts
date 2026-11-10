@@ -57,7 +57,12 @@ export default async function setup(): Promise<void> {
       const studentEmail = members[0]?.email ?? '';
       const userId = tenant.members.get(studentEmail) ?? '';
       await submitLostReport(
-        { boss: services.boss, crypto: services.crypto },
+        {
+          boss: services.boss,
+          crypto: services.crypto,
+          registrar: services.registrar,
+          appOrigin: services.config.appOrigin,
+        },
         {
           tenantId: tenant.tenantId,
           actor: { kind: 'user', userId, role: 'student', name: 'Rafiq Ahmed' },

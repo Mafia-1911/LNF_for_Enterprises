@@ -3,6 +3,8 @@ export {
   createAuthPolicy,
   createSessionUserResolver,
   getMe,
+  memberByEmail,
+  memberNames,
   seedMember,
   type IdentityDeps,
   type Me,

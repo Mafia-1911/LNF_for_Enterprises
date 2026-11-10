@@ -269,3 +269,12 @@ export async function insertPolicyIfMissing(
     .values({ tenantId, key, value, updatedAt: tx.now, updatedBy: null })
     .onConflictDoNothing();
 }
+
+export async function listBinCodes(tx: Tx, tenantId: string): Promise<string[]> {
+  const rows = await tx.db
+    .select({ code: bins.code })
+    .from(bins)
+    .where(eq(bins.tenantId, tenantId))
+    .orderBy(asc(bins.code));
+  return rows.map((r) => r.code);
+}

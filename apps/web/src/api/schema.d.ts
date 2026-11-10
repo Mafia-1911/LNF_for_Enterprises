@@ -71,6 +71,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My alerts, newest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Up to 50 alerts and the unread count. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AlertList"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark alerts as read (all of them when no ids are given) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MarkAlertsRead"];
+                };
+            };
+            responses: {
+                /** @description Done. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit/{recordType}/{recordId}": {
         parameters: {
             query?: never;
@@ -163,6 +287,652 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["Catalog"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/bins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The suggested bin for a category, and every bin with its item count */
+        get: {
+            parameters: {
+                query: {
+                    category: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other" | "weapon" | "drugs" | "university_keys" | "hazardous";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Suggestion and bins. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BinSuggestion"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/found-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** "Find an item": any ID or words */
+        get: {
+            parameters: {
+                query?: {
+                    category?: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other" | "weapon" | "drugs" | "university_keys" | "hazardous";
+                    q?: string;
+                    scope?: "active" | "all";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matching items. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeskItemList"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Log a walk-in found item (WF-03) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LogFoundItem"];
+                };
+            };
+            responses: {
+                /** @description The item (IN_CUSTODY) and its label. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoggedFoundItem"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/found-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The full record, history and private details (staff only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The record. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeskFoundItem"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/found-items/{id}/correct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Correct a record (a reason is required and kept in the history) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CorrectFoundItem"];
+                };
+            };
+            responses: {
+                /** @description The corrected record. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeskFoundItem"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflicts with the current state. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/found-items/{id}/label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The printable label (QR, ID, bin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Label data. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FoundItemLabel"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/found-items/{id}/receive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A student post was brought in: confirm, shelve (IN_CUSTODY) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReceiveFoundItem"];
+                };
+            };
+            responses: {
+                /** @description The item and its label. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoggedFoundItem"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflicts with the current state. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/found-items/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a record created in error as VOID (it keeps its ID) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Reason"];
+                };
+            };
+            responses: {
+                /** @description The record, now VOID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeskFoundItem"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflicts with the current state. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/desk/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The desk "Today" list */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Items to shelve, claims, pickups and items expiring this week. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeskToday"];
                     };
                 };
                 /** @description Not signed in. */
@@ -289,6 +1059,320 @@ export interface paths {
                                 to: string;
                             }[];
                         };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/found-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Items I posted as a finder, newest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description My posts. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FoundPostList"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Post a found item (WF-02, US-02) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateFoundPost"];
+                };
+            };
+            responses: {
+                /** @description The post, its FND ID, QR and hand-in deadline. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FoundPost"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/found-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My post (the finder) or any post (desk staff) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The post. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FoundPost"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/found-items/similar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Someone lost this?": open lost reports like this item (no names, US-02) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SimilarLostQuery"];
+                };
+            };
+            responses: {
+                /** @description Up to 5 reports with plain reasons. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SimilarLostList"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gallery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Found items at the desk (FR-10). Not for visitors. */
+        get: {
+            parameters: {
+                query?: {
+                    building?: string;
+                    category?: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other" | "weapon" | "drugs" | "university_keys" | "hazardous";
+                    q?: string;
+                    since?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Gallery cards, newest first. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GalleryList"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -534,6 +1618,161 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a photo (re-encoded to WebP ≤ 500 KB, metadata removed) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The clean photo, not yet attached to anything. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            photo: components["schemas"]["UploadedPhoto"];
+                        };
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Too many requests. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/photos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A photo, if you may see it */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The WebP image. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/webp": string;
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tenant": {
         parameters: {
             query?: never;
@@ -583,6 +1822,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Alert: {
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** @enum {string} */
+            kind: "possible_match" | "item_arrived" | "item_not_received" | "id_card_found" | "hand_in_reminder" | "claim_update" | "general";
+            link: string | null;
+            /** Format: date-time */
+            readAt: string | null;
+            title: string;
+        };
+        AlertList: {
+            alerts: components["schemas"]["Alert"][];
+            unread: number;
+        };
         Appearance: {
             custom: {
                 dark: {
@@ -623,6 +1878,13 @@ export interface components {
             note: string | null;
             toState: string | null;
         };
+        BinSuggestion: {
+            bins: {
+                code: string;
+                itemCount: number;
+            }[];
+            suggested: string | null;
+        };
         Building: {
             code: string;
             floors: components["schemas"]["Floor"][];
@@ -646,12 +1908,40 @@ export interface components {
             label: string;
             swatch: string;
         };
+        CorrectFoundItem: {
+            binCode?: string | null;
+            condition?: string | null;
+            reason: string;
+            shortName?: string | null;
+        };
+        CreateFoundPost: {
+            brand: string | null;
+            /** @enum {string} */
+            category: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other";
+            /** @enum {string|null} */
+            colour: "black" | "white" | "grey" | "silver" | "blue" | "navy" | "red" | "green" | "yellow" | "orange" | "pink" | "purple" | "brown" | "beige" | "gold" | "multi" | null;
+            /** Format: date-time */
+            foundAt: string;
+            model: string | null;
+            /** @default [] */
+            photoIds: string[];
+            /** @default [] */
+            pingReportIds: string[];
+            place: components["schemas"]["FoundPlace"];
+            privateNote: string | null;
+            /** @default [] */
+            privateTicks: string[];
+            publicDescription: string | null;
+            shortName: string | null;
+        };
         CreateLostReport: {
             brand: string | null;
             /** @enum {string} */
             category: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other";
             /** @enum {string|null} */
             colour: "black" | "white" | "grey" | "silver" | "blue" | "navy" | "red" | "green" | "yellow" | "orange" | "pink" | "purple" | "brown" | "beige" | "gold" | "multi" | null;
+            /** @default [] */
+            photoIds: string[];
             place: components["schemas"]["LostReportPlace"];
             privateNote: string | null;
             publicDescription: string | null;
@@ -660,6 +1950,74 @@ export interface components {
             timeFrom: string;
             /** Format: date-time */
             timeTo: string;
+        };
+        DeskFoundItem: {
+            binCode: string | null;
+            brand: string | null;
+            category: string;
+            colour: string | null;
+            condition: string | null;
+            conditionPhotoIds: string[];
+            /** Format: date-time */
+            foundAt: string;
+            /** Format: date-time */
+            handInDeadline: string | null;
+            history: {
+                /** Format: date-time */
+                at: string;
+                by: string;
+                event: string;
+                fromState: string | null;
+                label: string;
+                note: string | null;
+                toState: string | null;
+            }[];
+            id: string;
+            idNumberMasked: string | null;
+            model: string | null;
+            ownerEmailed: boolean;
+            photoIds: string[];
+            place: {
+                buildingCode: string | null;
+                buildingName: string | null;
+                floorName: string | null;
+                zoneName: string | null;
+            };
+            privateDetails: {
+                note: string | null;
+                ticks: string[];
+            };
+            publicDescription: string | null;
+            restricted: boolean;
+            /** Format: date-time */
+            retentionEndsAt: string | null;
+            sensitive: boolean;
+            shortName: string | null;
+            /** @enum {string} */
+            source: "finder" | "desk";
+            sourceLabel: string;
+            state: components["schemas"]["FoundItemState"];
+            title: string;
+        };
+        DeskItemList: {
+            items: components["schemas"]["DeskItemRow"][];
+        };
+        DeskItemRow: {
+            binCode: string | null;
+            category: string;
+            /** Format: date-time */
+            due: string | null;
+            id: string;
+            photoId: string | null;
+            sensitive: boolean;
+            state: components["schemas"]["FoundItemState"];
+            title: string;
+        };
+        DeskToday: {
+            claimsToReview: components["schemas"]["DeskItemRow"][];
+            expiringThisWeek: components["schemas"]["DeskItemRow"][];
+            pickupsDue: components["schemas"]["DeskItemRow"][];
+            toShelve: components["schemas"]["DeskItemRow"][];
         };
         DevClock: {
             /** Format: date-time */
@@ -682,6 +2040,130 @@ export interface components {
             name: string;
             zones: components["schemas"]["Zone"][];
         };
+        FoundItemLabel: {
+            binCode: string | null;
+            category: string;
+            categoryLabel: string;
+            /** Format: date-time */
+            date: string;
+            id: string;
+            qrDataUri: string;
+            url: string;
+        };
+        /** @enum {string} */
+        FoundItemState: "REPORTED_BY_FINDER" | "IN_CUSTODY" | "CLAIM_PENDING" | "READY_FOR_PICKUP" | "DISPATCHED" | "NOT_RECEIVED" | "EXPIRED" | "DONATED" | "DISPOSED" | "TRANSFERRED" | "VOID";
+        FoundPlace: {
+            buildingCode: string;
+            /** Format: uuid */
+            floorId: string | null;
+            /** Format: uuid */
+            zoneId: string | null;
+        };
+        FoundPost: {
+            brand: string | null;
+            category: string;
+            colour: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            desk: {
+                hours: string;
+                location: string;
+                name: string;
+            };
+            /** Format: date-time */
+            foundAt: string;
+            /** Format: date-time */
+            handInDeadline: string | null;
+            id: string;
+            model: string | null;
+            photoIds: string[];
+            pinged: number;
+            place: {
+                buildingCode: string | null;
+                buildingName: string | null;
+                floorName: string | null;
+                zoneName: string | null;
+            };
+            publicDescription: string | null;
+            qrDataUri: string;
+            shortName: string | null;
+            state: components["schemas"]["FoundItemState"];
+            title: string;
+        };
+        FoundPostList: {
+            items: {
+                brand: string | null;
+                category: string;
+                colour: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                foundAt: string;
+                /** Format: date-time */
+                handInDeadline: string | null;
+                id: string;
+                model: string | null;
+                photoIds: string[];
+                pinged: number;
+                place: {
+                    buildingCode: string | null;
+                    buildingName: string | null;
+                    floorName: string | null;
+                    zoneName: string | null;
+                };
+                publicDescription: string | null;
+                shortName: string | null;
+                state: components["schemas"]["FoundItemState"];
+                title: string;
+            }[];
+        };
+        GalleryItem: {
+            category: string;
+            colour: string | null;
+            /** Format: date-time */
+            foundAt: string;
+            id: string;
+            photoId: string | null;
+            place: {
+                buildingCode: string | null;
+                buildingName: string | null;
+                floorName: string | null;
+                zoneName: string | null;
+            };
+            sensitive: boolean;
+            state: components["schemas"]["FoundItemState"];
+            title: string;
+        };
+        GalleryList: {
+            items: components["schemas"]["GalleryItem"][];
+        };
+        LogFoundItem: {
+            binCode: string | null;
+            brand: string | null;
+            /** @enum {string} */
+            category: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other" | "weapon" | "drugs" | "university_keys" | "hazardous";
+            /** @enum {string|null} */
+            colour: "black" | "white" | "grey" | "silver" | "blue" | "navy" | "red" | "green" | "yellow" | "orange" | "pink" | "purple" | "brown" | "beige" | "gold" | "multi" | null;
+            condition: string | null;
+            /** @default [] */
+            conditionPhotoIds: string[];
+            /** Format: date-time */
+            foundAt: string;
+            idNumber: string | null;
+            model: string | null;
+            /** @default [] */
+            photoIds: string[];
+            place: components["schemas"]["FoundPlace"];
+            privateNote: string | null;
+            /** @default [] */
+            privateTicks: string[];
+            publicDescription: string | null;
+            shortName: string | null;
+        };
+        LoggedFoundItem: {
+            item: components["schemas"]["DeskFoundItem"];
+            label: components["schemas"]["FoundItemLabel"];
+        };
         LostReport: {
             brand: string | null;
             category: string;
@@ -692,6 +2174,7 @@ export interface components {
             expiresAt: string;
             hasPrivateDetails: boolean;
             id: string;
+            photoIds: string[];
             place: {
                 buildingCode: string | null;
                 buildingName: string | null;
@@ -709,8 +2192,17 @@ export interface components {
         LostReportCreated: {
             report: components["schemas"]["LostReport"];
             similarInCustody: {
+                category: string;
+                /** Format: date-time */
+                foundAt: string;
                 id: string;
-                shortName: string;
+                photoId: string | null;
+                place: {
+                    buildingName: string | null;
+                    zoneName: string | null;
+                };
+                reasons: string[];
+                title: string;
             }[];
         };
         LostReportList: {
@@ -725,6 +2217,9 @@ export interface components {
         };
         /** @enum {string} */
         LostReportState: "OPEN" | "POSSIBLE_MATCH" | "CLAIMED" | "RESOLVED" | "EXPIRED" | "WITHDRAWN";
+        MarkAlertsRead: {
+            ids?: string[];
+        };
         Me: {
             contact: string;
             /** Format: uuid */
@@ -736,8 +2231,82 @@ export interface components {
         MeResponse: {
             me: components["schemas"]["Me"];
         };
+        Reason: {
+            reason: string;
+        };
+        ReceiveFoundItem: {
+            binCode: string | null;
+            brand: string | null;
+            /** @enum {string} */
+            category: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other" | "weapon" | "drugs" | "university_keys" | "hazardous";
+            /** @enum {string|null} */
+            colour: "black" | "white" | "grey" | "silver" | "blue" | "navy" | "red" | "green" | "yellow" | "orange" | "pink" | "purple" | "brown" | "beige" | "gold" | "multi" | null;
+            condition: string | null;
+            /** @default [] */
+            conditionPhotoIds: string[];
+            /** Format: date-time */
+            foundAt: string;
+            idNumber: string | null;
+            model: string | null;
+            /** @default [] */
+            photoIds: string[];
+            place: components["schemas"]["FoundPlace"];
+            privateNote: string | null;
+            /** @default [] */
+            privateTicks: string[];
+            publicDescription: string | null;
+            shortName: string | null;
+        };
         /** @enum {string} */
         Role: "student" | "visitor" | "desk_officer" | "supervisor" | "it_admin";
+        SimilarLostList: {
+            reports: components["schemas"]["SimilarLostReport"][];
+        };
+        SimilarLostQuery: {
+            /** @default null */
+            brand: string | null;
+            /** @default null */
+            buildingCode: string | null;
+            /** @enum {string} */
+            category: "phone" | "laptop" | "tablet" | "bag" | "wallet" | "university_id" | "bank_card" | "cash" | "documents" | "keys" | "bottle" | "umbrella" | "charger" | "headphones" | "clothing" | "glasses" | "watch" | "jewellery" | "books_notes" | "calculator" | "other" | "weapon" | "drugs" | "university_keys" | "hazardous";
+            /**
+             * @default null
+             * @enum {string|null}
+             */
+            colour: "black" | "white" | "grey" | "silver" | "blue" | "navy" | "red" | "green" | "yellow" | "orange" | "pink" | "purple" | "brown" | "beige" | "gold" | "multi" | null;
+            /**
+             * Format: uuid
+             * @default null
+             */
+            floorId: string | null;
+            /**
+             * Format: date-time
+             * @default null
+             */
+            foundAt: string | null;
+            /** @default null */
+            words: string | null;
+            /**
+             * Format: uuid
+             * @default null
+             */
+            zoneId: string | null;
+        };
+        SimilarLostReport: {
+            category: string;
+            colour: string | null;
+            id: string;
+            /** Format: date-time */
+            lostOn: string;
+            place: {
+                buildingCode: string | null;
+                buildingName: string | null;
+                floorName: string | null;
+                zoneName: string | null;
+            };
+            reasons: string[];
+            title: string;
+        };
         TenantInfo: {
             appearance: components["schemas"]["Appearance"];
             office: {
@@ -752,6 +2321,13 @@ export interface components {
             isPractice: boolean;
             name: string;
             shortName: string;
+        };
+        UploadedPhoto: {
+            bytes: number;
+            height: number;
+            /** Format: uuid */
+            id: string;
+            width: number;
         };
         Zone: {
             /** Format: uuid */

@@ -38,6 +38,11 @@ const EnvSchema = z.object({
   SMTP_PASSWORD: optionalString,
   EMAIL_FROM: z.string('Required.').min(3, 'Required.'),
   SMS_PROVIDER: z.enum(['dev'], 'Only the dev SMS adapter exists in this phase.'),
+  /** University ID lookups for the ID card fast lane (NF-02): dev directory or none. */
+  REGISTRAR_PROVIDER: z.preprocess(
+    emptyToUndefined,
+    z.enum(['dev', 'none'], 'Use dev or none.').optional(),
+  ),
   STORAGE_ENDPOINT: z.url('Must be the S3-compatible endpoint URL.'),
   STORAGE_REGION: z.string().min(1).default('auto'),
   STORAGE_BUCKET: z.string('Required.').min(3, 'Required.'),
@@ -73,6 +78,7 @@ export type Config = {
         password: string | undefined;
       };
   sms: { provider: 'dev' };
+  registrar: { provider: 'dev' | 'none' };
   storage: {
     endpoint: string;
     region: string;
@@ -133,6 +139,8 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     if (e.SMS_PROVIDER === 'dev')
       problems.push('SMS_PROVIDER: the dev adapter is not allowed in production.');
     if (e.ENABLE_DEV_TOOLS) problems.push('ENABLE_DEV_TOOLS: must be false in production.');
+    if (e.REGISTRAR_PROVIDER === 'dev')
+      problems.push('REGISTRAR_PROVIDER: the dev directory is not allowed in production.');
     if (e.EMAIL_TRANSPORT === 'memory') problems.push('EMAIL_TRANSPORT: memory is for tests only.');
     if (!e.APP_ORIGIN.startsWith('https://'))
       problems.push('APP_ORIGIN: must use https in production.');
@@ -176,6 +184,7 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
             password: e.SMTP_PASSWORD,
           },
     sms: { provider: e.SMS_PROVIDER },
+    registrar: { provider: e.REGISTRAR_PROVIDER ?? (production ? 'none' : 'dev') },
     storage: {
       endpoint: e.STORAGE_ENDPOINT,
       region: e.STORAGE_REGION,

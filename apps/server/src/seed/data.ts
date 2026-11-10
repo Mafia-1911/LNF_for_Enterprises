@@ -1,6 +1,6 @@
 // Seed data for North South University, taken from the Figma screens (docs/design/screens).
 import { DEFAULT_APPEARANCE } from '@lf/contracts';
-import { CATEGORIES, COLOURS } from '@lf/domain';
+import { binCode, CATEGORIES, COLOURS } from '@lf/domain';
 import type { CatalogSeed } from '../modules/catalog';
 import type { MemberSeed } from '../modules/identity';
 
@@ -67,8 +67,19 @@ export const NSU_CATALOG: CatalogSeed = {
     buildingCode: 'ADM',
     location: 'Admin Building, Ground floor, Security Room',
     hours: 'Sun–Thu, 9:00 – 17:00',
-    bins: ['A', 'B', 'C'].flatMap((shelf) =>
-      [1, 2, 3, 4, 5, 6].map((n) => ({ code: `${shelf}${n}`, label: `Shelf ${shelf} · Bin ${n}` })),
+    // Figma bin codes (S-06, C-04): S small valuables, A accessories, B bags and books, C clothing.
+    bins: (
+      [
+        ['S', 'Small valuables', 8],
+        ['A', 'Accessories', 10],
+        ['B', 'Bags, umbrellas and books', 12],
+        ['C', 'Clothing', 12],
+      ] as const
+    ).flatMap(([shelf, name, count]) =>
+      Array.from({ length: count }, (_, i) => ({
+        code: binCode(shelf, i + 1),
+        label: `${name} · ${binCode(shelf, i + 1)}`,
+      })),
     ),
   },
   categories: CATEGORIES,
@@ -77,6 +88,7 @@ export const NSU_CATALOG: CatalogSeed = {
     appearance: DEFAULT_APPEARANCE,
     'lost_report.open_days': 30,
     'found_item.hand_in_hours': 48,
+    'found_item.retention_days': 60,
     'pickup.proxy_allowed': true,
   },
 };
@@ -142,3 +154,12 @@ export const NSU_PRACTICE_TENANT = {
   hostnames: ['practice.localhost'],
   isPractice: true,
 };
+
+/**
+ * Fictional university ID numbers for the dev registrar (ID card fast lane, NF-02). The real
+ * registrar (RDS) replaces this in a later phase; production refuses the dev directory.
+ */
+export const DEV_DIRECTORY = [
+  { idNumber: '2112345042', email: 'rafiq.ahmed@northsouth.edu', name: 'Rafiq Ahmed' },
+  { idNumber: '2010987001', email: 'sadia.rahman@northsouth.edu', name: 'Sadia Rahman' },
+] as const;

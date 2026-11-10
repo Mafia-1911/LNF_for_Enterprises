@@ -13,6 +13,7 @@ import type { Tenant } from '../../platform/tenancy';
 import {
   findMember,
   findMemberByEmail,
+  namesOf,
   findMemberByPhone,
   insertRoleAssignment,
   upsertRoleAssignment,
@@ -177,4 +178,18 @@ export async function seedMember(tx: Tx, member: MemberSeed, newId: () => string
   });
   await upsertRoleAssignment(tx, tx.tenantId, { userId, role: member.role, title: member.title });
   return userId;
+}
+
+/** Names for history lists and "logged by" fields. */
+export function memberNames(tx: Tx, userIds: string[]): Promise<Map<string, string>> {
+  return namesOf(tx, [...new Set(userIds)]);
+}
+
+/** The member of this tenant with this email (for the ID card fast lane), or null. */
+export async function memberByEmail(
+  tx: Tx,
+  email: string,
+): Promise<{ userId: string; name: string } | null> {
+  const m = await findMemberByEmail(tx, tx.tenantId, email.toLowerCase());
+  return m && m.role ? { userId: m.userId, name: m.name } : null;
 }

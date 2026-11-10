@@ -8,6 +8,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { except } from 'hono/combine';
 import { cors } from 'hono/cors';
 import { csrf } from 'hono/csrf';
 import { HTTPException } from 'hono/http-exception';
@@ -29,7 +30,9 @@ import { auditRoutes } from './modules/audit/routes';
 import { catalogRoutes } from './modules/catalog/routes';
 import { createSessionUserResolver } from './modules/identity';
 import { identityRoutes } from './modules/identity/routes';
-import { itemsRoutes } from './modules/items/routes';
+import { foundItemsRoutes, itemsRoutes } from './modules/items/routes';
+import { notificationsRoutes } from './modules/notifications/routes';
+import { photosRoutes } from './modules/photos/routes';
 import type { Services } from './services';
 
 export type AppOptions = {
@@ -80,18 +83,24 @@ export function createApp(services: Services, options: AppOptions) {
   );
   app.use('/api/*', cors({ origin: config.appOrigin, credentials: true }));
   app.use('/api/*', csrf({ origin: config.appOrigin }));
-  app.use(
-    '/api/*',
-    bodyLimit({
-      maxSize: 1024 * 1024,
-      onError: () => {
-        throw new AppError(
-          'validation',
-          'That request is too large; shorten the text and try again.',
-        );
-      },
-    }),
-  );
+  // 1 MB for JSON everywhere; photo uploads get 10 MB (plan §6.1; the browser resizes first).
+  const jsonLimit = bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: () => {
+      throw new AppError(
+        'validation',
+        'That request is too large; shorten the text and try again.',
+      );
+    },
+  });
+  const photoLimit = bodyLimit({
+    maxSize: 10 * 1024 * 1024,
+    onError: () => {
+      throw new AppError('validation', 'That photo is too large; choose one under 10 MB.');
+    },
+  });
+  app.use('/api/photos', photoLimit);
+  app.use('/api/*', except('/api/photos', jsonLimit));
 
   app.get('/healthz', async (c) => {
     const [database, storage] = await Promise.all([
@@ -123,7 +132,16 @@ export function createApp(services: Services, options: AppOptions) {
   const guards = createGuards({ clock, db });
   app.route('/', identityRoutes(guards));
   app.route('/', catalogRoutes(guards, { clock, db }));
-  app.route('/', itemsRoutes(guards, { boss: services.boss, crypto: services.crypto }));
+  const itemDeps = {
+    boss: services.boss,
+    crypto: services.crypto,
+    registrar: services.registrar,
+    appOrigin: config.appOrigin,
+  };
+  app.route('/', itemsRoutes(guards, itemDeps));
+  app.route('/', foundItemsRoutes(guards, itemDeps));
+  app.route('/', photosRoutes(guards, { storage: services.storage }));
+  app.route('/', notificationsRoutes(guards));
   app.route('/', auditRoutes(guards));
   if (config.devTools && services.devClock)
     app.route('/', devRoutes(guards, { clock: services.devClock, sms: services.sms }));

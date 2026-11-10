@@ -9,12 +9,17 @@ import type { DatabaseHandle } from './platform/db/types';
 import { createEmailSender, type EmailSender } from './platform/email';
 import { createBoss, type JobDefinition, type PgBoss } from './platform/jobs';
 import type { Logger } from './platform/logger';
+import { createDevRegistrar, noRegistrar, type Registrar } from './platform/registrar';
 import { createDevSmsAdapter, type SmsSender } from './platform/sms';
 import { createStorage, type Storage } from './platform/storage';
 import { createTenantResolver, type TenantResolver } from './platform/tenancy';
 import { auditJobs } from './modules/audit/jobs';
 import { createAuthPolicy } from './modules/identity';
+import { itemsJobs } from './modules/items/jobs';
 import { matchingJobs } from './modules/matching/jobs';
+import { notificationsJobs } from './modules/notifications/jobs';
+import { photosJobs } from './modules/photos/jobs';
+import { DEV_DIRECTORY } from './seed/data';
 
 export type Services = {
   config: Config;
@@ -29,6 +34,7 @@ export type Services = {
   sms: SmsSender;
   storage: Storage;
   crypto: PrivateDetailsCrypto;
+  registrar: Registrar;
   tenants: TenantResolver;
   jobs: JobDefinition[];
 };
@@ -54,22 +60,35 @@ export function createServices(
     policy: createAuthPolicy({ db, clock }),
     logger,
   });
+  const boss = createBoss(config.database.url, logger, { schedule: config.nodeEnv !== 'test' });
+  const storage = createStorage(config.storage);
+  const crypto = createPrivateDetailsCrypto(
+    config.privateDetails.keys,
+    config.privateDetails.activeVersion,
+  );
+  const registrar =
+    config.registrar.provider === 'dev' ? createDevRegistrar(DEV_DIRECTORY) : noRegistrar;
+  const itemDeps = { boss, crypto, registrar, appOrigin: config.appOrigin };
   return {
     config,
     logger,
     clock,
     devClock,
     db,
-    boss: createBoss(config.database.url, logger, { schedule: config.nodeEnv !== 'test' }),
+    boss,
     auth,
     email,
     sms,
-    storage: createStorage(config.storage),
-    crypto: createPrivateDetailsCrypto(
-      config.privateDetails.keys,
-      config.privateDetails.activeVersion,
-    ),
+    storage,
+    crypto,
+    registrar,
     tenants: createTenantResolver(db, () => clock.now().getTime()),
-    jobs: [...auditJobs({ db, clock, logger }), ...matchingJobs({ db, clock, logger })],
+    jobs: [
+      ...auditJobs({ db, clock, logger }),
+      ...matchingJobs({ db, clock, logger }),
+      ...notificationsJobs({ email, logger }),
+      ...photosJobs({ storage, db, clock, logger }),
+      ...itemsJobs({ ...itemDeps, db, clock, logger }),
+    ],
   };
 }

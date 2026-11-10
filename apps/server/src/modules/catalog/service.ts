@@ -14,6 +14,7 @@ import { recordAuditEvent } from '../audit';
 import {
   findMainDesk,
   findPolicy,
+  listBinCodes,
   insertPolicyIfMissing,
   listCategories,
   listColours,
@@ -159,4 +160,26 @@ export async function seedCatalog(tx: Tx, seed: CatalogSeed): Promise<void> {
   for (const [i, c] of seed.colours.entries()) await upsertColour(tx, t, { ...c, sort: i });
   for (const [key, value] of Object.entries(seed.policies))
     await insertPolicyIfMissing(tx, t, key, value);
+}
+
+/** Every bin code at this tenant's desk(s), e.g. "S-06". */
+export function listDeskBins(tx: Tx): Promise<string[]> {
+  return listBinCodes(tx, tx.tenantId);
+}
+
+/** A numeric tenant policy (e.g. "found_item.hand_in_hours"), or the fallback when unset. */
+export async function readNumberPolicy(tx: Tx, key: string, fallback: number): Promise<number> {
+  const value = await findPolicy(tx, tx.tenantId, key);
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+/** Where people hand items in: name, location and hours of the main desk. */
+export async function deskInfo(tx: Tx): Promise<{ name: string; location: string; hours: string }> {
+  return (
+    (await findMainDesk(tx, tx.tenantId)) ?? {
+      name: 'Lost & Found Office',
+      location: 'Ask at the university information desk',
+      hours: 'Office hours',
+    }
+  );
 }

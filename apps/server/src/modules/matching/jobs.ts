@@ -2,11 +2,12 @@
 import type { Clock } from '../../platform/clock';
 import type { DatabaseHandle } from '../../platform/db/types';
 import type { JobDefinition } from '../../platform/jobs';
+import { JOB, type MatchLostReportData } from '../../platform/jobs/names';
 import type { Logger } from '../../platform/logger';
 import { matchLostReport } from './service';
 
-export const MATCH_LOST_REPORT_JOB = 'match-lost-report';
-export type MatchLostReportData = { tenantId: string; reportId: string };
+export const MATCH_LOST_REPORT_JOB = JOB.matchLostReport;
+export type { MatchLostReportData };
 
 export function matchingJobs(deps: {
   db: DatabaseHandle;

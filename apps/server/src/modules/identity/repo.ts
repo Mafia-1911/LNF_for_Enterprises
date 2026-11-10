@@ -1,6 +1,6 @@
 // The only file that touches identity tables. Every function takes tenantId first (plan §5.3).
 import { isRole, type Role } from '@lf/domain';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { users } from '../../platform/auth/schema';
 import type { Tx } from '../../platform/db/types';
 import { roleAssignments } from './schema';
@@ -117,4 +117,14 @@ export async function upsertRoleAssignment(
       target: [roleAssignments.tenantId, roleAssignments.userId],
       set: { role: data.role, title: data.title },
     });
+}
+
+/** Display names for a set of user ids (history lists). */
+export async function namesOf(tx: Tx, userIds: string[]): Promise<Map<string, string>> {
+  if (userIds.length === 0) return new Map();
+  const rows = await tx.db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(inArray(users.id, userIds));
+  return new Map(rows.map((r) => [r.id, r.name]));
 }

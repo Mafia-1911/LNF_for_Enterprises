@@ -43,6 +43,8 @@ export const CreateLostReportSchema = z
     /** Stored encrypted, shown only to desk staff during claim review (FR-06). Never returned. */
     privateNote: optionalText(500, 'Keep private details to 500 characters.'),
     place: LostReportPlaceSchema,
+    /** Up to 5 photos from POST /api/photos (FR-05). Seen only by the owner and desk staff. */
+    photoIds: z.array(z.uuid()).max(5, 'Add up to 5 photos.').default([]),
     /** When the owner last saw it (ISO 8601 with offset). */
     timeFrom: z.iso.datetime({ offset: true, error: 'Enter when you last had it.' }),
     /** When they noticed it was gone. */
@@ -79,6 +81,7 @@ export const LostReportSchema = z
     createdAt: z.iso.datetime({ offset: true }),
     /** True when private details were recorded. Their content is never returned to the owner. */
     hasPrivateDetails: z.boolean(),
+    photoIds: z.array(z.string()),
   })
   .meta({ id: 'LostReport' });
 export type LostReport = z.infer<typeof LostReportSchema>;
@@ -86,8 +89,18 @@ export type LostReport = z.infer<typeof LostReportSchema>;
 export const LostReportCreatedSchema = z
   .object({
     report: LostReportSchema,
-    /** Similar items already in custody (CC-05). Always empty until found items exist (phase 1). */
-    similarInCustody: z.array(z.object({ id: z.string(), shortName: z.string() })),
+    /** Up to 5 similar items already at the desk (CC-05), with plain reasons (FR-07). */
+    similarInCustody: z.array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        category: z.string(),
+        place: z.object({ buildingName: z.string().nullable(), zoneName: z.string().nullable() }),
+        foundAt: z.iso.datetime({ offset: true }),
+        photoId: z.string().nullable(),
+        reasons: z.array(z.string()),
+      }),
+    ),
   })
   .meta({ id: 'LostReportCreated' });
 export type LostReportCreated = z.infer<typeof LostReportCreatedSchema>;
