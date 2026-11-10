@@ -13,6 +13,7 @@ import type { Tenant } from '../../platform/tenancy';
 import { recordAuditEvent } from '../audit';
 import {
   findMainDesk,
+  findMainDeskBuilding,
   findPolicy,
   listBinCodes,
   insertPolicyIfMissing,
@@ -42,6 +43,7 @@ export async function getCatalog(ctx: RequestCtx): Promise<Catalog> {
       const cats = await listCategories(tx, ctx.tenantId);
       const cols = await listColours(tx, ctx.tenantId);
       const places = await listPlaces(tx, ctx.tenantId);
+      const deskBuildingCode = await findMainDeskBuilding(tx, ctx.tenantId);
       return {
         categories: cats
           .filter((c) => deskStaff || !c.restricted)
@@ -60,6 +62,7 @@ export async function getCatalog(ctx: RequestCtx): Promise<Catalog> {
                 .map((z) => ({ id: z.id, name: z.name })),
             })),
         })),
+        deskBuildingCode,
       };
     },
     { readOnly: true },

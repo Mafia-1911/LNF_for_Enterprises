@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
-import { useTenant } from '../api/hooks';
+import { useAlerts, useTenant } from '../api/hooks';
 import { authClient } from '../lib/auth-client';
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
@@ -54,6 +54,9 @@ export function AppShell({ me }: { me: Me }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const items = navFor(me.role);
+  const hasAlerts = items.some((i) => i.to === '/alerts');
+  const alerts = useAlerts(hasAlerts);
+  const unread = alerts.data?.unread ?? 0;
   const active = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
   async function signOut() {
@@ -87,7 +90,11 @@ export function AppShell({ me }: { me: Me }) {
             {items.map((item) => (
               <NavTab key={item.to} active={active(item.to)}>
                 <Link to={item.to}>
-                  <NavTabContent icon={item.icon} label={item.label} />
+                  <NavTabContent
+                    icon={item.icon}
+                    label={item.label}
+                    count={item.to === '/alerts' ? unread : undefined}
+                  />
                 </Link>
               </NavTab>
             ))}

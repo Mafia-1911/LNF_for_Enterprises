@@ -1,16 +1,23 @@
 // Lost report submitted (Figma 39:5855). Accessibility change: the check icon uses on-primary
 // instead of accent (accent on primary is 1.1:1 in dark themes; docs/design/README.md).
-import { buttonClasses, Notice } from '@lf/ui';
+import type { LostReportCreated } from '@lf/contracts';
+import { buttonClasses, CategoryIcon, Notice } from '@lf/ui';
+import { useQueryClient } from '@tanstack/react-query';
 import { getRouteApi, Link } from '@tanstack/react-router';
 import { CircleCheck, SearchX } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { useLostReport } from '../../api/hooks';
+import { keys, photoUrl, useLostReport } from '../../api/hooks';
+import { dhakaDateTime } from '../../lib/clock';
 
 const route = getRouteApi('/app/lost/$id/submitted');
 
 export function SubmittedPage() {
   const { id } = route.useParams();
   const report = useLostReport(id);
+  const similar =
+    useQueryClient().getQueryData<LostReportCreated['similarInCustody']>(
+      keys.similarInCustody(id),
+    ) ?? [];
   const heading = useRef<HTMLParagraphElement>(null);
   useEffect(() => heading.current?.focus(), []);
 
@@ -41,16 +48,58 @@ export function SubmittedPage() {
           match is logged.
         </p>
       </section>
-      <h2 className="pt-8 text-heading-s font-bold text-ink">No similar items in custody yet</h2>
-      <div className="mt-3 flex flex-col items-center rounded-lg border border-dashed border-line px-6 py-10 text-center">
-        <span className="mb-3 inline-flex size-12 items-center justify-center rounded-lg bg-subtle text-ink">
-          <SearchX size={24} aria-hidden="true" />
-        </span>
-        <p className="text-body font-semibold text-ink">Nothing similar right now</p>
-        <p className="max-w-[384px] pt-1 text-body text-muted">
-          That’s normal. Most matches arrive within a few days.
-        </p>
-      </div>
+      {similar.length > 0 ? (
+        <>
+          <h2 className="pt-8 text-heading-s font-bold text-ink">
+            Already at the desk: {similar.length} similar {similar.length === 1 ? 'item' : 'items'}
+          </h2>
+          <p className="pt-1 text-body text-muted">
+            If one is yours, bring your university ID to the L&amp;F Office and mention your report
+            ID. Claiming online arrives in the next update.
+          </p>
+          <ul className="mt-3 flex flex-col gap-3">
+            {similar.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center gap-4 rounded-lg border border-line bg-surface p-3"
+              >
+                <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-subtle text-ink">
+                  {item.photoId ? (
+                    <img src={photoUrl(item.photoId)} alt="" className="size-full object-cover" />
+                  ) : (
+                    <CategoryIcon code={item.category} size={28} />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body font-semibold text-ink">
+                    {item.title}
+                  </span>
+                  <span className="block truncate text-body text-muted">
+                    {[item.place.buildingName, item.place.zoneName].filter(Boolean).join(' · ')} ·{' '}
+                    {dhakaDateTime(item.foundAt).split(',')[0]}
+                  </span>
+                  <span className="block text-body text-muted">{item.reasons.join(', ')}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <>
+          <h2 className="pt-8 text-heading-s font-bold text-ink">
+            No similar items in custody yet
+          </h2>
+          <div className="mt-3 flex flex-col items-center rounded-lg border border-dashed border-line px-6 py-10 text-center">
+            <span className="mb-3 inline-flex size-12 items-center justify-center rounded-lg bg-subtle text-ink">
+              <SearchX size={24} aria-hidden="true" />
+            </span>
+            <p className="text-body font-semibold text-ink">Nothing similar right now</p>
+            <p className="max-w-[384px] pt-1 text-body text-muted">
+              That’s normal. Most matches arrive within a few days.
+            </p>
+          </div>
+        </>
+      )}
       <div className="flex flex-wrap gap-3 pt-8">
         <Link to="/lost/$id" params={{ id }} className={buttonClasses('primary')}>
           View my report

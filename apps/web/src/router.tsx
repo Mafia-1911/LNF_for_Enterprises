@@ -17,7 +17,9 @@ import { AppShell } from './components/AppShell';
 import { applyAppearance } from './lib/theme';
 import { SignInPage } from './routes/auth/SignInPage';
 import { ActivityPage } from './routes/student/ActivityPage';
-import { ComingSoon } from './routes/student/ComingSoon';
+import { AlertsPage } from './routes/student/AlertsPage';
+import { GalleryPage } from './routes/student/GalleryPage';
+import { DeskHome } from './features/desk/DeskHome';
 import { HomePage } from './routes/student/HomePage';
 import { StaffHome } from './routes/staff/StaffHome';
 
@@ -124,21 +126,56 @@ const activityRoute = createRoute({
   path: '/activity',
   staticData: { title: 'My activity' },
   beforeLoad: only('student', 'visitor'),
-  component: ActivityPage,
+  component: function Activity() {
+    const { me } = appRoute.useRouteContext();
+    return <ActivityPage me={me} />;
+  },
 });
 const galleryRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/gallery',
   staticData: { title: 'Gallery' },
-  beforeLoad: only('student'),
-  component: () => <ComingSoon title="Gallery" phase="phase 1" />,
+  beforeLoad: only('student', 'desk_officer', 'supervisor', 'it_admin'),
+  component: GalleryPage,
 });
 const alertsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/alerts',
   staticData: { title: 'Alerts' },
   beforeLoad: only('student', 'visitor'),
-  component: () => <ComingSoon title="Alerts" phase="phase 3" />,
+  component: function Alerts() {
+    const { me } = appRoute.useRouteContext();
+    return <AlertsPage emailed={me.role !== 'visitor'} />;
+  },
+});
+
+const foundNewRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/found/new',
+  staticData: { title: 'I found something' },
+  beforeLoad: only('student', 'desk_officer', 'supervisor'),
+  component: lazyRouteComponent(() => import('./features/found-report/FoundReportForm')),
+});
+
+const foundPostedRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/found/$id/posted',
+  staticData: { title: 'Found item posted' },
+  component: lazyRouteComponent(() => import('./features/found-report/PostedPage'), 'PostedPage'),
+});
+
+/** Where a label's QR points: desk staff get the record, the finder gets their post. */
+const scanRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/i/$id',
+  beforeLoad: ({ context, params }) => {
+    const desk = context.me.role === 'desk_officer' || context.me.role === 'supervisor';
+    throw redirect(
+      desk
+        ? { to: '/desk/items/$id', params: { id: params.id } }
+        : { to: '/found/$id/posted', params: { id: params.id } },
+    );
+  },
 });
 
 const lostNewRoute = createRoute({
@@ -177,8 +214,62 @@ const deskRoute = createRoute({
   beforeLoad: only('desk_officer', 'supervisor'),
   component: function Desk() {
     const { me } = appRoute.useRouteContext();
-    return <StaffHome me={me} title="Lost & Found desk" />;
+    return <DeskHome me={me} />;
   },
+});
+
+const deskOnly = only('desk_officer', 'supervisor');
+
+const deskMoreRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/more',
+  staticData: { title: 'More' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/MorePage'), 'MorePage'),
+});
+
+const deskFindRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/find',
+  staticData: { title: 'Find an item' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/FindItemPage'), 'FindItemPage'),
+});
+
+const deskLogRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/log',
+  staticData: { title: 'Log a found item' },
+  beforeLoad: deskOnly,
+  validateSearch: (search: Record<string, unknown>): { step: number; receive?: string } => {
+    const step = Number(search['step']);
+    return {
+      step: Number.isInteger(step) && step >= 1 && step <= 4 ? step : 1,
+      ...(typeof search['receive'] === 'string' && search['receive']
+        ? { receive: search['receive'] }
+        : {}),
+    };
+  },
+  component: lazyRouteComponent(() => import('./features/desk/LogFoundItemFlow')),
+});
+
+const deskItemRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/items/$id',
+  staticData: { title: 'Found item' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/ItemRecordPage'), 'ItemRecordPage'),
+});
+
+const deskLabelRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/items/$id/label',
+  staticData: { title: 'Label' },
+  beforeLoad: deskOnly,
+  validateSearch: (search: Record<string, unknown>): { saved: boolean } => ({
+    saved: search['saved'] === true || search['saved'] === 'true',
+  }),
+  component: lazyRouteComponent(() => import('./features/desk/LabelPage'), 'LabelPage'),
 });
 
 const supervisorRoute = createRoute({
@@ -234,7 +325,15 @@ const routeTree = rootRoute.addChildren([
     lostNewRoute,
     submittedRoute,
     reportRoute,
+    foundNewRoute,
+    foundPostedRoute,
+    scanRoute,
     deskRoute,
+    deskMoreRoute,
+    deskFindRoute,
+    deskLogRoute,
+    deskItemRoute,
+    deskLabelRoute,
     supervisorRoute,
     adminRoute,
   ]),

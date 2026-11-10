@@ -1,5 +1,5 @@
-// Student / visitor home (Figma 39:899, shell + main actions only in this phase). Visitors don't
-// get the gallery strip or "I found something" (plan §9.7; visitors can only report and claim).
+// Student / visitor home (Figma 39:899). Visitors don't get "I found something" (plan §9.7;
+// visitors can only report a loss and claim).
 import type { Me } from '@lf/contracts';
 import { Notice } from '@lf/ui';
 import { Link } from '@tanstack/react-router';
@@ -37,19 +37,25 @@ export function HomePage({ me }: { me: Me }) {
           </span>
         </Link>
         {me.role === 'visitor' ? null : (
-          <div
-            aria-disabled="true"
-            className="flex min-h-[200px] flex-col rounded-xl bg-accent-soft p-8 text-ink"
+          <Link
+            to="/found/new"
+            className="group flex min-h-[200px] flex-col rounded-xl bg-accent-soft p-8 text-ink hover:shadow-hover"
           >
-            <HandHeart size={36} aria-hidden="true" className="text-accent-strong" />
+            <span className="flex justify-between">
+              <HandHeart size={36} aria-hidden="true" className="text-accent-strong" />
+              <ArrowRight
+                size={24}
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+              />
+            </span>
             <span className="mt-auto pt-8 font-display text-display-m font-semibold">
               I found something
             </span>
             <span className="pt-1 text-body text-muted">
-              Coming in the next update: post it, see who might have lost it, then hand it in within
-              48 h.
+              Post it, see who might have lost it, then hand it in within 48 h.
             </span>
-          </div>
+          </Link>
         )}
       </div>
       {office ? (

@@ -70,7 +70,7 @@ test.describe('sign-in methods', () => {
     await expect(page.getByRole('heading', { name: 'NSU single sign-on' })).toBeVisible();
     await page.getByRole('button', { name: /Nusrat Jahan/ }).click();
     await expect(page).toHaveURL(/\/desk$/);
-    await expect(page.getByRole('heading', { name: 'Lost & Found desk' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'What do you need to do?' })).toBeVisible();
     await expectAccessible(page, 'desk home');
   });
 });

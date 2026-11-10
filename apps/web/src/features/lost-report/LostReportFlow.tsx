@@ -19,13 +19,14 @@ import {
 } from '@lf/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, ArrowRight, ImagePlus, Lock, MapPin, Save } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock, MapPin, Save } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { ApiError } from '../../api/client';
 import { useCatalog, useSubmitLostReport } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
-import { now, timeLabel } from '../../lib/clock';
+import { PhotoPicker } from '../../components/PhotoPicker';
+import { localInputValue, now, timeLabel } from '../../lib/clock';
 import { clearDraft, loadDraft, saveDraft } from './draft';
 import {
   EMPTY_FORM,
@@ -39,12 +40,6 @@ import {
 } from './form';
 
 const route = getRouteApi('/app/lost/new');
-
-/** "2026-11-08T16:39" in the browser's local time, for datetime-local min/max. */
-function localInputValue(at: Date): string {
-  const off = at.getTimezoneOffset() * 60_000;
-  return new Date(at.getTime() - off).toISOString().slice(0, 16);
-}
 
 export function LostReportFlow({ me }: { me: Me }) {
   const { step } = route.useSearch();
@@ -299,21 +294,13 @@ function StepDescribe({ form, catalog, headingRef }: StepProps) {
           error={errors.publicDescription?.message}
           {...form.register('publicDescription')}
         />
-        <div>
-          <p className="pb-2 text-body font-semibold text-ink">
-            Photos <span className="font-normal text-muted">(coming soon)</span>
-          </p>
-          {/* TODO(docs/todo.md#photos): photo upload pipeline arrives in phase 1. */}
-          <div className="flex items-center gap-4" aria-disabled="true">
-            <span className="flex h-[78px] w-[104px] shrink-0 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-control text-center text-label text-muted opacity-60">
-              <ImagePlus size={20} aria-hidden="true" />
-              Add photo
-            </span>
-            <p className="text-body text-muted">
-              Photos are coming soon. For now, describe it in words; that is enough to match it.
-            </p>
-          </div>
-        </div>
+        <Controller
+          control={form.control}
+          name="photoIds"
+          render={({ field }) => (
+            <PhotoPicker label="Photos" value={field.value} onChange={field.onChange} />
+          )}
+        />
         <div className="rounded-md border border-line bg-subtle/60 p-3.5">
           <TextAreaField
             label="Private details"

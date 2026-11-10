@@ -130,6 +130,17 @@ export async function findMainDesk(tx: Tx, tenantId: string) {
   return desk ?? null;
 }
 
+export async function findMainDeskBuilding(tx: Tx, tenantId: string): Promise<string | null> {
+  const [row] = await tx.db
+    .select({ code: buildings.code })
+    .from(desks)
+    .innerJoin(buildings, and(eq(buildings.id, desks.buildingId), eq(buildings.tenantId, tenantId)))
+    .where(eq(desks.tenantId, tenantId))
+    .orderBy(asc(desks.code))
+    .limit(1);
+  return row?.code ?? null;
+}
+
 export async function findPolicy(tx: Tx, tenantId: string, key: string): Promise<unknown> {
   const [row] = await tx.db
     .select({ value: policies.value })

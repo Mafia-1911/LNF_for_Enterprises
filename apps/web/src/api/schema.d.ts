@@ -1894,6 +1894,7 @@ export interface components {
             buildings: components["schemas"]["Building"][];
             categories: components["schemas"]["Category"][];
             colours: components["schemas"]["Colour"][];
+            deskBuildingCode: string | null;
         };
         Category: {
             /** @enum {string} */

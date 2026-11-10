@@ -28,6 +28,8 @@ export const CatalogSchema = z
     categories: z.array(CategorySchema),
     colours: z.array(ColourSchema),
     buildings: z.array(BuildingSchema),
+    /** The Lost & Found desk's building: the default "where found" at intake (WF-03). */
+    deskBuildingCode: z.string().nullable(),
   })
   .meta({ id: 'Catalog' });
 export type Catalog = z.infer<typeof CatalogSchema>;

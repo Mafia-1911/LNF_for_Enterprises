@@ -313,12 +313,19 @@
             "items": {
               "$ref": "#/components/schemas/Building"
             }
+          },
+          "deskBuildingCode": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
           "categories",
           "colours",
-          "buildings"
+          "buildings",
+          "deskBuildingCode"
         ]
       },
       "Category": {

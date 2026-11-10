@@ -18,6 +18,7 @@ export const LostReportFormSchema = z
     zoneId: z.string(),
     timeFrom: z.string().min(1, 'Enter when you last had it.'),
     timeTo: z.string().min(1, 'Enter when you noticed it was gone.'),
+    photoIds: z.array(z.string()).max(5, 'Add up to 5 photos.'),
   })
   .refine(
     (v) =>
@@ -42,12 +43,13 @@ export const EMPTY_FORM: LostReportForm = {
   zoneId: '',
   timeFrom: '',
   timeTo: '',
+  photoIds: [],
 };
 
 /** Fields checked before leaving each step. */
 export const STEP_FIELDS: Record<1 | 2 | 3, (keyof LostReportForm)[]> = {
   1: ['category'],
-  2: ['colour', 'shortName', 'brand', 'publicDescription', 'privateNote'],
+  2: ['colour', 'shortName', 'brand', 'publicDescription', 'privateNote', 'photoIds'],
   3: ['building', 'floorId', 'zoneId', 'timeFrom', 'timeTo'],
 };
 
@@ -88,6 +90,7 @@ export function toPayload(
     },
     timeFrom: localToIso(form.timeFrom),
     timeTo: localToIso(form.timeTo),
+    photoIds: form.photoIds,
   };
   const parsed = CreateLostReportSchema.safeParse(candidate);
   if (!parsed.success) {

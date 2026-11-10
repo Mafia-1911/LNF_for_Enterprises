@@ -10,3 +10,38 @@
     background-position: 40% center;
   }
 }
+
+/* Printing: only the label (first position on an Avery L7165 A4 sheet, 99.1 × 67.7 mm) or the
+   marked card is printed; the rest of the page is hidden. */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  [data-print-label],
+  [data-print-label] *,
+  [data-print-area],
+  [data-print-area] * {
+    visibility: visible;
+  }
+  [data-print-label] {
+    position: absolute;
+    top: 13.1mm;
+    left: 4.6mm;
+    width: 99.1mm;
+    height: 67.7mm;
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  [data-print-area] {
+    position: absolute;
+    top: 10mm;
+    left: 10mm;
+    right: 10mm;
+  }
+}
