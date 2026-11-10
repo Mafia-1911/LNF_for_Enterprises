@@ -17,6 +17,8 @@ pnpm install
 pnpm dev                                               # API on :3000, web app on :5173
 ```
 
+The containers belong to the Compose project `lost-and-found`. If you run `up` from a second copy of the repo, they switch to that copy's mounted files (the mock SSO login page, the Postgres init script). Run `bash scripts/infra-up.sh` from the copy you work in to switch them back.
+
 The first `pnpm dev` creates `.env` from `.env.example`, applies the migrations and loads the seed data. Running it again is safe. To wait until the local services are healthy (useful in scripts), use `bash scripts/infra-up.sh` instead of `up -d`.
 
 | What              | URL                                  | Notes                                                                           |

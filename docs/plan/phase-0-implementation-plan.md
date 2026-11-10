@@ -82,4 +82,4 @@ Each milestone ends with the parts of `pnpm verify` that exist so far, then a co
 - [x] h1 flow screens + drafts + submitted screen
 - [x] h2 Playwright + axe
 - [x] i1 Stryker, route-coverage check, squawk, drift check, audit, gitleaks, semgrep
-- [ ] i2 CI workflow, README, final report
+- [x] i2 CI workflow, README, final report

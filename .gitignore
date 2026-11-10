@@ -7,7 +7,7 @@ node_modules/
 # build output
 dist/
 coverage/
-reports/
+/reports/
 .stryker-tmp/
 apps/server/.route-coverage/
 test-results/

@@ -2,7 +2,7 @@ pnpm-lock.yaml
 node_modules
 dist
 coverage
-reports
+/reports
 apps/server/migrations/meta
 apps/web/src/api/schema.d.ts
 packages/ui/src/tokens/tokens.css
