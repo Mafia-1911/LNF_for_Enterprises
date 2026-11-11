@@ -2,7 +2,10 @@
 export {
   createAuthPolicy,
   createSessionUserResolver,
+  addStaff,
   getMe,
+  listStaff,
+  removeStaff,
   memberByEmail,
   memberNames,
   memberProfiles,

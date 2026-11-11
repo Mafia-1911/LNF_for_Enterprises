@@ -20,7 +20,6 @@ import {
   DESK_ROLES,
   FAILED_VERIFICATION_LIMIT,
   FAILED_VERIFICATION_WINDOW_DAYS,
-  MAX_ACTIVE_CLAIMS,
   pickupWindowEnd,
   privateTicksFor,
   reviewDue,
@@ -36,7 +35,7 @@ import type { RequestCtx, Tx } from '../../platform/db/types';
 import { Conflict, Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
 import { bindTransition } from '../audit';
-import { deskInfo } from '../catalog';
+import { deskInfo, readPolicies } from '../catalog';
 import { memberProfiles } from '../identity';
 import {
   deskRowsFor,
@@ -155,8 +154,9 @@ async function blockedReason(
   if (item.finderId === claimantId) return 'You found this item, so you can’t claim it.';
   if (existing && existing.state !== 'WITHDRAWN')
     return 'You already claimed this item; open My activity to see the claim.';
-  if ((await countActiveByClaimant(tx, tx.tenantId, claimantId)) >= MAX_ACTIVE_CLAIMS)
-    return `You already have ${MAX_ACTIVE_CLAIMS} open claims; wait for a decision before making another.`;
+  const cap = (await readPolicies(tx)).activeClaimCap;
+  if ((await countActiveByClaimant(tx, tx.tenantId, claimantId)) >= cap)
+    return `You already have ${cap} open ${cap === 1 ? 'claim' : 'claims'}; wait for a decision before making another.`;
   const paused = await pausedUntil(tx, claimantId);
   if (paused)
     return `New claims are paused until ${dhakaDay(paused)} after three answers didn’t match; ask the desk if this is wrong.`;
@@ -649,7 +649,7 @@ export async function reviewClaim(
       const code = await freshPickupCode(deps, tx);
       const encrypted = deps.crypto.encrypt(code, codeAad(tx.tenantId, claim.id));
       const calendar = await loadWorkingCalendar(tx);
-      const endsAt = pickupWindowEnd(tx.now, calendar);
+      const endsAt = pickupWindowEnd(tx.now, calendar, (await readPolicies(tx)).pickupWindowDays);
       await claimTransition(
         tx,
         { id: claim.id, state: claim.state as ClaimState },
@@ -749,41 +749,36 @@ export async function reviewClaim(
 /** The desk "Today" list (Figma 39:11179): to shelve, claims to review, pickups due, expiring. */
 export async function deskToday(ctx: RequestCtx): Promise<DeskToday> {
   if (!isDesk(ctx)) throw new Forbidden();
-  return withTx(
-    ctx,
-    async (tx) => {
-      const waiting = await listByState(tx, tx.tenantId, ['SUBMITTED']);
-      const approved = await listByState(tx, tx.tenantId, ['APPROVED']);
-      const items = new Map(
-        (
-          await foundItemsFor(tx, [...new Set([...waiting, ...approved].map((c) => c.foundItemId))])
-        ).map((i) => [i.id, i]),
-      );
-      const due = new Map<string, Date | null>();
-      for (const c of waiting) if (!due.has(c.foundItemId)) due.set(c.foundItemId, c.reviewDueAt);
-      const reviewRows = await deskRowsFor(
-        tx,
-        [...due.keys()]
-          .map((id) => items.get(id))
-          .filter((i): i is FoundItemRow => i !== undefined),
-        (r) => due.get(r.id) ?? null,
-      );
-      const pickupRows = await deskRowsFor(
-        tx,
-        approved
-          .map((c) => items.get(c.foundItemId))
-          .filter((i): i is FoundItemRow => i !== undefined),
-        (r) => approved.find((c) => c.foundItemId === r.id)?.pickupEndsAt ?? null,
-      );
-      return {
-        toShelve: await toShelveRows(tx),
-        claimsToReview: reviewRows,
-        pickupsDue: pickupRows,
-        expiringThisWeek: await expiringRows(tx, addDaysToInstant(tx.now, 7)),
-      };
-    },
-    { readOnly: true },
+  return withTx(ctx, todayLists, { readOnly: true });
+}
+
+/** The desk's Today lists inside the caller's transaction (desk home, supervisor overview). */
+export async function todayLists(tx: Tx): Promise<DeskToday> {
+  const waiting = await listByState(tx, tx.tenantId, ['SUBMITTED']);
+  const approved = await listByState(tx, tx.tenantId, ['APPROVED']);
+  const items = new Map(
+    (
+      await foundItemsFor(tx, [...new Set([...waiting, ...approved].map((c) => c.foundItemId))])
+    ).map((i) => [i.id, i]),
   );
+  const due = new Map<string, Date | null>();
+  for (const c of waiting) if (!due.has(c.foundItemId)) due.set(c.foundItemId, c.reviewDueAt);
+  const reviewRows = await deskRowsFor(
+    tx,
+    [...due.keys()].map((id) => items.get(id)).filter((i): i is FoundItemRow => i !== undefined),
+    (r) => due.get(r.id) ?? null,
+  );
+  const pickupRows = await deskRowsFor(
+    tx,
+    approved.map((c) => items.get(c.foundItemId)).filter((i): i is FoundItemRow => i !== undefined),
+    (r) => approved.find((c) => c.foundItemId === r.id)?.pickupEndsAt ?? null,
+  );
+  return {
+    toShelve: await toShelveRows(tx),
+    claimsToReview: reviewRows,
+    pickupsDue: pickupRows,
+    expiringThisWeek: await expiringRows(tx, addDaysToInstant(tx.now, 7)),
+  };
 }
 
 // ── Timers (CC-11) ─────────────────────────────────────────────────────────────────────────────

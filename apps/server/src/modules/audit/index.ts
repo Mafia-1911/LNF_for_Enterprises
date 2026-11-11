@@ -3,6 +3,8 @@ export {
   bindTransition,
   createCheckpoint,
   getRecordHistory,
+  lastEventOf,
+  latestEvents,
   recordAuditEvent,
   verifyAuditChain,
   type AuditEntry,

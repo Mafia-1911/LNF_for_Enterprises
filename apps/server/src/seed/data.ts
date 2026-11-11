@@ -90,6 +90,10 @@ export const NSU_CATALOG: CatalogSeed = {
     'found_item.hand_in_hours': 48,
     'found_item.retention_days': 60,
     'pickup.proxy_allowed': true,
+    'found_item.look_alike_retention_days': 30,
+    'pickup.window_days': 3,
+    'claims.active_cap': 3,
+    'alerts.sms': false,
   },
 };
 

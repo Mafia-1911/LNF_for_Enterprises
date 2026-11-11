@@ -1,5 +1,5 @@
 // The only file that touches audit tables. No update or delete functions exist, on purpose.
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { Tx } from '../../platform/db/types';
 import { auditCheckpointEvents, auditCheckpoints, auditEvents } from './schema';
 
@@ -40,6 +40,47 @@ export async function listRecordEvents(
         eq(auditEvents.tenantId, tenantId),
         eq(auditEvents.recordType, recordType),
         eq(auditEvents.recordId, recordId),
+      ),
+    )
+    .orderBy(asc(auditEvents.id));
+}
+
+/** The newest events in a tenant, optionally only for some record types (overview feed). */
+export async function listLatestEvents(
+  tx: Tx,
+  tenantId: string,
+  limit: number,
+  recordTypes: string[] | null,
+): Promise<AuditEventRow[]> {
+  return tx.db
+    .select()
+    .from(auditEvents)
+    .where(
+      and(
+        eq(auditEvents.tenantId, tenantId),
+        recordTypes ? inArray(auditEvents.recordType, recordTypes) : undefined,
+      ),
+    )
+    .orderBy(desc(auditEvents.id))
+    .limit(limit);
+}
+
+/** Every event of some records of one type, oldest first. */
+export async function listEventsFor(
+  tx: Tx,
+  tenantId: string,
+  recordType: string,
+  recordIds: string[],
+): Promise<AuditEventRow[]> {
+  if (recordIds.length === 0) return [];
+  return tx.db
+    .select()
+    .from(auditEvents)
+    .where(
+      and(
+        eq(auditEvents.tenantId, tenantId),
+        eq(auditEvents.recordType, recordType),
+        inArray(auditEvents.recordId, recordIds),
       ),
     )
     .orderBy(asc(auditEvents.id));

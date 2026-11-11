@@ -39,6 +39,11 @@ export const MATCH_REASON_LABEL: Record<MatchReason, string> = {
 
 export type MatchScore = { score: number; reasons: MatchReason[] };
 
+/** An owner is alerted at this score or above (e.g. same colour and same building). */
+export const MATCH_ALERT_SCORE = 5;
+/** Pairs at this score or above are listed as likely matches. */
+export const MATCH_LIST_SCORE = 3;
+
 const POINTS: Record<MatchReason, number> = {
   same_colour: 3,
   same_brand: 3,

@@ -7,6 +7,7 @@ export {
   collectClaim,
   runPickupTimer,
   submitClaim,
+  todayLists,
   type ClaimRow,
   type ClaimsDeps,
 } from './service';

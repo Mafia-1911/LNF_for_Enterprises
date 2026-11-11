@@ -7,6 +7,7 @@ import {
   isHighValue,
   isPickupCode,
   pickupWindowEnd,
+  PICKUP_WINDOW_DAYS,
   reviewDue,
 } from './claims';
 import { CATEGORIES, CATEGORY_CODES } from './catalog';
@@ -83,6 +84,13 @@ describe('deadlines in working days', () => {
     // 9 Nov (Mon) +3 working days, skipping the 12th: 10, 11, 15 Nov.
     expect(pickupWindowEnd(new Date('2026-11-09T05:00:00.000Z'), calendar).toISOString()).toBe(
       '2026-11-15T11:00:00.000Z',
+    );
+  });
+
+  it('uses the window length a supervisor set', () => {
+    expect(PICKUP_WINDOW_DAYS).toBe(3);
+    expect(pickupWindowEnd(new Date('2026-11-09T05:00:00.000Z'), calendar, 1).toISOString()).toBe(
+      '2026-11-10T11:00:00.000Z',
     );
   });
 

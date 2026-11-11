@@ -1,6 +1,10 @@
 // React Query hooks over the generated client. Screens call these, never fetch() directly.
 import type {
+  AddClosure,
+  AddStaff,
   Appearance,
+  Policies,
+  RetentionDecision,
   CorrectFoundItem,
   CreateFoundPost,
   CreateLostReport,
@@ -37,6 +41,11 @@ export const keys = {
   matches: (reportId: string) => ['lost-reports', reportId, 'matches'] as const,
   deskClaims: ['desk', 'claims'] as const,
   deskItemClaims: (itemId: string) => ['desk', 'item-claims', itemId] as const,
+  supervisor: ['supervisor'] as const,
+  overview: ['supervisor', 'overview'] as const,
+  retention: ['supervisor', 'retention'] as const,
+  policies: ['supervisor', 'policies'] as const,
+  staff: ['supervisor', 'staff'] as const,
 };
 
 export type GalleryQuery = { q?: string; category?: string; building?: string; since?: string };
@@ -468,5 +477,117 @@ export function useDispatch(id: string) {
   return useQuery({
     queryKey: ['desk', 'dispatch', id],
     queryFn: () => unwrap(api.GET('/api/desk/dispatches/{id}', { params: { path: { id } } })),
+  });
+}
+
+// ── Supervisor ──────────────────────────────────────────────────────────────────────────────────
+
+export function useSupervisorOverview() {
+  return useQuery({
+    queryKey: keys.overview,
+    queryFn: () => unwrap(api.GET('/api/supervisor/overview')),
+  });
+}
+
+export function useRetention() {
+  return useQuery({
+    queryKey: keys.retention,
+    queryFn: () => unwrap(api.GET('/api/supervisor/retention')),
+  });
+}
+
+function invalidateSupervisor(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: keys.supervisor });
+  void qc.invalidateQueries({ queryKey: ['desk'] });
+}
+
+export function useDecideRetention() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RetentionDecision) =>
+      unwrap(api.POST('/api/supervisor/retention/decide', { body })),
+    onSuccess: () => invalidateSupervisor(qc),
+  });
+}
+
+export function useKeepLonger() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrap(api.POST('/api/supervisor/retention/{id}/keep', { params: { path: { id } } })),
+    onSuccess: () => invalidateSupervisor(qc),
+  });
+}
+
+export function useRunRetention() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/supervisor/retention/run')),
+    onSuccess: () => invalidateSupervisor(qc),
+  });
+}
+
+export function usePolicySettings() {
+  return useQuery({
+    queryKey: keys.policies,
+    queryFn: () => unwrap(api.GET('/api/supervisor/policies')),
+  });
+}
+
+export function useSavePolicies() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Policies) => unwrap(api.PUT('/api/supervisor/policies', { body })),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.policies, data);
+      invalidateSupervisor(qc);
+    },
+  });
+}
+
+export function useAddClosure() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddClosure) => unwrap(api.POST('/api/supervisor/closures', { body })),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.policies, data);
+      invalidateSupervisor(qc);
+    },
+  });
+}
+
+export function useRemoveClosure() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrap(api.DELETE('/api/supervisor/closures/{id}', { params: { path: { id } } })),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.policies, data);
+      invalidateSupervisor(qc);
+    },
+  });
+}
+
+export function useStaff() {
+  return useQuery({
+    queryKey: keys.staff,
+    queryFn: () => unwrap(api.GET('/api/supervisor/staff')),
+  });
+}
+
+export function useAddStaff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddStaff) => unwrap(api.POST('/api/supervisor/staff', { body })),
+    onSuccess: (data) => qc.setQueryData(keys.staff, data),
+  });
+}
+
+export function useRemoveStaff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (email: string) =>
+      unwrap(api.POST('/api/supervisor/staff/remove', { body: { email } })),
+    onSuccess: (data) => qc.setQueryData(keys.staff, data),
   });
 }

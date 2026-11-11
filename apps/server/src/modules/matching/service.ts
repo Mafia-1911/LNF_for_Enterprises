@@ -1,7 +1,14 @@
 // Matching (FR-07, US-04, WF-03 "matching runs"): rule-based score from packages/domain, plain
 // reasons, at most one alert per owner per pair. Runs as jobs after the change that caused it.
 import type { LikelyMatch } from '@lf/contracts';
-import { DESK_ROLES, MATCH_REASON_LABEL, topMatches, type MatchReason } from '@lf/domain';
+import {
+  DESK_ROLES,
+  MATCH_ALERT_SCORE,
+  MATCH_LIST_SCORE,
+  MATCH_REASON_LABEL,
+  topMatches,
+  type MatchReason,
+} from '@lf/domain';
 import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
 import { NotFound } from '../../platform/errors';
@@ -30,10 +37,9 @@ import {
 
 export type MatchingDeps = NotificationsDeps;
 
-/** A pair this strong alerts the owner (e.g. same colour and same building). */
-export const ALERT_SCORE = 5;
-/** A pair this strong is listed under "Likely matches in custody". */
-export const LIST_SCORE = 3;
+/** A pair this strong alerts the owner; this strong is listed (thresholds live in @lf/domain). */
+export const ALERT_SCORE = MATCH_ALERT_SCORE;
+export const LIST_SCORE = MATCH_LIST_SCORE;
 
 const CLAIMABLE = ['IN_CUSTODY', 'CLAIM_PENDING'];
 const reasonText = (codes: string[]) =>

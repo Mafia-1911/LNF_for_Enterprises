@@ -4,6 +4,7 @@ import {
   DEFAULT_APPEARANCE,
   type Appearance,
   type Catalog,
+  type Policies,
   type TenantInfo,
 } from '@lf/contracts';
 import { DESK_ROLES, type CategoryCode, type ColourCode } from '@lf/domain';
@@ -174,6 +175,61 @@ export function listDeskBins(tx: Tx): Promise<string[]> {
 export async function readNumberPolicy(tx: Tx, key: string, fallback: number): Promise<number> {
   const value = await findPolicy(tx, tx.tenantId, key);
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+// ── Supervisor policies (Figma 39:26930) ─────────────────────────────────────────────────────────
+
+/** Where each policy is stored. Keys are stable: other modules read some of them directly. */
+export const POLICY_KEY = {
+  proxyPickup: 'pickup.proxy_allowed',
+  retentionDays: 'found_item.retention_days',
+  lookAlikeRetentionDays: 'found_item.look_alike_retention_days',
+  pickupWindowDays: 'pickup.window_days',
+  activeClaimCap: 'claims.active_cap',
+  smsAlerts: 'alerts.sms',
+} as const satisfies Record<keyof Policies, string>;
+
+/** SRS defaults, used until a supervisor changes a value. */
+export const POLICY_DEFAULTS: Policies = {
+  proxyPickup: true,
+  retentionDays: 60,
+  lookAlikeRetentionDays: 30,
+  pickupWindowDays: 3,
+  activeClaimCap: 3,
+  smsAlerts: false,
+};
+
+const POLICY_NAMES = Object.keys(POLICY_KEY) as (keyof Policies)[];
+
+/** Every supervisor policy, with defaults for unset or malformed values. */
+export async function readPolicies(tx: Tx): Promise<Policies> {
+  const out: Policies = { ...POLICY_DEFAULTS };
+  for (const name of POLICY_NAMES) {
+    const value = await findPolicy(tx, tx.tenantId, POLICY_KEY[name]);
+    const fallback = POLICY_DEFAULTS[name];
+    if (typeof fallback === 'boolean' && typeof value === 'boolean')
+      Object.assign(out, { [name]: value });
+    if (typeof fallback === 'number' && typeof value === 'number' && Number.isInteger(value))
+      Object.assign(out, { [name]: value });
+  }
+  return out;
+}
+
+/** Saves the policies that changed and audits each change. Returns the names that changed. */
+export async function writePolicies(tx: Tx, next: Policies): Promise<(keyof Policies)[]> {
+  const current = await readPolicies(tx);
+  const userId = tx.actor.kind === 'user' ? tx.actor.userId : null;
+  const changed = POLICY_NAMES.filter((name) => current[name] !== next[name]);
+  for (const name of changed) {
+    await upsertPolicy(tx, tx.tenantId, POLICY_KEY[name], next[name], userId);
+    await recordAuditEvent(tx, {
+      recordType: 'policy',
+      recordId: POLICY_KEY[name],
+      event: 'POLICY_CHANGED',
+      note: `${String(current[name])} → ${String(next[name])}`,
+    });
+  }
+  return changed;
 }
 
 /** Where people hand items in: name, location and hours of the main desk. */

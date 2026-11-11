@@ -10,6 +10,8 @@ import {
   latestCheckpoint,
   listCheckpointEvents,
   listCheckpoints,
+  listEventsFor,
+  listLatestEvents,
   listRecordEvents,
   listUncheckpointedEvents,
   lockCheckpoints,
@@ -138,6 +140,41 @@ export async function getRecordHistory(
     note: r.note,
     at: r.at.toISOString(),
   }));
+}
+
+function toEntry(r: AuditEventRow): AuditEntry {
+  return {
+    id: r.id,
+    event: r.event,
+    fromState: r.fromState,
+    toState: r.toState,
+    actorId: r.actorId,
+    actorKind: r.actorKind,
+    note: r.note,
+    at: r.at.toISOString(),
+  };
+}
+
+/** The newest events in this tenant, with the record each one is about (supervisor overview). */
+export async function latestEvents(
+  tx: Tx,
+  limit: number,
+  recordTypes: string[] | null = null,
+): Promise<(AuditEntry & { recordType: string; recordId: string })[]> {
+  const rows = await listLatestEvents(tx, tx.tenantId, limit, recordTypes);
+  return rows.map((r) => ({ ...toEntry(r), recordType: r.recordType, recordId: r.recordId }));
+}
+
+/** The last event of each record (for example how an expired item was decided). */
+export async function lastEventOf(
+  tx: Tx,
+  recordType: string,
+  recordIds: string[],
+): Promise<Map<string, AuditEntry>> {
+  const out = new Map<string, AuditEntry>();
+  for (const r of await listEventsFor(tx, tx.tenantId, recordType, recordIds))
+    out.set(r.recordId, toEntry(r));
+  return out;
 }
 
 // ── Checkpoints ──────────────────────────────────────────────────────────────────────────────────

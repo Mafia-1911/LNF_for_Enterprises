@@ -2373,6 +2373,200 @@
           "reason"
         ]
       },
+      "RetentionList": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "object",
+            "properties": {
+              "days": {
+                "type": "integer"
+              },
+              "lookAlikeDays": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "days",
+              "lookAlikeDays"
+            ]
+          },
+          "awaiting": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RetentionItem"
+            }
+          },
+          "ending": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RetentionItem"
+            }
+          },
+          "decided": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RetentionItem"
+            }
+          }
+        },
+        "required": [
+          "policy",
+          "awaiting",
+          "ending",
+          "decided"
+        ]
+      },
+      "RetentionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "place": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photoId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "lookAlike": {
+            "type": "boolean"
+          },
+          "endsAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "decision": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "donate",
+              "dispose",
+              "transfer",
+              null
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "title",
+          "binCode",
+          "place",
+          "photoId",
+          "sensitive",
+          "lookAlike",
+          "endsAt",
+          "decision",
+          "decidedAt",
+          "note"
+        ]
+      },
+      "RetentionDecisionResult": {
+        "type": "object",
+        "properties": {
+          "decided": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "decided"
+        ]
+      },
+      "RetentionDecision": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "donate",
+              "dispose",
+              "transfer"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "ids",
+          "decision",
+          "note"
+        ]
+      },
+      "RetentionRun": {
+        "type": "object",
+        "properties": {
+          "recalculated": {
+            "type": "integer"
+          },
+          "expired": {
+            "type": "integer"
+          },
+          "lastChanceAlerts": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "recalculated",
+          "expired",
+          "lastChanceAlerts"
+        ]
+      },
       "UploadedPhoto": {
         "type": "object",
         "properties": {
@@ -2430,6 +2624,9 @@
               "id_card_found",
               "hand_in_reminder",
               "claim_update",
+              "last_chance",
+              "report_expiring",
+              "report_expired",
               "general"
             ]
           },
@@ -3388,6 +3585,330 @@
           "actorKind",
           "note",
           "at"
+        ]
+      },
+      "SupervisorOverview": {
+        "type": "object",
+        "properties": {
+          "counts": {
+            "type": "object",
+            "properties": {
+              "inCustody": {
+                "type": "integer"
+              },
+              "claimsToReview": {
+                "type": "integer"
+              },
+              "returned30Days": {
+                "type": "integer"
+              },
+              "expiringThisWeek": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "inCustody",
+              "claimsToReview",
+              "returned30Days",
+              "expiringThisWeek"
+            ]
+          },
+          "badges": {
+            "type": "object",
+            "properties": {
+              "retention": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "retention"
+            ]
+          },
+          "needsDecision": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NeedsDecision"
+            }
+          },
+          "activity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityEntry"
+            }
+          },
+          "today": {
+            "$ref": "#/components/schemas/DeskToday"
+          }
+        },
+        "required": [
+          "counts",
+          "badges",
+          "needsDecision",
+          "activity",
+          "today"
+        ]
+      },
+      "NeedsDecision": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "retention",
+              "claim_overdue"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string"
+          },
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "detail",
+          "link",
+          "at"
+        ]
+      },
+      "ActivityEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "label": {
+            "type": "string"
+          },
+          "recordId": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "recordId",
+          "actor",
+          "at"
+        ]
+      },
+      "PolicySettings": {
+        "type": "object",
+        "properties": {
+          "policies": {
+            "$ref": "#/components/schemas/Policies"
+          },
+          "closures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Closure"
+            }
+          }
+        },
+        "required": [
+          "policies",
+          "closures"
+        ]
+      },
+      "Policies": {
+        "type": "object",
+        "properties": {
+          "proxyPickup": {
+            "type": "boolean"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 365
+          },
+          "lookAlikeRetentionDays": {
+            "type": "integer",
+            "minimum": 7,
+            "maximum": 365
+          },
+          "pickupWindowDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "activeClaimCap": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "smsAlerts": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "proxyPickup",
+          "retentionDays",
+          "lookAlikeRetentionDays",
+          "pickupWindowDays",
+          "activeClaimCap",
+          "smsAlerts"
+        ]
+      },
+      "Closure": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "from",
+          "to"
+        ]
+      },
+      "AddClosure": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "name",
+          "from",
+          "to"
+        ]
+      },
+      "StaffList": {
+        "type": "object",
+        "properties": {
+          "staff": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffMember"
+            }
+          }
+        },
+        "required": [
+          "staff"
+        ]
+      },
+      "StaffMember": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "desk_officer",
+              "supervisor"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "invited"
+            ]
+          },
+          "you": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "name",
+          "role",
+          "status",
+          "you"
+        ]
+      },
+      "AddStaff": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "desk_officer",
+              "supervisor"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "role"
+        ]
+      },
+      "RemoveStaff": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "DevClock": {
@@ -4839,6 +5360,248 @@
           },
           "409": {
             "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/retention": {
+      "get": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Items awaiting a retention decision, ending soon, and recently decided (US-08)",
+        "responses": {
+          "200": {
+            "description": "The three lists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/retention/decide": {
+      "post": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Donate, dispose of or transfer expired items, with a note (WF-05)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "How many were decided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionDecisionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/retention/{id}/keep": {
+      "post": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Keep an item 30 more days",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The item with its new end.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/retention/run": {
+      "post": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Run the daily retention job now",
+        "responses": {
+          "200": {
+            "description": "What the run did.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionRun"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6383,6 +7146,443 @@
           },
           "403": {
             "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/overview": {
+      "get": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Numbers, decisions, latest activity and Today for the supervisor",
+        "responses": {
+          "200": {
+            "description": "The overview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorOverview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/policies": {
+      "get": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Policies and closures",
+        "responses": {
+          "200": {
+            "description": "Policies and closures.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicySettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Change policies (applies straight away to open records)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Policies"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The saved settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicySettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/closures": {
+      "post": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Add a closure or semester break (retention pauses, NF-09)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddClosure"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicySettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/closures/{id}": {
+      "delete": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Remove a closure",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The saved settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicySettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/staff": {
+      "get": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Desk officers and supervisors",
+        "responses": {
+          "200": {
+            "description": "The staff.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Give someone desk access",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddStaff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The staff list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/staff/remove": {
+      "post": {
+        "tags": [
+          "supervisor"
+        ],
+        "summary": "Remove desk access",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveStaff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The staff list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
             "content": {
               "application/json": {
                 "schema": {

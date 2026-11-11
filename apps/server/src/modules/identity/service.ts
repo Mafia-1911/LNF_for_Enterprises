@@ -2,17 +2,24 @@
 //   - Students and staff use their university email (tenant.emailDomain); visitors use a phone.
 //   - Staff roles (desk officer, supervisor, IT admin) sign in with SSO only (A2, CC-10).
 //   - First sign-in gives a default role: student for university accounts, visitor for phones.
-import { isStaffRole, type Role } from '@lf/domain';
+import type { AddStaff, StaffMember } from '@lf/contracts';
+import { isRole, isStaffRole, type Role } from '@lf/domain';
 import { SignInRefused, type AuthPolicy, type SignInMethod } from '../../platform/auth';
 import type { Clock } from '../../platform/clock';
 import { withTx } from '../../platform/db/tx';
 import type { DatabaseHandle, RequestCtx, Tx } from '../../platform/db/types';
-import { Unauthenticated } from '../../platform/errors';
+import { NotFound, Unauthenticated, ValidationFailed } from '../../platform/errors';
 import type { SessionUser } from '../../platform/http/context';
 import type { Tenant } from '../../platform/tenancy';
 import {
+  deleteStaffInvite,
   findMember,
   findMemberByEmail,
+  findStaffInvite,
+  listStaffInvites,
+  listStaffMembers,
+  setRoleAssignment,
+  upsertStaffInvite,
   namesOf,
   findMemberByPhone,
   insertRoleAssignment,
@@ -54,10 +61,16 @@ export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
     async checkEmailCode(email, tenant) {
       if (domainOf(email) !== tenant.emailDomain)
         throw new SignInRefused(MSG.wrongDomain(tenant.emailDomain));
-      const m = await member(tenant, (ctx) =>
-        withTx(ctx, (tx) => findMemberByEmail(tx, tenant.id, email), { readOnly: true }),
+      const [m, invite] = await withTx(
+        systemCtx(deps, tenant, 'auth-policy'),
+        async (tx) =>
+          [
+            await findMemberByEmail(tx, tenant.id, email),
+            await findStaffInvite(tx, tenant.id, email.toLowerCase()),
+          ] as const,
+        { readOnly: true },
       );
-      if (m?.role && isStaffRole(m.role)) throw new SignInRefused(MSG.staffUseSso);
+      if ((m?.role && isStaffRole(m.role)) || invite) throw new SignInRefused(MSG.staffUseSso);
     },
 
     async checkPhoneCode(phoneNumber, tenant) {
@@ -97,6 +110,21 @@ export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
       const role: Role = method === 'phone_otp' ? 'visitor' : 'student';
       await withTx(systemCtx(deps, tenant, 'auth-default-role'), async (tx) => {
         const m = await findMember(tx, tenant.id, userId);
+        // A supervisor added this person as staff before they signed in (Staff page).
+        const invite =
+          m && method === 'sso'
+            ? await findStaffInvite(tx, tenant.id, m.email.toLowerCase())
+            : null;
+        if (m && invite && isRole(invite.role)) {
+          await setRoleAssignment(tx, tenant.id, {
+            userId,
+            role: invite.role,
+            title: STAFF_TITLE[invite.role] ?? null,
+            grantedBy: invite.grantedBy,
+          });
+          await deleteStaffInvite(tx, tenant.id, invite.email);
+          return;
+        }
         if (m && !m.role)
           await insertRoleAssignment(tx, tenant.id, {
             userId,
@@ -207,4 +235,81 @@ export async function memberProfiles(
     if (m) out.set(id, { name: m.name, title: m.title, role: m.role ?? 'none' });
   }
   return out;
+}
+
+// ── Staff (supervisor's Staff page, Figma 39:27640) ──────────────────────────────────────────────
+
+const STAFF_TITLE: Partial<Record<Role, string>> = {
+  desk_officer: 'Desk officer',
+  supervisor: 'L&F Supervisor',
+};
+
+/** Desk officers and supervisors, plus people added who haven't signed in yet. */
+export async function listStaff(tx: Tx): Promise<StaffMember[]> {
+  const me = tx.actor.kind === 'user' ? tx.actor.userId : null;
+  const active: StaffMember[] = (await listStaffMembers(tx, tx.tenantId)).map((m) => ({
+    userId: m.userId,
+    email: m.email,
+    name: m.name,
+    role: m.role === 'supervisor' ? 'supervisor' : 'desk_officer',
+    status: 'active',
+    you: m.userId === me,
+  }));
+  const invited: StaffMember[] = (await listStaffInvites(tx, tx.tenantId)).map((i) => ({
+    userId: null,
+    email: i.email,
+    name: i.name,
+    role: i.role === 'supervisor' ? 'supervisor' : 'desk_officer',
+    status: 'invited',
+    you: false,
+  }));
+  return [...active, ...invited];
+}
+
+/**
+ * Gives someone desk access. A person who already signed in gets the role now; anyone else gets it
+ * on their first single sign-on. Returns the record id to audit.
+ */
+export async function addStaff(tx: Tx, input: AddStaff, emailDomain: string): Promise<string> {
+  if (domainOf(input.email) !== emailDomain)
+    throw new ValidationFailed({
+      email: `Staff need an @${emailDomain} email; check the address.`,
+    });
+  const grantedBy = tx.actor.kind === 'user' ? tx.actor.userId : null;
+  const m = await findMemberByEmail(tx, tx.tenantId, input.email);
+  if (m?.role === 'it_admin')
+    throw new ValidationFailed({
+      email: 'That person is the IT admin; ask IT to change their role.',
+    });
+  if (m?.role === input.role)
+    throw new ValidationFailed({ email: `${m.name} already has that role; nothing to change.` });
+  if (m) {
+    await setRoleAssignment(tx, tx.tenantId, {
+      userId: m.userId,
+      role: input.role,
+      title: STAFF_TITLE[input.role] ?? null,
+      grantedBy,
+    });
+    return m.userId;
+  }
+  await upsertStaffInvite(tx, tx.tenantId, { ...input, grantedBy });
+  return `invite:${input.email}`;
+}
+
+/** Removes desk access: the person becomes an ordinary university member again. */
+export async function removeStaff(tx: Tx, email: string): Promise<string> {
+  const me = tx.actor.kind === 'user' ? tx.actor.userId : null;
+  if (await deleteStaffInvite(tx, tx.tenantId, email)) return `invite:${email}`;
+  const m = await findMemberByEmail(tx, tx.tenantId, email);
+  if (!m || (m.role !== 'desk_officer' && m.role !== 'supervisor'))
+    throw new NotFound("That person isn't on the staff list; reload the page.");
+  if (m.userId === me)
+    throw new ValidationFailed({}, "You can't remove your own access; ask another supervisor.");
+  await setRoleAssignment(tx, tx.tenantId, {
+    userId: m.userId,
+    role: 'student',
+    title: null,
+    grantedBy: me,
+  });
+  return m.userId;
 }

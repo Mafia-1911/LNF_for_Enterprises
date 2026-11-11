@@ -76,9 +76,16 @@ export function reviewDue(submittedAt: Date, calendar: WorkingCalendar): Date {
   return officeClose(calendar.addWorkingDays(dhakaDate(submittedAt), 2));
 }
 
-/** The pickup window closes 3 working days after approval, at the office's closing time (WF-04). */
-export function pickupWindowEnd(approvedAt: Date, calendar: WorkingCalendar): Date {
-  return officeClose(calendar.addWorkingDays(dhakaDate(approvedAt), 3));
+/** Working days an approved owner has to collect (WF-04); supervisors can change it (Policies). */
+export const PICKUP_WINDOW_DAYS = 3;
+
+/** The pickup window closes `days` working days after approval, at the office's closing time. */
+export function pickupWindowEnd(
+  approvedAt: Date,
+  calendar: WorkingCalendar,
+  days = PICKUP_WINDOW_DAYS,
+): Date {
+  return officeClose(calendar.addWorkingDays(dhakaDate(approvedAt), days));
 }
 
 /** CC-15: three failed verifications in 7 days pause claim rights. */

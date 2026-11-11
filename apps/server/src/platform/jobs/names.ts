@@ -7,6 +7,8 @@ export const JOB = {
   sendEmail: 'send-email',
   handInTimer: 'found-item-hand-in-timer',
   photoCleanup: 'photo-cleanup',
+  retention: 'found-item-retention',
+  lostReportTimer: 'lost-report-expiry-timer',
 } as const;
 
 export type MatchLostReportData = { tenantId: string; reportId: string };

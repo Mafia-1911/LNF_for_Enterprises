@@ -52,6 +52,7 @@ import {
 import { memberByEmail, memberNames } from '../identity';
 import { notify, sendEmail, type NotificationsDeps } from '../notifications';
 import { attachPhotos, photosForRecords, setRecordPhotoVisibility } from '../photos';
+import { loadRetentionRules, retentionEndOf } from './retention-rules';
 import {
   countAllFoundItems,
   countItemsPerBin,
@@ -586,9 +587,14 @@ async function idCardFastLane(
   return { ...patch, ownerEmailedAt: tx.now };
 }
 
-async function retentionEnd(tx: Tx): Promise<Date> {
-  const days = await readNumberPolicy(tx, 'found_item.retention_days', 60);
-  return addDaysToInstant(tx.now, days);
+/** Retention for an item reaching the desk now (look-alikes get the shorter period, CC-02). */
+async function retentionEnd(tx: Tx, category: string): Promise<Date> {
+  return retentionEndOf(await loadRetentionRules(tx), {
+    category,
+    receivedAt: tx.now,
+    createdAt: tx.now,
+    retentionExtraDays: 0,
+  });
 }
 
 /** WF-03: an officer logs a walk-in item. It goes straight to IN_CUSTODY with a bin and a label. */
@@ -626,7 +632,7 @@ export async function logFoundItem(
         binCode,
         condition: input.condition,
         receivedAt: tx.now,
-        retentionEndsAt: await retentionEnd(tx),
+        retentionEndsAt: await retentionEnd(tx, input.category),
       },
     });
     await savePrivateDetails(deps, tx, newId, input.privateTicks, input.privateNote);
@@ -691,7 +697,7 @@ export async function receiveFoundItem(
         binCode,
         condition: input.condition,
         receivedAt: tx.now,
-        retentionEndsAt: await retentionEnd(tx),
+        retentionEndsAt: await retentionEnd(tx, input.category),
       },
     });
     if (input.privateTicks.length > 0 || input.privateNote) {

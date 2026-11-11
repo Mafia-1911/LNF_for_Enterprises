@@ -36,6 +36,7 @@ import { dispatchRoutes } from './modules/dispatch/routes';
 import { matchingRoutes } from './modules/matching/routes';
 import { notificationsRoutes } from './modules/notifications/routes';
 import { photosRoutes } from './modules/photos/routes';
+import { supervisionRoutes } from './modules/supervision/routes';
 import type { Services } from './services';
 
 export type AppOptions = {
@@ -149,6 +150,7 @@ export function createApp(services: Services, options: AppOptions) {
   app.route('/', claimsRoutes(guards, itemDeps));
   app.route('/', dispatchRoutes(guards, itemDeps));
   app.route('/', auditRoutes(guards));
+  app.route('/', supervisionRoutes(guards));
   if (config.devTools && services.devClock)
     app.route('/', devRoutes(guards, { clock: services.devClock, sms: services.sms }));
 

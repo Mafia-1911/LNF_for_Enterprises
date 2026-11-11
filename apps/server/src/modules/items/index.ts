@@ -35,3 +35,4 @@ export {
   runHandInTimer,
   type FoundItemsDeps,
 } from './found-items';
+export { custodyCounts, recalculateRetention, runLostReportTimer, runRetention } from './retention';

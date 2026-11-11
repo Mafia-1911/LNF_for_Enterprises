@@ -267,7 +267,8 @@ describe('desk intake (WF-03)', () => {
     expect(item.binCode).toBe('B-01');
     expect(item.condition).toBe('One spoke bent.');
     expect(item.sourceLabel).toBe('Desk, by Nusrat Jahan');
-    expect(item.retentionEndsAt).toBe('2027-01-07T10:39:00.000Z');
+    // An umbrella is a look-alike (CC-02): 30 days, not 60.
+    expect(item.retentionEndsAt).toBe('2026-12-08T10:39:00.000Z');
     expect(label).toMatchObject({ id: item.id, binCode: 'B-01', categoryLabel: 'Umbrella' });
     expect(label.url).toMatch(new RegExp(`/i/${item.id}$`));
   });

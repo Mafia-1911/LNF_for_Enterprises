@@ -22,6 +22,11 @@ import {
   LostReportSchema,
   ReasonSchema,
   ReceiveFoundItemSchema,
+  RetentionDecisionResultSchema,
+  RetentionDecisionSchema,
+  RetentionItemSchema,
+  RetentionListSchema,
+  RetentionRunSchema,
   SimilarLostListSchema,
   SimilarLostQuerySchema,
 } from '@lf/contracts';
@@ -52,6 +57,7 @@ import {
   voidFoundItem,
   type FoundItemsDeps,
 } from './found-items';
+import { decideRetention, keepLonger, listRetention, runRetentionNow } from './retention';
 
 const REPORTERS = ['student', 'visitor', 'desk_officer', 'supervisor'] as const;
 
@@ -450,6 +456,85 @@ export function foundItemsRoutes(guards: Guards, deps: FoundItemsDeps) {
         ),
         200,
       ),
+  );
+
+  // ── Retention and disposal (supervisor, WF-05) ─────────────────────────────────────────────────
+
+  const SUPERVISOR = ['supervisor'] as const;
+
+  router.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/supervisor/retention',
+      tags: ['supervisor'],
+      summary: 'Items awaiting a retention decision, ending soon, and recently decided (US-08)',
+      middleware: [guards.requireRole(...SUPERVISOR)] as const,
+      responses: {
+        200: { description: 'The three lists.', content: json(RetentionListSchema) },
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await listRetention(c.var.ctx), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/supervisor/retention/decide',
+      tags: ['supervisor'],
+      summary: 'Donate, dispose of or transfer expired items, with a note (WF-05)',
+      middleware: [guards.requireRole(...SUPERVISOR)] as const,
+      request: { body: { required: true, content: json(RetentionDecisionSchema) } },
+      responses: {
+        200: {
+          description: 'How many were decided.',
+          content: json(RetentionDecisionResultSchema),
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+        404: errorResponses[404],
+        409: errorResponses[409],
+      },
+    }),
+    async (c) => c.json(await decideRetention(c.var.ctx, c.req.valid('json')), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/supervisor/retention/{id}/keep',
+      tags: ['supervisor'],
+      summary: 'Keep an item 30 more days',
+      middleware: [guards.requireRole(...SUPERVISOR)] as const,
+      request: { params: itemParam },
+      responses: {
+        200: { description: 'The item with its new end.', content: json(RetentionItemSchema) },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+        404: errorResponses[404],
+        409: errorResponses[409],
+      },
+    }),
+    async (c) => c.json(await keepLonger(c.var.ctx, itemId(c.req.valid('param').id)), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/supervisor/retention/run',
+      tags: ['supervisor'],
+      summary: 'Run the daily retention job now',
+      middleware: [guards.requireRole(...SUPERVISOR)] as const,
+      responses: {
+        200: { description: 'What the run did.', content: json(RetentionRunSchema) },
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await runRetentionNow(deps, c.var.ctx), 200),
   );
 
   return router;

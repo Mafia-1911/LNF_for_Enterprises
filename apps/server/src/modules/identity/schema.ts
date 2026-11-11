@@ -25,3 +25,24 @@ export const roleAssignments = pgTable(
     index('role_assignments_tenant_role_idx').on(t.tenantId, t.role),
   ],
 );
+
+/**
+ * Staff added by a supervisor before they have signed in (Figma 39:27640). On their first single
+ * sign-on the role is applied and the invite removed.
+ */
+export const staffInvites = pgTable(
+  'staff_invites',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    /** Lower-case university email. */
+    email: text('email').notNull(),
+    name: text('name').notNull(),
+    /** desk_officer | supervisor */
+    role: text('role').notNull(),
+    grantedBy: uuid('granted_by').references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.tenantId, t.email] })],
+);

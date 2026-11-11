@@ -5,6 +5,7 @@
 //   CLAIM_PENDING -> IN_CUSTODY (all claims rejected)
 //   READY_FOR_PICKUP -> IN_CUSTODY (pickup window lapsed)
 //   IN_CUSTODY -> EXPIRED -> DONATED | DISPOSED | TRANSFERRED
+//   EXPIRED -> IN_CUSTODY by KEEP: a supervisor keeps an expired item longer (Figma 39:21973).
 // Additions: creation by a finder (POST) or at the desk (LOG_INTAKE); NOT_RECEIVED can be reopened
 // ("Final, can be reopened"); restricted items go IN_CUSTODY -> TRANSFERRED the same day (CC-12);
 // records created in error become VOID (identifiers rule).
@@ -41,6 +42,7 @@ export const FOUND_ITEM_EVENTS = [
   'DONATE',
   'DISPOSE',
   'TRANSFER',
+  'KEEP',
   'VOID',
 ] as const;
 export type FoundItemEvent = (typeof FOUND_ITEM_EVENTS)[number];
@@ -87,5 +89,6 @@ export const foundItemMachine = defineMachine<FoundItemState, FoundItemEvent>({
     { from: 'EXPIRED', event: 'DONATE', to: 'DONATED', by: supervisor },
     { from: 'EXPIRED', event: 'DISPOSE', to: 'DISPOSED', by: supervisor },
     { from: 'EXPIRED', event: 'TRANSFER', to: 'TRANSFERRED', by: supervisor },
+    { from: 'EXPIRED', event: 'KEEP', to: 'IN_CUSTODY', by: supervisor },
   ],
 });

@@ -19,7 +19,7 @@ import {
 } from '../items';
 import { notify } from '../notifications';
 import { attachPhotos } from '../photos';
-import { findDispatch, insertDispatch, type DispatchRow } from './repo';
+import { countDispatchesSince, findDispatch, insertDispatch, type DispatchRow } from './repo';
 
 export type DispatchDeps = ClaimsDeps;
 
@@ -189,4 +189,9 @@ export async function getDispatch(ctx: RequestCtx, id: string): Promise<Dispatch
     },
     { readOnly: true },
   );
+}
+
+/** How many items were handed back since `since` (supervisor overview). */
+export function returnedSince(tx: Tx, since: Date): Promise<number> {
+  return countDispatchesSince(tx, tx.tenantId, since);
 }

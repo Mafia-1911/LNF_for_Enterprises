@@ -3012,6 +3012,763 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/supervisor/closures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a closure or semester break (retention pauses, NF-09) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddClosure"];
+                };
+            };
+            responses: {
+                /** @description The saved settings. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PolicySettings"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/closures/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a closure */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The saved settings. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PolicySettings"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Numbers, decisions, latest activity and Today for the supervisor */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The overview. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupervisorOverview"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Policies and closures */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Policies and closures. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PolicySettings"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Change policies (applies straight away to open records) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Policies"];
+                };
+            };
+            responses: {
+                /** @description The saved settings. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PolicySettings"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Items awaiting a retention decision, ending soon, and recently decided (US-08) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The three lists. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RetentionList"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/retention/{id}/keep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Keep an item 30 more days */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The item with its new end. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RetentionItem"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflicts with the current state. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/retention/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Donate, dispose of or transfer expired items, with a note (WF-05) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RetentionDecision"];
+                };
+            };
+            responses: {
+                /** @description How many were decided. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RetentionDecisionResult"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflicts with the current state. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/retention/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run the daily retention job now */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description What the run did. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RetentionRun"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Desk officers and supervisors */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The staff. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffList"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Give someone desk access */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddStaff"];
+                };
+            };
+            responses: {
+                /** @description The staff list. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffList"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supervisor/staff/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove desk access */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RemoveStaff"];
+                };
+            };
+            responses: {
+                /** @description The staff list. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffList"];
+                    };
+                };
+                /** @description The request has invalid fields. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Signed in, but not allowed. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tenant": {
         parameters: {
             query?: never;
@@ -3061,13 +3818,34 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ActivityEntry: {
+            actor: string;
+            /** Format: date-time */
+            at: string;
+            id: number;
+            label: string;
+            recordId: string;
+        };
+        AddClosure: {
+            /** Format: date */
+            from: string;
+            name: string;
+            /** Format: date */
+            to: string;
+        };
+        AddStaff: {
+            email: string;
+            name: string;
+            /** @enum {string} */
+            role: "desk_officer" | "supervisor";
+        };
         Alert: {
             body: string;
             /** Format: date-time */
             createdAt: string;
             id: string;
             /** @enum {string} */
-            kind: "possible_match" | "item_arrived" | "item_not_received" | "id_card_found" | "hand_in_reminder" | "claim_update" | "general";
+            kind: "possible_match" | "item_arrived" | "item_not_received" | "id_card_found" | "hand_in_reminder" | "claim_update" | "last_chance" | "report_expiring" | "report_expired" | "general";
             link: string | null;
             /** Format: date-time */
             readAt: string | null;
@@ -3190,6 +3968,15 @@ export interface components {
         };
         /** @enum {string} */
         ClaimState: "SUBMITTED" | "MORE_INFO_REQUESTED" | "APPROVED" | "REJECTED" | "COLLECTED" | "LAPSED" | "WITHDRAWN" | "CANCELLED";
+        Closure: {
+            /** Format: date */
+            from: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date */
+            to: string;
+        };
         Colour: {
             /** @enum {string} */
             code: "black" | "white" | "grey" | "silver" | "blue" | "navy" | "red" | "green" | "yellow" | "orange" | "pink" | "purple" | "brown" | "beige" | "gold" | "multi";
@@ -3616,6 +4403,15 @@ export interface components {
         MeResponse: {
             me: components["schemas"]["Me"];
         };
+        NeedsDecision: {
+            /** Format: date-time */
+            at: string | null;
+            detail: string;
+            /** @enum {string} */
+            kind: "retention" | "claim_overdue";
+            link: string;
+            title: string;
+        };
         Pickup: {
             claimant: {
                 name: string;
@@ -3637,6 +4433,18 @@ export interface components {
         };
         PickupLookup: {
             code: string;
+        };
+        Policies: {
+            activeClaimCap: number;
+            lookAlikeRetentionDays: number;
+            pickupWindowDays: number;
+            proxyPickup: boolean;
+            retentionDays: number;
+            smsAlerts: boolean;
+        };
+        PolicySettings: {
+            closures: components["schemas"]["Closure"][];
+            policies: components["schemas"]["Policies"];
         };
         ProvideMore: {
             answer: string;
@@ -3666,6 +4474,50 @@ export interface components {
             privateTicks: string[];
             publicDescription: string | null;
             shortName: string | null;
+        };
+        RemoveStaff: {
+            email: string;
+        };
+        RetentionDecision: {
+            /** @enum {string} */
+            decision: "donate" | "dispose" | "transfer";
+            ids: string[];
+            note: string;
+        };
+        RetentionDecisionResult: {
+            decided: number;
+        };
+        RetentionItem: {
+            binCode: string | null;
+            category: string;
+            /** Format: date-time */
+            decidedAt: string | null;
+            /** @enum {string|null} */
+            decision: "donate" | "dispose" | "transfer" | null;
+            /** Format: date-time */
+            endsAt: string | null;
+            id: string;
+            lookAlike: boolean;
+            note: string | null;
+            photoId: string | null;
+            place: string | null;
+            sensitive: boolean;
+            state: components["schemas"]["FoundItemState"];
+            title: string;
+        };
+        RetentionList: {
+            awaiting: components["schemas"]["RetentionItem"][];
+            decided: components["schemas"]["RetentionItem"][];
+            ending: components["schemas"]["RetentionItem"][];
+            policy: {
+                days: number;
+                lookAlikeDays: number;
+            };
+        };
+        RetentionRun: {
+            expired: number;
+            lastChanceAlerts: number;
+            recalculated: number;
         };
         ReviewClaim: {
             /** @enum {string} */
@@ -3726,6 +4578,20 @@ export interface components {
             reasons: string[];
             title: string;
         };
+        StaffList: {
+            staff: components["schemas"]["StaffMember"][];
+        };
+        StaffMember: {
+            email: string;
+            name: string;
+            /** @enum {string} */
+            role: "desk_officer" | "supervisor";
+            /** @enum {string} */
+            status: "active" | "invited";
+            /** Format: uuid */
+            userId: string | null;
+            you: boolean;
+        };
         SubmitClaim: {
             answers: {
                 answer: string;
@@ -3735,6 +4601,20 @@ export interface components {
             lostReportId: string | null;
             /** @default [] */
             proofPhotoIds: string[];
+        };
+        SupervisorOverview: {
+            activity: components["schemas"]["ActivityEntry"][];
+            badges: {
+                retention: number;
+            };
+            counts: {
+                claimsToReview: number;
+                expiringThisWeek: number;
+                inCustody: number;
+                returned30Days: number;
+            };
+            needsDecision: components["schemas"]["NeedsDecision"][];
+            today: components["schemas"]["DeskToday"];
         };
         TenantInfo: {
             appearance: components["schemas"]["Appearance"];

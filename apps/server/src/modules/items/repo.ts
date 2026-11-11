@@ -43,6 +43,10 @@ export async function insertLostReport(
   return row;
 }
 
+export type LostReportPatch = Partial<
+  Pick<LostReportRow, 'expiresAt' | 'renewCount' | 'expiryReminderSentAt'>
+>;
+
 /** Moves a report from `from` to `to`. Fails with Conflict if someone else changed it first. */
 export async function updateLostReportState(
   tx: Tx,
@@ -50,7 +54,7 @@ export async function updateLostReportState(
   id: string,
   from: LostReportState,
   to: LostReportState,
-  patch: Partial<Pick<LostReportRow, 'expiresAt' | 'renewCount'>> = {},
+  patch: LostReportPatch = {},
 ): Promise<LostReportRow> {
   const [row] = await tx.db
     .update(lostReports)
@@ -501,4 +505,66 @@ export async function findFoundItems(
     .select()
     .from(foundItems)
     .where(and(eq(foundItems.tenantId, tenantId), inArray(foundItems.id, ids)));
+}
+
+// ── Timers: retention (WF-05) and lost-report expiry ─────────────────────────────────────────────
+
+/** Found items in the given states (retention run, supervisor lists). Oldest change first. */
+export async function listFoundItemsByState(
+  tx: Tx,
+  tenantId: string,
+  states: FoundItemState[],
+  updatedSince: Date | null = null,
+): Promise<FoundItemRow[]> {
+  return tx.db
+    .select()
+    .from(foundItems)
+    .where(
+      and(
+        eq(foundItems.tenantId, tenantId),
+        inArray(foundItems.state, states),
+        updatedSince ? gte(foundItems.updatedAt, updatedSince) : undefined,
+      ),
+    )
+    .orderBy(asc(foundItems.updatedAt))
+    .limit(5000);
+}
+
+/** OPEN reports that expire on or before `until`, soonest first. */
+export async function listOpenReportsExpiringBy(
+  tx: Tx,
+  tenantId: string,
+  until: Date,
+): Promise<LostReportRow[]> {
+  return tx.db
+    .select()
+    .from(lostReports)
+    .where(
+      and(
+        eq(lostReports.tenantId, tenantId),
+        eq(lostReports.state, 'OPEN'),
+        lte(lostReports.expiresAt, until),
+      ),
+    )
+    .orderBy(asc(lostReports.expiresAt))
+    .limit(1000);
+}
+
+/** Changes non-state fields of a report, guarded on its current state. */
+export async function patchLostReport(
+  tx: Tx,
+  tenantId: string,
+  id: string,
+  state: LostReportState,
+  patch: LostReportPatch,
+): Promise<LostReportRow> {
+  const [row] = await tx.db
+    .update(lostReports)
+    .set({ ...patch, updatedAt: tx.now })
+    .where(
+      and(eq(lostReports.tenantId, tenantId), eq(lostReports.id, id), eq(lostReports.state, state)),
+    )
+    .returning();
+  if (!row) throw new Conflict();
+  return row;
 }

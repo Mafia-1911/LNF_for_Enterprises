@@ -50,6 +50,8 @@ export const lostReports = pgTable(
     timeTo: ts('time_to').notNull(),
     expiresAt: ts('expires_at').notNull(),
     renewCount: bigint('renew_count', { mode: 'number' }).notNull().default(0),
+    /** When the "your report expires in 2 days" alert went out; cleared on renew. */
+    expiryReminderSentAt: ts('expiry_reminder_sent_at'),
     createdAt: ts('created_at').notNull(),
     updatedAt: ts('updated_at').notNull(),
   },
@@ -118,6 +120,10 @@ export const foundItems = pgTable(
     reminderSentAt: ts('reminder_sent_at'),
     receivedAt: ts('received_at'),
     retentionEndsAt: ts('retention_ends_at'),
+    /** Days added by "Keep longer" (WF-05). Retention is recomputed from intake, policy and pauses. */
+    retentionExtraDays: bigint('retention_extra_days', { mode: 'number' }).notNull().default(0),
+    /** When owners of similar reports got the last-chance alert (WF-05, 7 days before expiry). */
+    lastChanceSentAt: ts('last_chance_sent_at'),
     /** University ID or card number, AES-256-GCM (CC-06). Only the last 4 are ever shown. */
     idNumberCiphertext: text('id_number_ciphertext'),
     idNumberLast4: text('id_number_last4'),

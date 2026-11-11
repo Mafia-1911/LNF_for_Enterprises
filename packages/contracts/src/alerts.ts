@@ -8,6 +8,9 @@ export const ALERT_KINDS = [
   'id_card_found',
   'hand_in_reminder',
   'claim_update',
+  'last_chance',
+  'report_expiring',
+  'report_expired',
   'general',
 ] as const;
 

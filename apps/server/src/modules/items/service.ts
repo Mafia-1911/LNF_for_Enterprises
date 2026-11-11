@@ -28,6 +28,7 @@ import {
   insertPrivateDetails,
   listLostReportsByOwner,
   updateLostReportState,
+  type LostReportPatch,
   type LostReportRow,
   type NewLostReport,
 } from './repo';
@@ -38,7 +39,7 @@ export type ItemsDeps = FoundItemsDeps;
 type LostReportRecord = { id: string; state: LostReportState | null };
 type LostReportChange = {
   values?: NewLostReport;
-  patch?: Partial<Pick<LostReportRow, 'expiresAt' | 'renewCount'>>;
+  patch?: LostReportPatch;
 };
 
 export const lostReportTransition = bindTransition({
@@ -242,6 +243,7 @@ export async function renewLostReport(ctx: RequestCtx, id: string): Promise<Lost
         patch: {
           expiresAt: addDaysToInstant(tx.now, LOST_REPORT_OPEN_DAYS),
           renewCount: row.renewCount + 1,
+          expiryReminderSentAt: null,
         },
       },
     );

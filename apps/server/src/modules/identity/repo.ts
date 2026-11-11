@@ -3,7 +3,7 @@ import { isRole, type Role } from '@lf/domain';
 import { and, eq, inArray } from 'drizzle-orm';
 import { users } from '../../platform/auth/schema';
 import type { Tx } from '../../platform/db/types';
-import { roleAssignments } from './schema';
+import { roleAssignments, staffInvites } from './schema';
 
 export type Member = {
   userId: string;
@@ -127,4 +127,88 @@ export async function namesOf(tx: Tx, userIds: string[]): Promise<Map<string, st
     .from(users)
     .where(inArray(users.id, userIds));
   return new Map(rows.map((r) => [r.id, r.name]));
+}
+
+// ── Staff (supervisor's Staff page) ──────────────────────────────────────────────────────────────
+
+export async function listStaffMembers(tx: Tx, tenantId: string): Promise<Member[]> {
+  const rows = await tx.db
+    .select({
+      userId: users.id,
+      name: users.name,
+      email: users.email,
+      phoneNumber: users.phoneNumber,
+      role: roleAssignments.role,
+      title: roleAssignments.title,
+    })
+    .from(roleAssignments)
+    .innerJoin(users, eq(users.id, roleAssignments.userId))
+    .where(
+      and(
+        eq(roleAssignments.tenantId, tenantId),
+        inArray(roleAssignments.role, ['desk_officer', 'supervisor']),
+      ),
+    )
+    .orderBy(users.name);
+  return rows.map((r) => ({ ...r, role: r.role && isRole(r.role) ? r.role : null }));
+}
+
+export type StaffInviteRow = typeof staffInvites.$inferSelect;
+
+export function listStaffInvites(tx: Tx, tenantId: string): Promise<StaffInviteRow[]> {
+  return tx.db
+    .select()
+    .from(staffInvites)
+    .where(eq(staffInvites.tenantId, tenantId))
+    .orderBy(staffInvites.name);
+}
+
+export async function findStaffInvite(
+  tx: Tx,
+  tenantId: string,
+  email: string,
+): Promise<StaffInviteRow | null> {
+  const [row] = await tx.db
+    .select()
+    .from(staffInvites)
+    .where(and(eq(staffInvites.tenantId, tenantId), eq(staffInvites.email, email)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function upsertStaffInvite(
+  tx: Tx,
+  tenantId: string,
+  invite: { email: string; name: string; role: Role; grantedBy: string | null },
+): Promise<void> {
+  await tx.db
+    .insert(staffInvites)
+    .values({ tenantId, ...invite, createdAt: tx.now })
+    .onConflictDoUpdate({
+      target: [staffInvites.tenantId, staffInvites.email],
+      set: { name: invite.name, role: invite.role, grantedBy: invite.grantedBy },
+    });
+}
+
+export async function deleteStaffInvite(tx: Tx, tenantId: string, email: string): Promise<boolean> {
+  const rows = await tx.db
+    .delete(staffInvites)
+    .where(and(eq(staffInvites.tenantId, tenantId), eq(staffInvites.email, email)))
+    .returning({ email: staffInvites.email });
+  return rows.length > 0;
+}
+
+/** Sets someone's role in a tenant (staff changes), recording who granted it. */
+export async function setRoleAssignment(
+  tx: Tx,
+  tenantId: string,
+  data: { userId: string; role: Role; title: string | null; grantedBy: string | null },
+): Promise<void> {
+  await tx.db
+    .insert(roleAssignments)
+    .values({ tenantId, ...data, createdAt: tx.now })
+    .onConflictDoUpdate({
+      target: [roleAssignments.tenantId, roleAssignments.userId],
+      set: { role: data.role, title: data.title, grantedBy: data.grantedBy },
+    });
 }

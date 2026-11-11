@@ -1,5 +1,5 @@
 // The only file that touches the dispatches table.
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, gte } from 'drizzle-orm';
 import type { Tx } from '../../platform/db/types';
 import { dispatches } from './schema';
 
@@ -34,4 +34,13 @@ export async function findDispatch(
     .where(and(eq(dispatches.tenantId, tenantId), eq(dispatches.id, id)))
     .limit(1);
   return row ?? null;
+}
+
+/** Handovers since a time (supervisor overview: returned in the last 30 days). */
+export async function countDispatchesSince(tx: Tx, tenantId: string, since: Date): Promise<number> {
+  const [row] = await tx.db
+    .select({ n: count() })
+    .from(dispatches)
+    .where(and(eq(dispatches.tenantId, tenantId), gte(dispatches.createdAt, since)));
+  return row?.n ?? 0;
 }

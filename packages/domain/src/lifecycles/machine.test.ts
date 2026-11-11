@@ -101,18 +101,20 @@ describe('found item lifecycle (SRS)', () => {
     ['EXPIRED', 'DONATE', 'supervisor', 'DONATED'],
     ['EXPIRED', 'DISPOSE', 'supervisor', 'DISPOSED'],
     ['EXPIRED', 'TRANSFER', 'supervisor', 'TRANSFERRED'],
+    ['EXPIRED', 'KEEP', 'supervisor', 'IN_CUSTODY'],
   ] as const)('%s --%s--> as %s gives %s', (from, event, who, to) => {
     const actor =
       who === 'system' ? ({ kind: 'system' } as const) : ({ kind: 'user', role: who } as const);
     expect(step(foundItemMachine, from, event, actor)).toEqual({ ok: true, to });
   });
 
-  it('only supervisors approve disposal (US-08)', () => {
+  it('only supervisors approve disposal or keep an expired item longer (US-08)', () => {
     for (const role of ROLES.filter((r) => r !== 'supervisor')) {
-      expect(step(foundItemMachine, 'EXPIRED', 'DISPOSE', { kind: 'user', role })).toEqual({
-        ok: false,
-        reason: 'forbidden',
-      });
+      for (const event of ['DISPOSE', 'DONATE', 'KEEP'] as const)
+        expect(step(foundItemMachine, 'EXPIRED', event, { kind: 'user', role })).toEqual({
+          ok: false,
+          reason: 'forbidden',
+        });
     }
   });
 
