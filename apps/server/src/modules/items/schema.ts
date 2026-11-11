@@ -164,3 +164,24 @@ export const foundItemPings = pgTable(
     index('found_item_pings_lost_idx').on(t.tenantId, t.lostReportId),
   ],
 );
+
+/**
+ * FND IDs reserved for outage label sheets (NF-04, CC-17). Printed in advance; during an outage an
+ * item is tagged on paper and entered later under the same ID with its original intake time.
+ */
+export const reservedIds = pgTable(
+  'reserved_ids',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    id: text('id').notNull(),
+    reservedBy: uuid('reserved_by').references(() => users.id),
+    reservedAt: ts('reserved_at').notNull(),
+    usedAt: ts('used_at'),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.id] }),
+    index('reserved_ids_unused_idx').on(t.tenantId, t.usedAt),
+  ],
+);

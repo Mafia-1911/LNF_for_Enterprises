@@ -3,6 +3,7 @@
 // lost reports move through their own transitions from items; system steps run as the system actor.
 import { randomInt } from 'node:crypto';
 import type {
+  Approval,
   Claim,
   ClaimStart,
   DeskClaim,
@@ -18,8 +19,10 @@ import {
   claimMachine,
   claimQuestions,
   DESK_ROLES,
+  DISPUTE_WINDOW_DAYS,
   FAILED_VERIFICATION_LIMIT,
   FAILED_VERIFICATION_WINDOW_DAYS,
+  isHighValue,
   pickupWindowEnd,
   privateTicksFor,
   reviewDue,
@@ -34,9 +37,9 @@ import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
 import { Conflict, Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
-import { bindTransition } from '../audit';
+import { bindTransition, recordAuditEvent } from '../audit';
 import { deskInfo, readPolicies } from '../catalog';
-import { memberProfiles } from '../identity';
+import { flagClearedAt, memberNames, memberProfiles } from '../identity';
 import {
   deskRowsFor,
   expiringRows,
@@ -61,12 +64,14 @@ import {
   countFailedFor,
   findClaim,
   insertClaim,
+  listApprovalRequests,
   listApprovedDueReminder,
   listApprovedPastWindow,
   listByClaimant,
   listByState,
   listForItem,
   listRecentRejections,
+  listRejectionsSince,
   patchClaim,
   updateClaimState,
   type ClaimPatch,
@@ -130,8 +135,11 @@ function readCode(deps: ClaimsDeps, tenantId: string, row: ClaimRow): string | n
 /** CC-15: three failed verifications in 7 days pause claim rights until the oldest falls out. */
 async function pausedUntil(tx: Tx, claimantId: string): Promise<Date | null> {
   const since = addDaysToInstant(tx.now, -FAILED_VERIFICATION_WINDOW_DAYS);
+  // A supervisor's "Review done — clear" (Flags page) lifts the pause (CC-15 "pending review").
+  const cleared = await flagClearedAt(tx, claimantId, 'failed_verifications');
   const failed = (await listRecentRejections(tx, tx.tenantId, claimantId, since))
     .filter((r) => Object.values(r.verdicts).includes('fail'))
+    .filter((r) => !cleared || (r.decidedAt !== null && r.decidedAt > cleared))
     .map((r) => r.decidedAt as Date)
     .sort((a, b) => a.getTime() - b.getTime());
   if (failed.length < FAILED_VERIFICATION_LIMIT) return null;
@@ -322,7 +330,21 @@ async function toClaimView(
     createdAt: row.createdAt.toISOString(),
     desk: await deskInfo(tx),
     canReRequest: row.state === 'LAPSED' && !row.reRequested && item.state === 'IN_CUSTODY',
+    canDispute: disputable(tx, row, item),
   };
+}
+
+const DAY = 86_400_000;
+/** WF-06: a closed or rejected claim within 7 days (CC-01); a collected one within 30 (CC-14). */
+function disputable(tx: Tx, row: ClaimRow, item: FoundItemRow): Claim['canDispute'] {
+  const age = tx.now.getTime() - row.updatedAt.getTime();
+  // Cancelled because the item went to someone else (not because the owner withdrew), or rejected.
+  const lost =
+    row.state === 'REJECTED' ||
+    (row.state === 'CANCELLED' && ['READY_FOR_PICKUP', 'DISPATCHED'].includes(item.state));
+  if (lost && age <= DISPUTE_WINDOW_DAYS * DAY) return 'second_claimant';
+  if (row.state === 'COLLECTED' && age <= 30 * DAY) return 'wrong_handover';
+  return null;
 }
 
 export async function listMyClaims(deps: ClaimsDeps, ctx: RequestCtx): Promise<Claim[]> {
@@ -700,7 +722,7 @@ export async function reviewClaim(
           userId: other.claimantId,
           kind: 'claim_update',
           title: 'Your claim was closed',
-          body: `The item went to an owner whose answers matched. If you think this is wrong, ask the L&F Office within 7 days.`,
+          body: `The item went to an owner whose answers matched. If you think this is wrong, open the claim and tap "Dispute" within 7 days.`,
           link: `/claims/${other.id}`,
         });
       }
@@ -850,3 +872,138 @@ export function collectClaim(tx: Tx, claim: ClaimRow, note: string): Promise<Cla
 
 export type { ClaimRow };
 export { ACTIVE as ACTIVE_CLAIM_STATES };
+
+// ── High-value approvals (CC-08, CC-10) ───────────────────────────────────────────────────────────
+
+/** Where a claim's supervisor approval stands (desk pickup screen). */
+export function approvalOf(row: ClaimRow): 'none' | 'requested' | 'approved' {
+  if (row.supervisorApprovedAt) return 'approved';
+  return row.approvalRequestedAt ? 'requested' : 'none';
+}
+
+/** The desk asks a supervisor to approve a high-value handover. */
+export async function requestApproval(
+  ctx: RequestCtx,
+  claimId: string,
+): Promise<{ approval: 'none' | 'requested' | 'approved' }> {
+  const actor = ctx.actor;
+  if (actor.kind !== 'user' || !DESK_ROLES.includes(actor.role)) throw new Forbidden();
+  return withTx(ctx, async (tx) => {
+    const row = await findClaim(tx, tx.tenantId, claimId);
+    if (!row || row.state !== 'APPROVED') throw new NotFound(NOT_FOUND);
+    const item = await foundItemFor(tx, row.foundItemId);
+    if (!item || !isHighValue(item.category))
+      throw new ValidationFailed(
+        {},
+        'Only high-value items need a supervisor; finish the handover.',
+      );
+    if (row.approvalRequestedAt) return { approval: approvalOf(row) };
+    const saved = await patchClaim(tx, tx.tenantId, row.id, 'APPROVED', {
+      approvalRequestedAt: tx.now,
+      approvalRequestedBy: actor.userId,
+    });
+    await recordAuditEvent(tx, {
+      recordType: 'claim',
+      recordId: row.id,
+      event: 'APPROVAL_REQUESTED',
+      note: null,
+    });
+    return { approval: approvalOf(saved) };
+  });
+}
+
+/** Approval requests waiting for (or given by) a supervisor. */
+export function listApprovals(ctx: RequestCtx): Promise<Approval[]> {
+  return withTx(ctx, approvalRows, { readOnly: true });
+}
+
+/** The same list inside the caller's transaction (supervisor overview). */
+export async function approvalRows(tx: Tx): Promise<Approval[]> {
+  const rows = await listApprovalRequests(tx, tx.tenantId);
+  const items = new Map(
+    (
+      await foundItemsFor(
+        tx,
+        rows.map((r) => r.foundItemId),
+      )
+    ).map((i) => [i.id, i]),
+  );
+  const people = await memberProfiles(
+    tx,
+    rows.map((r) => r.claimantId),
+  );
+  const officers = await memberNames(
+    tx,
+    rows.map((r) => r.approvalRequestedBy).filter((v): v is string => v !== null),
+  );
+  return rows.map((r) => {
+    const item = items.get(r.foundItemId);
+    return {
+      claimId: r.id,
+      foundItemId: r.foundItemId,
+      itemTitle: item ? itemTitle(item) : r.foundItemId,
+      category: item?.category ?? 'other',
+      claimantName: people.get(r.claimantId)?.name ?? 'Unknown',
+      claimantRole: people.get(r.claimantId)?.role ?? 'none',
+      requestedBy: r.approvalRequestedBy
+        ? (officers.get(r.approvalRequestedBy) ?? 'Staff')
+        : 'Staff',
+      requestedAt: (r.approvalRequestedAt ?? r.updatedAt).toISOString(),
+      approved: r.supervisorApprovedAt !== null,
+    };
+  });
+}
+
+/** A supervisor approves a requested high-value handover; the desk can then finish it. */
+export async function approveHandover(ctx: RequestCtx, claimId: string): Promise<Approval[]> {
+  const actor = ctx.actor;
+  if (actor.kind !== 'user' || actor.role !== 'supervisor') throw new Forbidden();
+  await withTx(ctx, async (tx) => {
+    const row = await findClaim(tx, tx.tenantId, claimId);
+    if (!row || row.state !== 'APPROVED' || !row.approvalRequestedAt) throw new NotFound(NOT_FOUND);
+    if (row.supervisorApprovedAt) return;
+    await patchClaim(tx, tx.tenantId, row.id, 'APPROVED', {
+      supervisorApprovedBy: actor.userId,
+      supervisorApprovedAt: tx.now,
+    });
+    await recordAuditEvent(tx, {
+      recordType: 'claim',
+      recordId: row.id,
+      event: 'HANDOVER_APPROVED',
+      note: null,
+    });
+  });
+  return listApprovals(ctx);
+}
+
+/** People with 3+ failed verifications in 7 days (Flags page, CC-15). */
+export async function failedVerifiers(
+  tx: Tx,
+): Promise<{ userId: string; failed: number; latest: Date }[]> {
+  const since = addDaysToInstant(tx.now, -FAILED_VERIFICATION_WINDOW_DAYS);
+  const by = new Map<string, Date[]>();
+  for (const r of await listRejectionsSince(tx, tx.tenantId, since)) {
+    if (!Object.values(r.verdicts).includes('fail') || !r.decidedAt) continue;
+    by.set(r.claimantId, [...(by.get(r.claimantId) ?? []), r.decidedAt]);
+  }
+  return [...by]
+    .filter(([, dates]) => dates.length >= FAILED_VERIFICATION_LIMIT)
+    .map(([userId, dates]) => ({
+      userId,
+      failed: dates.length,
+      latest: new Date(Math.max(...dates.map((d) => d.getTime()))),
+    }));
+}
+
+/** For disputes (dispatch module): this person's claim and what they may dispute, or null. */
+export async function disputableClaim(
+  tx: Tx,
+  claimId: string,
+  userId: string,
+): Promise<{ row: ClaimRow; kind: 'second_claimant' | 'wrong_handover' } | null> {
+  const row = await findClaim(tx, tx.tenantId, claimId);
+  if (!row || row.claimantId !== userId) return null;
+  const item = await foundItemFor(tx, row.foundItemId);
+  const kind = item ? disputable(tx, row, item) : null;
+  return kind ? { row, kind } : null;
+}

@@ -165,6 +165,15 @@ export async function latestEvents(
   return rows.map((r) => ({ ...toEntry(r), recordType: r.recordType, recordId: r.recordId }));
 }
 
+/** One record's audit trail inside the caller's transaction, oldest first. */
+export async function recordHistory(
+  tx: Tx,
+  recordType: string,
+  recordId: string,
+): Promise<AuditEntry[]> {
+  return (await listRecordEvents(tx, tx.tenantId, recordType, recordId)).map(toEntry);
+}
+
 /** The last event of each record (for example how an expired item was decided). */
 export async function lastEventOf(
   tx: Tx,

@@ -359,3 +359,19 @@ export async function custodyCounts(tx: Tx): Promise<{
     oldestAwaiting: expired[0]?.retentionEndsAt ?? null,
   };
 }
+
+/** Finders with 2+ posts never handed in (Flags page, CC-03 "repeat cases flagged"). */
+export async function noShowFinders(
+  tx: Tx,
+): Promise<{ userId: string; count: number; latest: Date }[]> {
+  const by = new Map<string, Date[]>();
+  for (const r of await listFoundItemsByState(tx, tx.tenantId, ['NOT_RECEIVED']))
+    if (r.finderId) by.set(r.finderId, [...(by.get(r.finderId) ?? []), r.updatedAt]);
+  return [...by]
+    .filter(([, dates]) => dates.length >= 2)
+    .map(([userId, dates]) => ({
+      userId,
+      count: dates.length,
+      latest: new Date(Math.max(...dates.map((d) => d.getTime()))),
+    }));
+}

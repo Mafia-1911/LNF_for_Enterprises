@@ -3,7 +3,7 @@ import { isRole, type Role } from '@lf/domain';
 import { and, eq, inArray } from 'drizzle-orm';
 import { users } from '../../platform/auth/schema';
 import type { Tx } from '../../platform/db/types';
-import { roleAssignments, staffInvites } from './schema';
+import { accountFlags, flagClears, roleAssignments, staffInvites } from './schema';
 
 export type Member = {
   userId: string;
@@ -210,5 +210,52 @@ export async function setRoleAssignment(
     .onConflictDoUpdate({
       target: [roleAssignments.tenantId, roleAssignments.userId],
       set: { role: data.role, title: data.title, grantedBy: data.grantedBy },
+    });
+}
+
+// ── Account flags (CC-03, CC-14, CC-15) ──────────────────────────────────────────────────────────
+
+export async function insertAccountFlag(
+  tx: Tx,
+  tenantId: string,
+  flag: { id: string; userId: string; kind: string; reason: string },
+): Promise<void> {
+  await tx.db.insert(accountFlags).values({ tenantId, ...flag, createdAt: tx.now });
+}
+
+export function listAccountFlags(tx: Tx, tenantId: string) {
+  return tx.db.select().from(accountFlags).where(eq(accountFlags.tenantId, tenantId)).limit(1000);
+}
+
+export function listFlagClears(tx: Tx, tenantId: string) {
+  return tx.db.select().from(flagClears).where(eq(flagClears.tenantId, tenantId)).limit(5000);
+}
+
+export async function findFlagClear(tx: Tx, tenantId: string, userId: string, kind: string) {
+  const [row] = await tx.db
+    .select()
+    .from(flagClears)
+    .where(
+      and(
+        eq(flagClears.tenantId, tenantId),
+        eq(flagClears.userId, userId),
+        eq(flagClears.kind, kind),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function upsertFlagClear(
+  tx: Tx,
+  tenantId: string,
+  data: { userId: string; kind: string; clearedBy: string | null },
+): Promise<void> {
+  await tx.db
+    .insert(flagClears)
+    .values({ tenantId, ...data, clearedAt: tx.now })
+    .onConflictDoUpdate({
+      target: [flagClears.tenantId, flagClears.userId, flagClears.kind],
+      set: { clearedAt: tx.now, clearedBy: data.clearedBy },
     });
 }

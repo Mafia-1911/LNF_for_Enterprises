@@ -50,6 +50,11 @@ export const claims = pgTable(
     reminderSentAt: ts('reminder_sent_at'),
     /** CC-11: a lapsed claim may be re-requested once. */
     reRequested: boolean('re_requested').notNull().default(false),
+    /** High-value handover approval (CC-08, CC-10): requested by the desk, given by a supervisor. */
+    approvalRequestedAt: ts('approval_requested_at'),
+    approvalRequestedBy: uuid('approval_requested_by').references(() => users.id),
+    supervisorApprovedBy: uuid('supervisor_approved_by').references(() => users.id),
+    supervisorApprovedAt: ts('supervisor_approved_at'),
     createdAt: ts('created_at').notNull(),
     updatedAt: ts('updated_at').notNull(),
   },

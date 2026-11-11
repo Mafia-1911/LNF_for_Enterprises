@@ -5,6 +5,7 @@ import type {
   ActivityEntry,
   AddClosure,
   AddStaff,
+  Flag,
   Policies,
   PolicySettings,
   StaffMember,
@@ -23,10 +24,19 @@ import { NotFound, ValidationFailed } from '../../platform/errors';
 import { tenantEmailDomain } from '../../platform/tenancy';
 import { latestEvents, recordAuditEvent } from '../audit';
 import { readPolicies, writePolicies } from '../catalog';
-import { todayLists } from '../claims';
-import { returnedSince } from '../dispatch';
-import { addStaff, listStaff, memberNames, removeStaff } from '../identity';
-import { custodyCounts, recalculateRetention } from '../items';
+import { approvalRows, failedVerifiers, todayLists } from '../claims';
+import { openDisputes, returnedSince } from '../dispatch';
+import {
+  accountFlags,
+  addStaff,
+  clearFlags,
+  flagClearTimes,
+  listStaff,
+  memberNames,
+  removeStaff,
+  type FlagKind,
+} from '../identity';
+import { custodyCounts, noShowFinders, recalculateRetention } from '../items';
 
 const DAY = 86_400_000;
 const MAX_CLOSURE_DAYS = 120;
@@ -102,6 +112,25 @@ export async function supervisorOverview(ctx: RequestCtx): Promise<SupervisorOve
             link: `/desk/claims/${row.id}`,
             at: row.due,
           });
+      const disputes = await openDisputes(tx);
+      for (const d of disputes)
+        needsDecision.push({
+          kind: 'dispute',
+          title: `Dispute on ${d.dispatchId ?? d.foundItemId}`,
+          detail: `${d.itemTitle} · raised by ${d.raisedBy}`,
+          link: `/supervisor/disputes`,
+          at: d.createdAt,
+        });
+      const approvals = (await approvalRows(tx)).filter((a) => !a.approved);
+      for (const a of approvals)
+        needsDecision.push({
+          kind: 'approval',
+          title: `Approve handover: ${a.itemTitle}`,
+          detail: `${a.claimantName} · requested by ${a.requestedBy}`,
+          link: '/supervisor/approvals',
+          at: a.requestedAt,
+        });
+      const flags = await flagsIn(tx);
       return {
         counts: {
           inCustody: counts.held,
@@ -109,7 +138,12 @@ export async function supervisorOverview(ctx: RequestCtx): Promise<SupervisorOve
           returned30Days: await returnedSince(tx, new Date(tx.now.getTime() - 30 * DAY)),
           expiringThisWeek: counts.expiringThisWeek,
         },
-        badges: { retention: counts.awaiting },
+        badges: {
+          retention: counts.awaiting,
+          approvals: approvals.length,
+          disputes: disputes.length,
+          flags: flags.length,
+        },
         needsDecision,
         activity: await activity(tx),
         today,
@@ -227,5 +261,68 @@ export function removeStaffMember(
       note: null,
     });
     return { staff: await listStaff(tx) };
+  });
+}
+
+// ── Flags (Figma 39:23882, CC-03, CC-14, CC-15) ──────────────────────────────────────────────────
+
+/** Accounts to review: repeat no-show finders, paused claimants, wrong recipients. */
+async function flagsIn(tx: Tx): Promise<Flag[]> {
+  const clears = await flagClearTimes(tx);
+  const fresh = (userId: string, kind: FlagKind, at: Date) => {
+    const cleared = clears.get(`${userId}:${kind}`);
+    return !cleared || at > cleared;
+  };
+  const by = new Map<string, { kinds: FlagKind[]; reasons: string[]; since: Date }>();
+  const add = (userId: string, kind: FlagKind, reason: string, at: Date) => {
+    if (!fresh(userId, kind, at)) return;
+    const f = by.get(userId) ?? { kinds: [], reasons: [], since: at };
+    if (!f.kinds.includes(kind)) f.kinds.push(kind);
+    f.reasons.push(reason);
+    if (at < f.since) f.since = at;
+    by.set(userId, f);
+  };
+  for (const n of await noShowFinders(tx))
+    add(
+      n.userId,
+      'no_show_finder',
+      `Repeat no-show: ${n.count} found posts never handed in`,
+      n.latest,
+    );
+  for (const v of await failedVerifiers(tx))
+    add(
+      v.userId,
+      'failed_verifications',
+      `Claims paused: ${v.failed} failed verifications in 7 days`,
+      v.latest,
+    );
+  for (const f of await accountFlags(tx)) add(f.userId, f.kind, f.reason, f.at);
+  const names = await memberNames(tx, [...by.keys()]);
+  return [...by].map(([userId, f]) => ({
+    userId,
+    name: names.get(userId) ?? 'Unknown',
+    kinds: f.kinds,
+    reasons: f.reasons,
+    since: f.since.toISOString(),
+  }));
+}
+
+export function listFlags(ctx: RequestCtx): Promise<{ flags: Flag[] }> {
+  return withTx(ctx, async (tx) => ({ flags: await flagsIn(tx) }), { readOnly: true });
+}
+
+/** "Review done — clear": hides this person's current flags and lifts a claim pause. */
+export function clearFlag(ctx: RequestCtx, userId: string): Promise<{ flags: Flag[] }> {
+  return withTx(ctx, async (tx) => {
+    const flag = (await flagsIn(tx)).find((f) => f.userId === userId);
+    if (!flag) throw new NotFound('That account has no flags to clear; reload the page.');
+    await clearFlags(tx, userId, flag.kinds);
+    await recordAuditEvent(tx, {
+      recordType: 'account',
+      recordId: userId,
+      event: 'FLAGS_CLEARED',
+      note: flag.kinds.join(', '),
+    });
+    return { flags: await flagsIn(tx) };
   });
 }

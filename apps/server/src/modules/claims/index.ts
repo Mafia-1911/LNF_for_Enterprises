@@ -1,9 +1,16 @@
 // Public surface of the claims module.
 export {
   ACTIVE_CLAIM_STATES,
+  approvalOf,
+  approvalRows,
   approvedClaimByCode,
+  approveHandover,
+  failedVerifiers,
+  listApprovals,
+  requestApproval,
   claimFor,
   claimTransition,
+  disputableClaim,
   collectClaim,
   runPickupTimer,
   submitClaim,

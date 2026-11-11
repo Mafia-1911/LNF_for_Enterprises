@@ -2,6 +2,7 @@
 //   - Students and staff use their university email (tenant.emailDomain); visitors use a phone.
 //   - Staff roles (desk officer, supervisor, IT admin) sign in with SSO only (A2, CC-10).
 //   - First sign-in gives a default role: student for university accounts, visitor for phones.
+import { randomUUID } from 'node:crypto';
 import type { AddStaff, StaffMember } from '@lf/contracts';
 import { isRole, isStaffRole, type Role } from '@lf/domain';
 import { SignInRefused, type AuthPolicy, type SignInMethod } from '../../platform/auth';
@@ -13,6 +14,11 @@ import type { SessionUser } from '../../platform/http/context';
 import type { Tenant } from '../../platform/tenancy';
 import {
   deleteStaffInvite,
+  findFlagClear,
+  insertAccountFlag,
+  listAccountFlags,
+  listFlagClears,
+  upsertFlagClear,
   findMember,
   findMemberByEmail,
   findStaffInvite,
@@ -312,4 +318,47 @@ export async function removeStaff(tx: Tx, email: string): Promise<string> {
     grantedBy: me,
   });
   return m.userId;
+}
+
+// ── Account flags (Flags page) ───────────────────────────────────────────────────────────────────
+
+export type FlagKind = 'no_show_finder' | 'failed_verifications' | 'wrong_recipient';
+
+/** CC-14: flag the account that received the wrong item. */
+export async function flagAccount(
+  tx: Tx,
+  userId: string,
+  kind: FlagKind,
+  reason: string,
+): Promise<void> {
+  await insertAccountFlag(tx, tx.tenantId, { id: randomUUID(), userId, kind, reason });
+}
+
+/** Flags raised directly on accounts (wrong recipients), with when. */
+export async function accountFlags(
+  tx: Tx,
+): Promise<{ userId: string; kind: FlagKind; reason: string; at: Date }[]> {
+  return (await listAccountFlags(tx, tx.tenantId)).map((f) => ({
+    userId: f.userId,
+    kind: f.kind as FlagKind,
+    reason: f.reason,
+    at: f.createdAt,
+  }));
+}
+
+/** When each person's flags of each kind were last cleared: `${userId}:${kind}` → time. */
+export async function flagClearTimes(tx: Tx): Promise<Map<string, Date>> {
+  return new Map(
+    (await listFlagClears(tx, tx.tenantId)).map((c) => [`${c.userId}:${c.kind}`, c.clearedAt]),
+  );
+}
+
+export async function flagClearedAt(tx: Tx, userId: string, kind: FlagKind): Promise<Date | null> {
+  return (await findFlagClear(tx, tx.tenantId, userId, kind))?.clearedAt ?? null;
+}
+
+/** "Review done — clear": hides the flags until new evidence arrives, and lifts a claim pause. */
+export async function clearFlags(tx: Tx, userId: string, kinds: FlagKind[]): Promise<void> {
+  const by = tx.actor.kind === 'user' ? tx.actor.userId : null;
+  for (const kind of kinds) await upsertFlagClear(tx, tx.tenantId, { userId, kind, clearedBy: by });
 }

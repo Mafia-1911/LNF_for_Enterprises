@@ -2,7 +2,13 @@
 export {
   createAuthPolicy,
   createSessionUserResolver,
+  accountFlags,
   addStaff,
+  clearFlags,
+  flagAccount,
+  flagClearedAt,
+  flagClearTimes,
+  type FlagKind,
   getMe,
   listStaff,
   removeStaff,

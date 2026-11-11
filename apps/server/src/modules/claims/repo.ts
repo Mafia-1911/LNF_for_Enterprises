@@ -174,3 +174,35 @@ export async function countFailedFor(tx: Tx, tenantId: string, claimantIds: stri
     .groupBy(claims.claimantId);
   return new Map(rows.map((r) => [r.id, r.n]));
 }
+
+/** Every rejection with a decision since `since` (Flags page, CC-15). */
+export async function listRejectionsSince(tx: Tx, tenantId: string, since: Date) {
+  return tx.db
+    .select()
+    .from(claims)
+    .where(
+      and(
+        eq(claims.tenantId, tenantId),
+        eq(claims.state, 'REJECTED'),
+        isNotNull(claims.decidedAt),
+        gte(claims.decidedAt, since),
+      ),
+    )
+    .limit(5000);
+}
+
+/** Approved claims whose handover approval was requested (Approvals page). */
+export async function listApprovalRequests(tx: Tx, tenantId: string) {
+  return tx.db
+    .select()
+    .from(claims)
+    .where(
+      and(
+        eq(claims.tenantId, tenantId),
+        eq(claims.state, 'APPROVED'),
+        isNotNull(claims.approvalRequestedAt),
+      ),
+    )
+    .orderBy(asc(claims.approvalRequestedAt))
+    .limit(200);
+}

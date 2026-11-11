@@ -1,6 +1,10 @@
 // React Query hooks over the generated client. Screens call these, never fetch() directly.
 import type {
+  AddAmendment,
   AddClosure,
+  DispatchListQuery,
+  RaiseDispute,
+  ResolveDispute,
   AddStaff,
   Appearance,
   Policies,
@@ -46,6 +50,12 @@ export const keys = {
   retention: ['supervisor', 'retention'] as const,
   policies: ['supervisor', 'policies'] as const,
   staff: ['supervisor', 'staff'] as const,
+  dispatches: (q: DispatchListQuery) => ['supervisor', 'dispatches', q] as const,
+  dispatchRecord: (id: string) => ['supervisor', 'dispatch', id] as const,
+  disputes: ['supervisor', 'disputes'] as const,
+  approvals: ['supervisor', 'approvals'] as const,
+  flags: ['supervisor', 'flags'] as const,
+  myDispute: (claimId: string) => ['claims', claimId, 'dispute'] as const,
 };
 
 export type GalleryQuery = { q?: string; category?: string; building?: string; since?: string };
@@ -589,5 +599,132 @@ export function useRemoveStaff() {
     mutationFn: (email: string) =>
       unwrap(api.POST('/api/supervisor/staff/remove', { body: { email } })),
     onSuccess: (data) => qc.setQueryData(keys.staff, data),
+  });
+}
+
+export function useRequestApproval() {
+  return useMutation({
+    mutationFn: (claimId: string) =>
+      unwrap(
+        api.POST('/api/desk/pickups/{id}/request-approval', { params: { path: { id: claimId } } }),
+      ),
+  });
+}
+
+export function useDispatchDirectory(query: DispatchListQuery) {
+  return useQuery({
+    queryKey: keys.dispatches(query),
+    queryFn: () =>
+      unwrap(api.GET('/api/supervisor/dispatches', { params: { query: query as never } })),
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useDispatchRecord(id: string) {
+  return useQuery({
+    queryKey: keys.dispatchRecord(id),
+    queryFn: () => unwrap(api.GET('/api/supervisor/dispatches/{id}', { params: { path: { id } } })),
+  });
+}
+
+export function useAddAmendment(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddAmendment) =>
+      unwrap(
+        api.POST('/api/supervisor/dispatches/{id}/amendments', { params: { path: { id } }, body }),
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.dispatchRecord(id), data);
+      void qc.invalidateQueries({ queryKey: ['supervisor', 'dispatches'] });
+    },
+  });
+}
+
+export function useDisputes() {
+  return useQuery({
+    queryKey: keys.disputes,
+    queryFn: () => unwrap(api.GET('/api/supervisor/disputes')),
+  });
+}
+
+export function useDisputeNote(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (note: string) =>
+      unwrap(
+        api.POST('/api/supervisor/disputes/{id}/notes', {
+          params: { path: { id } },
+          body: { note },
+        }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: keys.disputes }),
+  });
+}
+
+export function useResolveDispute(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ResolveDispute) =>
+      unwrap(api.POST('/api/supervisor/disputes/{id}/resolve', { params: { path: { id } }, body })),
+    onSuccess: () => invalidateSupervisor(qc),
+  });
+}
+
+export function useMyDispute(claimId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.myDispute(claimId),
+    queryFn: () =>
+      unwrap(api.GET('/api/claims/{id}/dispute', { params: { path: { id: claimId } } })),
+    enabled,
+  });
+}
+
+export function useRaiseDispute(claimId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RaiseDispute) =>
+      unwrap(api.POST('/api/claims/{id}/dispute', { params: { path: { id: claimId } }, body })),
+    onSuccess: (data) => qc.setQueryData(keys.myDispute(claimId), data),
+  });
+}
+
+export function useApprovals() {
+  return useQuery({
+    queryKey: keys.approvals,
+    queryFn: () => unwrap(api.GET('/api/supervisor/approvals')),
+  });
+}
+
+export function useApproveHandover() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (claimId: string) =>
+      unwrap(
+        api.POST('/api/supervisor/approvals/{id}/approve', { params: { path: { id: claimId } } }),
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.approvals, data);
+      invalidateSupervisor(qc);
+    },
+  });
+}
+
+export function useFlags() {
+  return useQuery({
+    queryKey: keys.flags,
+    queryFn: () => unwrap(api.GET('/api/supervisor/flags')),
+  });
+}
+
+export function useClearFlag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      unwrap(api.POST('/api/supervisor/flags/{userId}/clear', { params: { path: { userId } } })),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.flags, data);
+      invalidateSupervisor(qc);
+    },
   });
 }

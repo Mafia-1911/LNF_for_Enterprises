@@ -357,6 +357,50 @@ const supervisorPoliciesRoute = createRoute({
   component: lazyRouteComponent(() => import('./features/supervisor/PoliciesPage'), 'PoliciesPage'),
 });
 
+const supervisorApprovalsRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/approvals',
+  staticData: { title: 'High-value approvals' },
+  component: lazyRouteComponent(
+    () => import('./features/supervisor/ApprovalsPage'),
+    'ApprovalsPage',
+  ),
+});
+
+const supervisorDispatchRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/dispatch',
+  staticData: { title: 'Dispatch directory' },
+  component: lazyRouteComponent(
+    () => import('./features/supervisor/DispatchDirectoryPage'),
+    'DispatchDirectoryPage',
+  ),
+});
+
+const supervisorDispatchRecordRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/dispatch/$id',
+  staticData: { title: 'Handover record' },
+  component: lazyRouteComponent(
+    () => import('./features/supervisor/DispatchRecordPage'),
+    'DispatchRecordPage',
+  ),
+});
+
+const supervisorDisputesRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/disputes',
+  staticData: { title: 'Disputes' },
+  component: lazyRouteComponent(() => import('./features/supervisor/DisputesPage'), 'DisputesPage'),
+});
+
+const supervisorFlagsRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/flags',
+  staticData: { title: 'Flagged accounts' },
+  component: lazyRouteComponent(() => import('./features/supervisor/FlagsPage'), 'FlagsPage'),
+});
+
 const supervisorStaffRoute = createRoute({
   getParentRoute: () => supervisorRoute,
   path: '/staff',
@@ -423,7 +467,12 @@ const routeTree = rootRoute.addChildren([
     deskHandedOverRoute,
     supervisorRoute.addChildren([
       supervisorOverviewRoute,
+      supervisorApprovalsRoute,
       supervisorRetentionRoute,
+      supervisorDispatchRoute,
+      supervisorDispatchRecordRoute,
+      supervisorDisputesRoute,
+      supervisorFlagsRoute,
       supervisorPoliciesRoute,
       supervisorStaffRoute,
     ]),

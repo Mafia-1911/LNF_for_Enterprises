@@ -1,6 +1,15 @@
 // Dispatch (DSP) records: one per handover (WF-04 step 7, FR-16). Locked 24 h after creation; later
 // corrections are amendments with a reason (FR-17, phase 4).
-import { boolean, index, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  boolean,
+  index,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from '../../platform/auth/schema';
 import { tenants } from '../../platform/tenancy/schema';
 
@@ -36,5 +45,56 @@ export const dispatches = pgTable(
     primaryKey({ columns: [t.tenantId, t.id] }),
     index('dispatches_item_idx').on(t.tenantId, t.foundItemId),
     index('dispatches_created_idx').on(t.tenantId, t.createdAt),
+  ],
+);
+
+/** Corrections to a DSP record (FR-17). The record itself never changes; each amendment is added. */
+export const dispatchAmendments = pgTable(
+  'dispatch_amendments',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    dispatchId: text('dispatch_id').notNull(),
+    seq: bigint('seq', { mode: 'number' }).notNull(),
+    reason: text('reason').notNull(),
+    byId: uuid('by_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: ts('created_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.tenantId, t.dispatchId, t.seq] })],
+);
+
+/**
+ * Disputes (WF-06): a second claimant after a decision (CC-01) or a wrong handover (CC-14). Only
+ * transition() changes `state`; notes and the outcome go in the audit trail.
+ */
+export const disputes = pgTable(
+  'disputes',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    id: uuid('id').notNull(),
+    state: text('state').notNull(),
+    /** second_claimant | wrong_handover */
+    kind: text('kind').notNull(),
+    foundItemId: text('found_item_id').notNull(),
+    claimId: text('claim_id'),
+    dispatchId: text('dispatch_id'),
+    raisedBy: uuid('raised_by')
+      .notNull()
+      .references(() => users.id),
+    statement: text('statement').notNull(),
+    /** Set on RESOLVE: upheld | rejected */
+    outcome: text('outcome'),
+    createdAt: ts('created_at').notNull(),
+    updatedAt: ts('updated_at').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.id] }),
+    index('disputes_state_idx').on(t.tenantId, t.state, t.createdAt),
+    index('disputes_item_idx').on(t.tenantId, t.foundItemId),
   ],
 );

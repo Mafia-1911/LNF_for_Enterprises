@@ -14,9 +14,7 @@
             "$ref": "#/components/schemas/Me"
           }
         },
-        "required": [
-          "me"
-        ]
+        "required": ["me"]
       },
       "Me": {
         "type": "object",
@@ -32,32 +30,17 @@
             "$ref": "#/components/schemas/Role"
           },
           "title": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "contact": {
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "role",
-          "title",
-          "contact"
-        ]
+        "required": ["id", "name", "role", "title", "contact"]
       },
       "Role": {
         "type": "string",
-        "enum": [
-          "student",
-          "visitor",
-          "desk_officer",
-          "supervisor",
-          "it_admin"
-        ]
+        "enum": ["student", "visitor", "desk_officer", "supervisor", "it_admin"]
       },
       "ErrorResponse": {
         "type": "object",
@@ -89,15 +72,10 @@
                 }
               }
             },
-            "required": [
-              "kind",
-              "message"
-            ]
+            "required": ["kind", "message"]
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
       },
       "TenantInfo": {
         "type": "object",
@@ -109,10 +87,7 @@
             "$ref": "#/components/schemas/Appearance"
           },
           "office": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "properties": {
               "name": {
                 "type": "string"
@@ -124,18 +99,10 @@
                 "type": "string"
               }
             },
-            "required": [
-              "name",
-              "location",
-              "hours"
-            ]
+            "required": ["name", "location", "hours"]
           }
         },
-        "required": [
-          "tenant",
-          "appearance",
-          "office"
-        ]
+        "required": ["tenant", "appearance", "office"]
       },
       "TenantSummary": {
         "type": "object",
@@ -153,38 +120,21 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "name",
-          "shortName",
-          "emailDomain",
-          "isPractice"
-        ]
+        "required": ["name", "shortName", "emailDomain", "isPractice"]
       },
       "Appearance": {
         "type": "object",
         "properties": {
           "preset": {
             "type": "string",
-            "enum": [
-              "navy",
-              "forest",
-              "indigo",
-              "teal"
-            ]
+            "enum": ["navy", "forest", "indigo", "teal"]
           },
           "mode": {
             "type": "string",
-            "enum": [
-              "light",
-              "dark",
-              "system"
-            ]
+            "enum": ["light", "dark", "system"]
           },
           "custom": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "properties": {
               "light": {
                 "type": "object",
@@ -281,17 +231,10 @@
                 ]
               }
             },
-            "required": [
-              "light",
-              "dark"
-            ]
+            "required": ["light", "dark"]
           }
         },
-        "required": [
-          "preset",
-          "mode",
-          "custom"
-        ]
+        "required": ["preset", "mode", "custom"]
       },
       "Catalog": {
         "type": "object",
@@ -315,18 +258,10 @@
             }
           },
           "deskBuildingCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
-        "required": [
-          "categories",
-          "colours",
-          "buildings",
-          "deskBuildingCode"
-        ]
+        "required": ["categories", "colours", "buildings", "deskBuildingCode"]
       },
       "Category": {
         "type": "object",
@@ -371,12 +306,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "code",
-          "label",
-          "sensitive",
-          "restricted"
-        ]
+        "required": ["code", "label", "sensitive", "restricted"]
       },
       "Colour": {
         "type": "object",
@@ -409,11 +339,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "code",
-          "label",
-          "swatch"
-        ]
+        "required": ["code", "label", "swatch"]
       },
       "Building": {
         "type": "object",
@@ -431,11 +357,7 @@
             }
           }
         },
-        "required": [
-          "code",
-          "name",
-          "floors"
-        ]
+        "required": ["code", "name", "floors"]
       },
       "Floor": {
         "type": "object",
@@ -454,11 +376,7 @@
             }
           }
         },
-        "required": [
-          "id",
-          "name",
-          "zones"
-        ]
+        "required": ["id", "name", "zones"]
       },
       "Zone": {
         "type": "object",
@@ -471,10 +389,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name"
-        ]
+        "required": ["id", "name"]
       },
       "LostReportCreated": {
         "type": "object",
@@ -500,32 +415,20 @@
                   "type": "object",
                   "properties": {
                     "buildingName": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": ["string", "null"]
                     },
                     "zoneName": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": ["string", "null"]
                     }
                   },
-                  "required": [
-                    "buildingName",
-                    "zoneName"
-                  ]
+                  "required": ["buildingName", "zoneName"]
                 },
                 "foundAt": {
                   "type": "string",
                   "format": "date-time"
                 },
                 "photoId": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "reasons": {
                   "type": "array",
@@ -534,22 +437,11 @@
                   }
                 }
               },
-              "required": [
-                "id",
-                "title",
-                "category",
-                "place",
-                "foundAt",
-                "photoId",
-                "reasons"
-              ]
+              "required": ["id", "title", "category", "place", "foundAt", "photoId", "reasons"]
             }
           }
         },
-        "required": [
-          "report",
-          "similarInCustody"
-        ]
+        "required": ["report", "similarInCustody"]
       },
       "LostReport": {
         "type": "object",
@@ -564,63 +456,34 @@
             "type": "string"
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "place": {
             "type": "object",
             "properties": {
               "buildingCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "buildingName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "floorName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "zoneName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "buildingCode",
-              "buildingName",
-              "floorName",
-              "zoneName"
-            ]
+            "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
           },
           "timeFrom": {
             "type": "string",
@@ -671,14 +534,7 @@
       },
       "LostReportState": {
         "type": "string",
-        "enum": [
-          "OPEN",
-          "POSSIBLE_MATCH",
-          "CLAIMED",
-          "RESOLVED",
-          "EXPIRED",
-          "WITHDRAWN"
-        ]
+        "enum": ["OPEN", "POSSIBLE_MATCH", "CLAIMED", "RESOLVED", "EXPIRED", "WITHDRAWN"]
       },
       "CreateLostReport": {
         "type": "object",
@@ -710,10 +566,7 @@
             ]
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "black",
               "white",
@@ -735,31 +588,19 @@
             ]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "privateNote": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "place": {
@@ -799,33 +640,20 @@
         "type": "object",
         "properties": {
           "buildingCode": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "minLength": 1,
             "maxLength": 10
           },
           "floorId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "zoneId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           }
         },
-        "required": [
-          "buildingCode",
-          "floorId",
-          "zoneId"
-        ]
+        "required": ["buildingCode", "floorId", "zoneId"]
       },
       "LostReportList": {
         "type": "object",
@@ -837,9 +665,7 @@
             }
           }
         },
-        "required": [
-          "reports"
-        ]
+        "required": ["reports"]
       },
       "FoundPost": {
         "type": "object",
@@ -854,82 +680,47 @@
             "type": "string"
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "title": {
             "type": "string"
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "model": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "place": {
             "type": "object",
             "properties": {
               "buildingCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "buildingName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "floorName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "zoneName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "buildingCode",
-              "buildingName",
-              "floorName",
-              "zoneName"
-            ]
+            "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
           },
           "foundAt": {
             "type": "string",
             "format": "date-time"
           },
           "handInDeadline": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "createdAt": {
@@ -958,11 +749,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "name",
-              "location",
-              "hours"
-            ]
+            "required": ["name", "location", "hours"]
           },
           "pinged": {
             "type": "number"
@@ -1034,10 +821,7 @@
             ]
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "black",
               "white",
@@ -1059,31 +843,19 @@
             ]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40
           },
           "model": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "place": {
@@ -1104,10 +876,7 @@
             "default": []
           },
           "privateNote": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "photoIds": {
@@ -1151,25 +920,15 @@
             "maxLength": 10
           },
           "floorId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "zoneId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           }
         },
-        "required": [
-          "buildingCode",
-          "floorId",
-          "zoneId"
-        ]
+        "required": ["buildingCode", "floorId", "zoneId"]
       },
       "FoundPostList": {
         "type": "object",
@@ -1189,82 +948,47 @@
                   "type": "string"
                 },
                 "colour": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "title": {
                   "type": "string"
                 },
                 "shortName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "brand": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "model": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "publicDescription": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "place": {
                   "type": "object",
                   "properties": {
                     "buildingCode": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": ["string", "null"]
                     },
                     "buildingName": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": ["string", "null"]
                     },
                     "floorName": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": ["string", "null"]
                     },
                     "zoneName": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": ["string", "null"]
                     }
                   },
-                  "required": [
-                    "buildingCode",
-                    "buildingName",
-                    "floorName",
-                    "zoneName"
-                  ]
+                  "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
                 },
                 "foundAt": {
                   "type": "string",
                   "format": "date-time"
                 },
                 "handInDeadline": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": ["string", "null"],
                   "format": "date-time"
                 },
                 "createdAt": {
@@ -1301,9 +1025,7 @@
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "SimilarLostList": {
         "type": "object",
@@ -1315,9 +1037,7 @@
             }
           }
         },
-        "required": [
-          "reports"
-        ]
+        "required": ["reports"]
       },
       "SimilarLostReport": {
         "type": "object",
@@ -1329,10 +1049,7 @@
             "type": "string"
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "title": {
             "type": "string"
@@ -1341,36 +1058,19 @@
             "type": "object",
             "properties": {
               "buildingCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "buildingName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "floorName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "zoneName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "buildingCode",
-              "buildingName",
-              "floorName",
-              "zoneName"
-            ]
+            "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
           },
           "lostOn": {
             "type": "string",
@@ -1383,15 +1083,7 @@
             }
           }
         },
-        "required": [
-          "id",
-          "category",
-          "colour",
-          "title",
-          "place",
-          "lostOn",
-          "reasons"
-        ]
+        "required": ["id", "category", "colour", "title", "place", "lostOn", "reasons"]
       },
       "SimilarLostQuery": {
         "type": "object",
@@ -1427,10 +1119,7 @@
             ]
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "black",
               "white",
@@ -1453,57 +1142,37 @@
             "default": null
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40,
             "default": null
           },
           "words": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500,
             "default": null
           },
           "buildingCode": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 10,
             "default": null
           },
           "floorId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid",
             "default": null
           },
           "zoneId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid",
             "default": null
           },
           "foundAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "default": null
           }
         },
-        "required": [
-          "category"
-        ]
+        "required": ["category"]
       },
       "GalleryList": {
         "type": "object",
@@ -1515,9 +1184,7 @@
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "GalleryItem": {
         "type": "object",
@@ -1532,10 +1199,7 @@
             "type": "string"
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "title": {
             "type": "string"
@@ -1544,36 +1208,19 @@
             "type": "object",
             "properties": {
               "buildingCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "buildingName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "floorName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "zoneName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "buildingCode",
-              "buildingName",
-              "floorName",
-              "zoneName"
-            ]
+            "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
           },
           "foundAt": {
             "type": "string",
@@ -1583,10 +1230,7 @@
             "type": "boolean"
           },
           "photoId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "required": [
@@ -1605,10 +1249,7 @@
         "type": "object",
         "properties": {
           "suggested": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "bins": {
             "type": "array",
@@ -1622,17 +1263,11 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "code",
-                "itemCount"
-              ]
+              "required": ["code", "itemCount"]
             }
           }
         },
-        "required": [
-          "suggested",
-          "bins"
-        ]
+        "required": ["suggested", "bins"]
       },
       "LoggedFoundItem": {
         "type": "object",
@@ -1644,10 +1279,7 @@
             "$ref": "#/components/schemas/FoundItemLabel"
           }
         },
-        "required": [
-          "item",
-          "label"
-        ]
+        "required": ["item", "label"]
       },
       "DeskFoundItem": {
         "type": "object",
@@ -1662,72 +1294,40 @@
             "type": "string"
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "title": {
             "type": "string"
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "model": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "place": {
             "type": "object",
             "properties": {
               "buildingCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "buildingName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "floorName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "zoneName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "buildingCode",
-              "buildingName",
-              "floorName",
-              "zoneName"
-            ]
+            "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
           },
           "foundAt": {
             "type": "string",
@@ -1735,38 +1335,23 @@
           },
           "source": {
             "type": "string",
-            "enum": [
-              "finder",
-              "desk"
-            ]
+            "enum": ["finder", "desk"]
           },
           "sourceLabel": {
             "type": "string"
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "condition": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "handInDeadline": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "retentionEndsAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "restricted": {
@@ -1776,10 +1361,7 @@
             "type": "boolean"
           },
           "idNumberMasked": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "privateDetails": {
             "type": "object",
@@ -1791,16 +1373,10 @@
                 }
               },
               "note": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "ticks",
-              "note"
-            ]
+            "required": ["ticks", "note"]
           },
           "photoIds": {
             "type": "array",
@@ -1826,16 +1402,10 @@
                   "type": "string"
                 },
                 "fromState": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "toState": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 },
                 "at": {
                   "type": "string",
@@ -1845,21 +1415,10 @@
                   "type": "string"
                 },
                 "note": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": ["string", "null"]
                 }
               },
-              "required": [
-                "event",
-                "label",
-                "fromState",
-                "toState",
-                "at",
-                "by",
-                "note"
-              ]
+              "required": ["event", "label", "fromState", "toState", "at", "by", "note"]
             }
           },
           "ownerEmailed": {
@@ -1901,10 +1460,7 @@
             "type": "string"
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "category": {
             "type": "string"
@@ -1923,15 +1479,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "binCode",
-          "category",
-          "categoryLabel",
-          "date",
-          "qrDataUri",
-          "url"
-        ]
+        "required": ["id", "binCode", "category", "categoryLabel", "date", "qrDataUri", "url"]
       },
       "LogFoundItem": {
         "type": "object",
@@ -1967,10 +1515,7 @@
             ]
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "black",
               "white",
@@ -1992,31 +1537,19 @@
             ]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40
           },
           "model": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "place": {
@@ -2037,10 +1570,7 @@
             "default": []
           },
           "privateNote": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "photoIds": {
@@ -2053,10 +1583,7 @@
             "default": []
           },
           "condition": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 300
           },
           "conditionPhotoIds": {
@@ -2069,17 +1596,11 @@
             "default": []
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 10
           },
           "idNumber": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40
           }
         },
@@ -2108,9 +1629,7 @@
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "DeskItemRow": {
         "type": "object",
@@ -2128,38 +1647,20 @@
             "type": "string"
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "photoId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "sensitive": {
             "type": "boolean"
           },
           "due": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
-        "required": [
-          "id",
-          "state",
-          "category",
-          "title",
-          "binCode",
-          "photoId",
-          "sensitive",
-          "due"
-        ]
+        "required": ["id", "state", "category", "title", "binCode", "photoId", "sensitive", "due"]
       },
       "ReceiveFoundItem": {
         "type": "object",
@@ -2195,10 +1696,7 @@
             ]
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "black",
               "white",
@@ -2220,31 +1718,19 @@
             ]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "brand": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40
           },
           "model": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "publicDescription": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "place": {
@@ -2265,17 +1751,11 @@
             "default": []
           },
           "privateNote": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500
           },
           "condition": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 300
           },
           "conditionPhotoIds": {
@@ -2288,17 +1768,11 @@
             "default": []
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 10
           },
           "idNumber": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 40
           },
           "photoIds": {
@@ -2330,24 +1804,15 @@
         "type": "object",
         "properties": {
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 60
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 10
           },
           "condition": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 300
           },
           "reason": {
@@ -2356,9 +1821,7 @@
             "maxLength": 300
           }
         },
-        "required": [
-          "reason"
-        ]
+        "required": ["reason"]
       },
       "Reason": {
         "type": "object",
@@ -2369,9 +1832,7 @@
             "maxLength": 300
           }
         },
-        "required": [
-          "reason"
-        ]
+        "required": ["reason"]
       },
       "RetentionList": {
         "type": "object",
@@ -2386,10 +1847,7 @@
                 "type": "integer"
               }
             },
-            "required": [
-              "days",
-              "lookAlikeDays"
-            ]
+            "required": ["days", "lookAlikeDays"]
           },
           "awaiting": {
             "type": "array",
@@ -2410,12 +1868,7 @@
             }
           }
         },
-        "required": [
-          "policy",
-          "awaiting",
-          "ending",
-          "decided"
-        ]
+        "required": ["policy", "awaiting", "ending", "decided"]
       },
       "RetentionItem": {
         "type": "object",
@@ -2433,22 +1886,13 @@
             "type": "string"
           },
           "binCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "place": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "photoId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "sensitive": {
             "type": "boolean"
@@ -2457,36 +1901,19 @@
             "type": "boolean"
           },
           "endsAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "decision": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "donate",
-              "dispose",
-              "transfer",
-              null
-            ]
+            "type": ["string", "null"],
+            "enum": ["donate", "dispose", "transfer", null]
           },
           "decidedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "note": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
         "required": [
@@ -2512,9 +1939,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "decided"
-        ]
+        "required": ["decided"]
       },
       "RetentionDecision": {
         "type": "object",
@@ -2530,11 +1955,7 @@
           },
           "decision": {
             "type": "string",
-            "enum": [
-              "donate",
-              "dispose",
-              "transfer"
-            ]
+            "enum": ["donate", "dispose", "transfer"]
           },
           "note": {
             "type": "string",
@@ -2542,11 +1963,7 @@
             "maxLength": 300
           }
         },
-        "required": [
-          "ids",
-          "decision",
-          "note"
-        ]
+        "required": ["ids", "decision", "note"]
       },
       "RetentionRun": {
         "type": "object",
@@ -2561,11 +1978,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "recalculated",
-          "expired",
-          "lastChanceAlerts"
-        ]
+        "required": ["recalculated", "expired", "lastChanceAlerts"]
       },
       "UploadedPhoto": {
         "type": "object",
@@ -2584,12 +1997,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "id",
-          "width",
-          "height",
-          "bytes"
-        ]
+        "required": ["id", "width", "height", "bytes"]
       },
       "AlertList": {
         "type": "object",
@@ -2604,10 +2012,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "alerts",
-          "unread"
-        ]
+        "required": ["alerts", "unread"]
       },
       "Alert": {
         "type": "object",
@@ -2637,32 +2042,18 @@
             "type": "string"
           },
           "link": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "createdAt": {
             "type": "string",
             "format": "date-time"
           },
           "readAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
-        "required": [
-          "id",
-          "kind",
-          "title",
-          "body",
-          "link",
-          "createdAt",
-          "readAt"
-        ]
+        "required": ["id", "kind", "title", "body", "link", "createdAt", "readAt"]
       },
       "MarkAlertsRead": {
         "type": "object",
@@ -2690,10 +2081,7 @@
             "type": "string"
           },
           "colour": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "title": {
             "type": "string"
@@ -2702,36 +2090,19 @@
             "type": "object",
             "properties": {
               "buildingCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "buildingName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "floorName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "zoneName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "buildingCode",
-              "buildingName",
-              "floorName",
-              "zoneName"
-            ]
+            "required": ["buildingCode", "buildingName", "floorName", "zoneName"]
           },
           "foundAt": {
             "type": "string",
@@ -2741,10 +2112,7 @@
             "type": "boolean"
           },
           "photoId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "score": {
             "type": "number"
@@ -2783,10 +2151,7 @@
             }
           },
           "myClaim": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "properties": {
               "id": {
                 "type": "string"
@@ -2795,10 +2160,7 @@
                 "$ref": "#/components/schemas/ClaimState"
               }
             },
-            "required": [
-              "id",
-              "state"
-            ]
+            "required": ["id", "state"]
           },
           "myLostReports": {
             "type": "array",
@@ -2812,26 +2174,14 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "id",
-                "title"
-              ]
+              "required": ["id", "title"]
             }
           },
           "blockedReason": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         },
-        "required": [
-          "item",
-          "questions",
-          "myClaim",
-          "myLostReports",
-          "blockedReason"
-        ]
+        "required": ["item", "questions", "myClaim", "myLostReports", "blockedReason"]
       },
       "ClaimQuestion": {
         "type": "object",
@@ -2843,10 +2193,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "key",
-          "question"
-        ]
+        "required": ["key", "question"]
       },
       "ClaimState": {
         "type": "string",
@@ -2874,10 +2221,7 @@
             "$ref": "#/components/schemas/GalleryItem"
           },
           "lostReportId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "answers": {
             "type": "array",
@@ -2894,36 +2238,20 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "key",
-                "question",
-                "answer"
-              ]
+              "required": ["key", "question", "answer"]
             }
           },
           "moreInfoRequest": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "decisionNote": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "pickupCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "pickupEndsAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "reviewDueAt": {
@@ -2947,14 +2275,14 @@
                 "type": "string"
               }
             },
-            "required": [
-              "name",
-              "location",
-              "hours"
-            ]
+            "required": ["name", "location", "hours"]
           },
           "canReRequest": {
             "type": "boolean"
+          },
+          "canDispute": {
+            "type": ["string", "null"],
+            "enum": ["second_claimant", "wrong_handover", null]
           }
         },
         "required": [
@@ -2970,7 +2298,8 @@
           "reviewDueAt",
           "createdAt",
           "desk",
-          "canReRequest"
+          "canReRequest",
+          "canDispute"
         ]
       },
       "SubmitClaim": {
@@ -2992,19 +2321,13 @@
                   "maxLength": 300
                 }
               },
-              "required": [
-                "key",
-                "answer"
-              ]
+              "required": ["key", "answer"]
             },
             "minItems": 1,
             "maxItems": 3
           },
           "lostReportId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 32,
             "default": null
           },
@@ -3018,9 +2341,7 @@
             "default": []
           }
         },
-        "required": [
-          "answers"
-        ]
+        "required": ["answers"]
       },
       "ClaimList": {
         "type": "object",
@@ -3032,9 +2353,7 @@
             }
           }
         },
-        "required": [
-          "claims"
-        ]
+        "required": ["claims"]
       },
       "ProvideMore": {
         "type": "object",
@@ -3045,9 +2364,7 @@
             "maxLength": 500
           }
         },
-        "required": [
-          "answer"
-        ]
+        "required": ["answer"]
       },
       "DeskToday": {
         "type": "object",
@@ -3077,12 +2394,7 @@
             }
           }
         },
-        "required": [
-          "toShelve",
-          "claimsToReview",
-          "pickupsDue",
-          "expiringThisWeek"
-        ]
+        "required": ["toShelve", "claimsToReview", "pickupsDue", "expiringThisWeek"]
       },
       "DeskClaimQueue": {
         "type": "object",
@@ -3103,17 +2415,11 @@
                   "format": "date-time"
                 }
               },
-              "required": [
-                "item",
-                "claims",
-                "dueAt"
-              ]
+              "required": ["item", "claims", "dueAt"]
             }
           }
         },
-        "required": [
-          "items"
-        ]
+        "required": ["items"]
       },
       "DeskItemClaims": {
         "type": "object",
@@ -3134,26 +2440,13 @@
                 "type": "string"
               },
               "binCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "photoId": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "id",
-              "title",
-              "state",
-              "category",
-              "binCode",
-              "photoId"
-            ]
+            "required": ["id", "title", "state", "category", "binCode", "photoId"]
           },
           "recorded": {
             "type": "object",
@@ -3170,23 +2463,14 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "label"
-                  ]
+                  "required": ["code", "label"]
                 }
               },
               "note": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "ticks",
-              "note"
-            ]
+            "required": ["ticks", "note"]
           },
           "claims": {
             "type": "array",
@@ -3195,11 +2479,7 @@
             }
           }
         },
-        "required": [
-          "item",
-          "recorded",
-          "claims"
-        ]
+        "required": ["item", "recorded", "claims"]
       },
       "DeskClaim": {
         "type": "object",
@@ -3217,20 +2497,13 @@
                 "type": "string"
               },
               "title": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "role": {
                 "type": "string"
               }
             },
-            "required": [
-              "name",
-              "title",
-              "role"
-            ]
+            "required": ["name", "title", "role"]
           },
           "submittedAt": {
             "type": "string",
@@ -3241,10 +2514,7 @@
             "format": "date-time"
           },
           "lostReportId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "failedVerifications": {
             "type": "number"
@@ -3264,36 +2534,18 @@
                   "type": "string"
                 },
                 "verdict": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "enum": [
-                    "pass",
-                    "fail",
-                    null
-                  ]
+                  "type": ["string", "null"],
+                  "enum": ["pass", "fail", null]
                 }
               },
-              "required": [
-                "key",
-                "question",
-                "answer",
-                "verdict"
-              ]
+              "required": ["key", "question", "answer", "verdict"]
             }
           },
           "moreInfoRequest": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "decisionNote": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "proofPhotoIds": {
             "type": "array",
@@ -3323,32 +2575,75 @@
             "type": "object",
             "additionalProperties": {
               "type": "string",
-              "enum": [
-                "pass",
-                "fail"
-              ]
+              "enum": ["pass", "fail"]
             }
           },
           "decision": {
             "type": "string",
-            "enum": [
-              "approve",
-              "reject",
-              "more"
-            ]
+            "enum": ["approve", "reject", "more"]
           },
           "note": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "maxLength": 500,
             "default": null
           }
         },
+        "required": ["verdicts", "decision"]
+      },
+      "ApprovalList": {
+        "type": "object",
+        "properties": {
+          "approvals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Approval"
+            }
+          }
+        },
+        "required": ["approvals"]
+      },
+      "Approval": {
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "foundItemId": {
+            "type": "string"
+          },
+          "itemTitle": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "claimantName": {
+            "type": "string"
+          },
+          "claimantRole": {
+            "type": "string"
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approved": {
+            "type": "boolean"
+          }
+        },
         "required": [
-          "verdicts",
-          "decision"
+          "claimId",
+          "foundItemId",
+          "itemTitle",
+          "category",
+          "claimantName",
+          "claimantRole",
+          "requestedBy",
+          "requestedAt",
+          "approved"
         ]
       },
       "Pickup": {
@@ -3370,25 +2665,13 @@
                 "type": "string"
               },
               "binCode": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "photoId": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             },
-            "required": [
-              "id",
-              "title",
-              "category",
-              "binCode",
-              "photoId"
-            ]
+            "required": ["id", "title", "category", "binCode", "photoId"]
           },
           "claimant": {
             "type": "object",
@@ -3397,26 +2680,23 @@
                 "type": "string"
               },
               "title": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "role": {
                 "type": "string"
               }
             },
-            "required": [
-              "name",
-              "title",
-              "role"
-            ]
+            "required": ["name", "title", "role"]
           },
           "highValue": {
             "type": "boolean"
           },
           "needsSupervisor": {
             "type": "boolean"
+          },
+          "approval": {
+            "type": "string",
+            "enum": ["none", "requested", "approved"]
           },
           "pickupEndsAt": {
             "type": "string",
@@ -3429,6 +2709,7 @@
           "claimant",
           "highValue",
           "needsSupervisor",
+          "approval",
           "pickupEndsAt"
         ]
       },
@@ -3440,9 +2721,7 @@
             "pattern": "^\\d{6}$"
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "Dispatch": {
         "type": "object",
@@ -3466,10 +2745,7 @@
             "type": "string"
           },
           "secondCheck": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "officerName": {
             "type": "string"
@@ -3501,19 +2777,14 @@
         "properties": {
           "photoMatches": {
             "type": "boolean",
-            "enum": [
-              true
-            ]
+            "enum": [true]
           },
           "idLast4": {
             "type": "string",
             "pattern": "^[A-Za-z0-9]{4}$"
           },
           "secondCheck": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "device_unlocked",
               "serial_matched",
@@ -3528,11 +2799,323 @@
             "format": "uuid"
           }
         },
+        "required": ["photoMatches", "idLast4", "signaturePhotoId"]
+      },
+      "DispatchList": {
+        "type": "object",
+        "properties": {
+          "dispatches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DispatchRow"
+            }
+          }
+        },
+        "required": ["dispatches"]
+      },
+      "DispatchRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "foundItemId": {
+            "type": "string"
+          },
+          "itemTitle": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "claimantName": {
+            "type": "string"
+          },
+          "idMasked": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "disputed": {
+            "type": "boolean"
+          },
+          "amendments": {
+            "type": "integer"
+          }
+        },
         "required": [
-          "photoMatches",
-          "idLast4",
-          "signaturePhotoId"
+          "id",
+          "foundItemId",
+          "itemTitle",
+          "category",
+          "claimantName",
+          "idMasked",
+          "createdAt",
+          "locked",
+          "disputed",
+          "amendments"
         ]
+      },
+      "DispatchRecord": {
+        "type": "object",
+        "properties": {
+          "dispatch": {
+            "$ref": "#/components/schemas/Dispatch"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            }
+          },
+          "amendments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Amendment"
+            }
+          },
+          "disputes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dispute"
+            }
+          }
+        },
+        "required": ["dispatch", "locked", "history", "amendments", "disputes"]
+      },
+      "HistoryEntry": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["label", "actor", "at", "note"]
+      },
+      "Amendment": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "by": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["seq", "reason", "by", "at"]
+      },
+      "Dispute": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["OPEN", "RESOLVED"]
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["second_claimant", "wrong_handover"]
+          },
+          "foundItemId": {
+            "type": "string"
+          },
+          "itemTitle": {
+            "type": "string"
+          },
+          "claimId": {
+            "type": ["string", "null"]
+          },
+          "dispatchId": {
+            "type": ["string", "null"]
+          },
+          "raisedBy": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": ["string", "null"],
+            "enum": ["upheld", "rejected", null]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "kind",
+          "foundItemId",
+          "itemTitle",
+          "claimId",
+          "dispatchId",
+          "raisedBy",
+          "statement",
+          "outcome",
+          "createdAt",
+          "history"
+        ]
+      },
+      "AddAmendment": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 500
+          }
+        },
+        "required": ["reason"]
+      },
+      "DisputeList": {
+        "type": "object",
+        "properties": {
+          "disputes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dispute"
+            }
+          }
+        },
+        "required": ["disputes"]
+      },
+      "DisputeNote": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        },
+        "required": ["note"]
+      },
+      "ResolveDispute": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["upheld", "rejected"]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          },
+          "flagRecipient": {
+            "type": "boolean"
+          }
+        },
+        "required": ["outcome", "note", "flagRecipient"]
+      },
+      "MyDispute": {
+        "type": "object",
+        "properties": {
+          "dispute": {
+            "type": ["object", "null"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "state": {
+                "type": "string",
+                "enum": ["OPEN", "RESOLVED"]
+              },
+              "kind": {
+                "type": "string",
+                "enum": ["second_claimant", "wrong_handover"]
+              },
+              "foundItemId": {
+                "type": "string"
+              },
+              "itemTitle": {
+                "type": "string"
+              },
+              "claimId": {
+                "type": ["string", "null"]
+              },
+              "dispatchId": {
+                "type": ["string", "null"]
+              },
+              "raisedBy": {
+                "type": "string"
+              },
+              "statement": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": ["string", "null"],
+                "enum": ["upheld", "rejected", null]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "state",
+              "kind",
+              "foundItemId",
+              "itemTitle",
+              "claimId",
+              "dispatchId",
+              "raisedBy",
+              "statement",
+              "outcome",
+              "createdAt"
+            ]
+          }
+        },
+        "required": ["dispute"]
+      },
+      "RaiseDispute": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 1000
+          }
+        },
+        "required": ["statement"]
       },
       "AuditEntry": {
         "type": "object",
@@ -3544,48 +3127,27 @@
             "type": "string"
           },
           "fromState": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "toState": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "actorId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "actorKind": {
             "type": "string"
           },
           "note": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "at": {
             "type": "string",
             "format": "date-time"
           }
         },
-        "required": [
-          "id",
-          "event",
-          "fromState",
-          "toState",
-          "actorId",
-          "actorKind",
-          "note",
-          "at"
-        ]
+        "required": ["id", "event", "fromState", "toState", "actorId", "actorKind", "note", "at"]
       },
       "SupervisorOverview": {
         "type": "object",
@@ -3606,23 +3168,25 @@
                 "type": "integer"
               }
             },
-            "required": [
-              "inCustody",
-              "claimsToReview",
-              "returned30Days",
-              "expiringThisWeek"
-            ]
+            "required": ["inCustody", "claimsToReview", "returned30Days", "expiringThisWeek"]
           },
           "badges": {
             "type": "object",
             "properties": {
               "retention": {
                 "type": "integer"
+              },
+              "approvals": {
+                "type": "integer"
+              },
+              "disputes": {
+                "type": "integer"
+              },
+              "flags": {
+                "type": "integer"
               }
             },
-            "required": [
-              "retention"
-            ]
+            "required": ["retention", "approvals", "disputes", "flags"]
           },
           "needsDecision": {
             "type": "array",
@@ -3640,23 +3204,14 @@
             "$ref": "#/components/schemas/DeskToday"
           }
         },
-        "required": [
-          "counts",
-          "badges",
-          "needsDecision",
-          "activity",
-          "today"
-        ]
+        "required": ["counts", "badges", "needsDecision", "activity", "today"]
       },
       "NeedsDecision": {
         "type": "object",
         "properties": {
           "kind": {
             "type": "string",
-            "enum": [
-              "retention",
-              "claim_overdue"
-            ]
+            "enum": ["retention", "claim_overdue", "dispute", "approval", "flag"]
           },
           "title": {
             "type": "string"
@@ -3668,20 +3223,11 @@
             "type": "string"
           },
           "at": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
-        "required": [
-          "kind",
-          "title",
-          "detail",
-          "link",
-          "at"
-        ]
+        "required": ["kind", "title", "detail", "link", "at"]
       },
       "ActivityEntry": {
         "type": "object",
@@ -3703,13 +3249,7 @@
             "format": "date-time"
           }
         },
-        "required": [
-          "id",
-          "label",
-          "recordId",
-          "actor",
-          "at"
-        ]
+        "required": ["id", "label", "recordId", "actor", "at"]
       },
       "PolicySettings": {
         "type": "object",
@@ -3724,10 +3264,7 @@
             }
           }
         },
-        "required": [
-          "policies",
-          "closures"
-        ]
+        "required": ["policies", "closures"]
       },
       "Policies": {
         "type": "object",
@@ -3787,12 +3324,7 @@
             "format": "date"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "from",
-          "to"
-        ]
+        "required": ["id", "name", "from", "to"]
       },
       "AddClosure": {
         "type": "object",
@@ -3811,11 +3343,7 @@
             "format": "date"
           }
         },
-        "required": [
-          "name",
-          "from",
-          "to"
-        ]
+        "required": ["name", "from", "to"]
       },
       "StaffList": {
         "type": "object",
@@ -3827,18 +3355,13 @@
             }
           }
         },
-        "required": [
-          "staff"
-        ]
+        "required": ["staff"]
       },
       "StaffMember": {
         "type": "object",
         "properties": {
           "userId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "email": {
@@ -3849,30 +3372,17 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "desk_officer",
-              "supervisor"
-            ]
+            "enum": ["desk_officer", "supervisor"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "invited"
-            ]
+            "enum": ["active", "invited"]
           },
           "you": {
             "type": "boolean"
           }
         },
-        "required": [
-          "userId",
-          "email",
-          "name",
-          "role",
-          "status",
-          "you"
-        ]
+        "required": ["userId", "email", "name", "role", "status", "you"]
       },
       "AddStaff": {
         "type": "object",
@@ -3887,17 +3397,10 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "desk_officer",
-              "supervisor"
-            ]
+            "enum": ["desk_officer", "supervisor"]
           }
         },
-        "required": [
-          "name",
-          "email",
-          "role"
-        ]
+        "required": ["name", "email", "role"]
       },
       "RemoveStaff": {
         "type": "object",
@@ -3907,9 +3410,49 @@
             "minLength": 3
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
+      },
+      "FlagList": {
+        "type": "object",
+        "properties": {
+          "flags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Flag"
+            }
+          }
+        },
+        "required": ["flags"]
+      },
+      "Flag": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["no_show_finder", "failed_verifications", "wrong_recipient"]
+            }
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["userId", "name", "kinds", "reasons", "since"]
       },
       "DevClock": {
         "type": "object",
@@ -3922,10 +3465,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "now",
-          "offsetMs"
-        ]
+        "required": ["now", "offsetMs"]
       }
     },
     "parameters": {}
@@ -3933,9 +3473,7 @@
   "paths": {
     "/api/me": {
       "get": {
-        "tags": [
-          "identity"
-        ],
+        "tags": ["identity"],
         "summary": "The signed-in person and their role in this university",
         "responses": {
           "200": {
@@ -3973,9 +3511,7 @@
     },
     "/api/tenant": {
       "get": {
-        "tags": [
-          "catalog"
-        ],
+        "tags": ["catalog"],
         "summary": "University name, theme and office details (no sign-in needed)",
         "responses": {
           "200": {
@@ -4003,9 +3539,7 @@
     },
     "/api/catalog": {
       "get": {
-        "tags": [
-          "catalog"
-        ],
+        "tags": ["catalog"],
         "summary": "Categories, colours and places this person may pick",
         "responses": {
           "200": {
@@ -4043,9 +3577,7 @@
     },
     "/api/admin/appearance": {
       "put": {
-        "tags": [
-          "catalog"
-        ],
+        "tags": ["catalog"],
         "summary": "Set the theme for everyone in this university (IT admin only)",
         "requestBody": {
           "required": true,
@@ -4103,9 +3635,7 @@
     },
     "/api/lost-reports": {
       "post": {
-        "tags": [
-          "items"
-        ],
+        "tags": ["items"],
         "summary": "Submit a lost report (US-01)",
         "requestBody": {
           "required": true,
@@ -4161,9 +3691,7 @@
         }
       },
       "get": {
-        "tags": [
-          "items"
-        ],
+        "tags": ["items"],
         "summary": "My lost reports, newest first",
         "responses": {
           "200": {
@@ -4201,9 +3729,7 @@
     },
     "/api/lost-reports/{id}": {
       "get": {
-        "tags": [
-          "items"
-        ],
+        "tags": ["items"],
         "summary": "One lost report (owner or desk staff)",
         "parameters": [
           {
@@ -4273,9 +3799,7 @@
     },
     "/api/lost-reports/{id}/renew": {
       "post": {
-        "tags": [
-          "items"
-        ],
+        "tags": ["items"],
         "summary": "Keep my report open another 30 days (twice at most)",
         "parameters": [
           {
@@ -4355,9 +3879,7 @@
     },
     "/api/found-items": {
       "post": {
-        "tags": [
-          "found-items"
-        ],
+        "tags": ["found-items"],
         "summary": "Post a found item (WF-02, US-02)",
         "requestBody": {
           "required": true,
@@ -4413,9 +3935,7 @@
         }
       },
       "get": {
-        "tags": [
-          "found-items"
-        ],
+        "tags": ["found-items"],
         "summary": "Items I posted as a finder, newest first",
         "responses": {
           "200": {
@@ -4453,9 +3973,7 @@
     },
     "/api/found-items/similar": {
       "post": {
-        "tags": [
-          "found-items"
-        ],
+        "tags": ["found-items"],
         "summary": "\"Someone lost this?\": open lost reports like this item (no names, US-02)",
         "requestBody": {
           "required": true,
@@ -4513,9 +4031,7 @@
     },
     "/api/found-items/{id}": {
       "get": {
-        "tags": [
-          "found-items"
-        ],
+        "tags": ["found-items"],
         "summary": "My post (the finder) or any post (desk staff)",
         "parameters": [
           {
@@ -4585,9 +4101,7 @@
     },
     "/api/gallery": {
       "get": {
-        "tags": [
-          "found-items"
-        ],
+        "tags": ["found-items"],
         "summary": "Found items at the desk (FR-10). Not for visitors.",
         "parameters": [
           {
@@ -4699,9 +4213,7 @@
     },
     "/api/desk/bins": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "The suggested bin for a category, and every bin with its item count",
         "parameters": [
           {
@@ -4786,9 +4298,7 @@
     },
     "/api/desk/found-items": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Log a walk-in found item (WF-03)",
         "requestBody": {
           "required": true,
@@ -4844,9 +4354,7 @@
         }
       },
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "\"Find an item\": any ID or words",
         "parameters": [
           {
@@ -4896,10 +4404,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "active",
-                "all"
-              ],
+              "enum": ["active", "all"],
               "default": "active"
             },
             "required": false,
@@ -4953,9 +4458,7 @@
     },
     "/api/desk/found-items/{id}": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "The full record, history and private details (staff only)",
         "parameters": [
           {
@@ -5025,9 +4528,7 @@
     },
     "/api/desk/found-items/{id}/label": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "The printable label (QR, ID, bin)",
         "parameters": [
           {
@@ -5097,9 +4598,7 @@
     },
     "/api/desk/found-items/{id}/receive": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "A student post was brought in: confirm, shelve (IN_CUSTODY)",
         "parameters": [
           {
@@ -5189,9 +4688,7 @@
     },
     "/api/desk/found-items/{id}/correct": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Correct a record (a reason is required and kept in the history)",
         "parameters": [
           {
@@ -5281,9 +4778,7 @@
     },
     "/api/desk/found-items/{id}/void": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Mark a record created in error as VOID (it keeps its ID)",
         "parameters": [
           {
@@ -5373,9 +4868,7 @@
     },
     "/api/supervisor/retention": {
       "get": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Items awaiting a retention decision, ending soon, and recently decided (US-08)",
         "responses": {
           "200": {
@@ -5413,9 +4906,7 @@
     },
     "/api/supervisor/retention/decide": {
       "post": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Donate, dispose of or transfer expired items, with a note (WF-05)",
         "requestBody": {
           "required": true,
@@ -5493,9 +4984,7 @@
     },
     "/api/supervisor/retention/{id}/keep": {
       "post": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Keep an item 30 more days",
         "parameters": [
           {
@@ -5575,9 +5064,7 @@
     },
     "/api/supervisor/retention/run": {
       "post": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Run the daily retention job now",
         "responses": {
           "200": {
@@ -5615,9 +5102,7 @@
     },
     "/api/photos": {
       "post": {
-        "tags": [
-          "photos"
-        ],
+        "tags": ["photos"],
         "summary": "Upload a photo (re-encoded to WebP ≤ 500 KB, metadata removed)",
         "requestBody": {
           "required": true,
@@ -5631,9 +5116,7 @@
                     "format": "binary"
                   }
                 },
-                "required": [
-                  "file"
-                ]
+                "required": ["file"]
               }
             }
           }
@@ -5650,9 +5133,7 @@
                       "$ref": "#/components/schemas/UploadedPhoto"
                     }
                   },
-                  "required": [
-                    "photo"
-                  ]
+                  "required": ["photo"]
                 }
               }
             }
@@ -5702,9 +5183,7 @@
     },
     "/api/photos/{id}": {
       "get": {
-        "tags": [
-          "photos"
-        ],
+        "tags": ["photos"],
         "summary": "A photo, if you may see it",
         "parameters": [
           {
@@ -5774,9 +5253,7 @@
     },
     "/api/alerts": {
       "get": {
-        "tags": [
-          "notifications"
-        ],
+        "tags": ["notifications"],
         "summary": "My alerts, newest first",
         "responses": {
           "200": {
@@ -5814,9 +5291,7 @@
     },
     "/api/alerts/read": {
       "post": {
-        "tags": [
-          "notifications"
-        ],
+        "tags": ["notifications"],
         "summary": "Mark alerts as read (all of them when no ids are given)",
         "requestBody": {
           "required": true,
@@ -5838,14 +5313,10 @@
                   "properties": {
                     "ok": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "ok"
-                  ]
+                  "required": ["ok"]
                 }
               }
             }
@@ -5885,9 +5356,7 @@
     },
     "/api/lost-reports/{id}/matches": {
       "get": {
-        "tags": [
-          "matching"
-        ],
+        "tags": ["matching"],
         "summary": "Likely matches in custody for my lost report",
         "parameters": [
           {
@@ -5916,9 +5385,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "matches"
-                  ]
+                  "required": ["matches"]
                 }
               }
             }
@@ -5968,9 +5435,7 @@
     },
     "/api/found-items/{id}/claim": {
       "get": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "\"This is mine\": the questions to answer for an item",
         "parameters": [
           {
@@ -6040,9 +5505,7 @@
     },
     "/api/found-items/{id}/claims": {
       "post": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "Claim an item by answering its questions (WF-04, FR-11)",
         "parameters": [
           {
@@ -6132,9 +5595,7 @@
     },
     "/api/claims": {
       "get": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "My claims, newest first",
         "responses": {
           "200": {
@@ -6172,9 +5633,7 @@
     },
     "/api/claims/{id}": {
       "get": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "One of my claims (with the pickup code once approved)",
         "parameters": [
           {
@@ -6244,9 +5703,7 @@
     },
     "/api/claims/{id}/withdraw": {
       "post": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "Withdraw my claim",
         "parameters": [
           {
@@ -6326,9 +5783,7 @@
     },
     "/api/claims/{id}/more": {
       "post": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "Answer what the desk asked for",
         "parameters": [
           {
@@ -6418,9 +5873,7 @@
     },
     "/api/claims/{id}/re-request": {
       "post": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "Re-request a lapsed pickup (once, CC-11)",
         "parameters": [
           {
@@ -6500,9 +5953,7 @@
     },
     "/api/lost-reports/{id}/withdraw": {
       "post": {
-        "tags": [
-          "claims"
-        ],
+        "tags": ["claims"],
         "summary": "\"I found it myself\": close my report and cancel its claims (US-12, CC-16)",
         "parameters": [
           {
@@ -6526,14 +5977,10 @@
                   "properties": {
                     "ok": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ]
+                      "enum": [true]
                     }
                   },
-                  "required": [
-                    "ok"
-                  ]
+                  "required": ["ok"]
                 }
               }
             }
@@ -6593,9 +6040,7 @@
     },
     "/api/desk/today": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "The desk \"Today\" list",
         "responses": {
           "200": {
@@ -6633,9 +6078,7 @@
     },
     "/api/desk/claims": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "\"Check claims\": items with claims waiting",
         "responses": {
           "200": {
@@ -6673,9 +6116,7 @@
     },
     "/api/desk/found-items/{id}/claims": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Every claim on one item, next to what was recorded at intake (FR-12)",
         "parameters": [
           {
@@ -6745,9 +6186,7 @@
     },
     "/api/desk/claims/{id}/review": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Approve, reject or ask for more (WF-04 step 3)",
         "parameters": [
           {
@@ -6835,11 +6274,184 @@
         }
       }
     },
+    "/api/desk/pickups/{id}/request-approval": {
+      "post": {
+        "tags": ["desk"],
+        "summary": "Ask a supervisor to approve a high-value handover",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Where the approval stands.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "approval": {
+                      "type": "string",
+                      "enum": ["none", "requested", "approved"]
+                    }
+                  },
+                  "required": ["approval"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/approvals": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "High-value handovers waiting for a supervisor",
+        "responses": {
+          "200": {
+            "description": "Requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/approvals/{id}/approve": {
+      "post": {
+        "tags": ["supervisor"],
+        "summary": "Approve a requested high-value handover",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/desk/pickups/lookup": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Find the approved claim for a 6-digit pickup code",
         "requestBody": {
           "required": true,
@@ -6907,9 +6519,7 @@
     },
     "/api/desk/pickups/{id}/hand-over": {
       "post": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "Record the handover: identity checked, signed (DSP record)",
         "parameters": [
           {
@@ -6999,9 +6609,7 @@
     },
     "/api/desk/dispatches/{id}": {
       "get": {
-        "tags": [
-          "desk"
-        ],
+        "tags": ["desk"],
         "summary": "A handover (DSP) record",
         "parameters": [
           {
@@ -7069,23 +6677,740 @@
         }
       }
     },
+    "/api/supervisor/dispatches": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "Search handovers by DSP/FND ID, claimant, ID last 4, date and category",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching handovers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/exports/dispatches.csv": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "The dispatch directory as CSV (FR-18)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV for audits.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/dispatches/{id}": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "A DSP record with the item history, amendments and disputes (US-07)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchRecord"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/dispatches/{id}/amendments": {
+      "post": {
+        "tags": ["supervisor"],
+        "summary": "Add a correction with a reason (FR-17)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddAmendment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/disputes": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "Every dispute, open first",
+        "responses": {
+          "200": {
+            "description": "Disputes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/disputes/{id}": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "One dispute with its history",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The dispute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispute"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/disputes/{id}/notes": {
+      "post": {
+        "tags": ["supervisor"],
+        "summary": "Add a note to a dispute (append-only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeNote"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The dispute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispute"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/disputes/{id}/resolve": {
+      "post": {
+        "tags": ["supervisor"],
+        "summary": "Resolve a dispute (upheld or rejected), optionally flagging the recipient (CC-14)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDispute"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The dispute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispute"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/dispute": {
+      "post": {
+        "tags": ["claims"],
+        "summary": "Dispute a closed claim or a wrong handover (WF-06)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseDispute"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The dispute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyDispute"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["claims"],
+        "summary": "My dispute on this claim, if any",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The dispute or null.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyDispute"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/audit/{recordType}/{recordId}": {
       "get": {
-        "tags": [
-          "audit"
-        ],
+        "tags": ["audit"],
         "summary": "Audit trail of one record",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "lost_report",
-                "found_item",
-                "claim",
-                "dispatch",
-                "policy"
-              ]
+              "enum": ["lost_report", "found_item", "claim", "dispatch", "policy"]
             },
             "required": true,
             "name": "recordType",
@@ -7117,9 +7442,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "events"
-                  ]
+                  "required": ["events"]
                 }
               }
             }
@@ -7159,9 +7482,7 @@
     },
     "/api/supervisor/overview": {
       "get": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Numbers, decisions, latest activity and Today for the supervisor",
         "responses": {
           "200": {
@@ -7199,9 +7520,7 @@
     },
     "/api/supervisor/policies": {
       "get": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Policies and closures",
         "responses": {
           "200": {
@@ -7237,9 +7556,7 @@
         }
       },
       "put": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Change policies (applies straight away to open records)",
         "requestBody": {
           "required": true,
@@ -7297,9 +7614,7 @@
     },
     "/api/supervisor/closures": {
       "post": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Add a closure or semester break (retention pauses, NF-09)",
         "requestBody": {
           "required": true,
@@ -7357,9 +7672,7 @@
     },
     "/api/supervisor/closures/{id}": {
       "delete": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Remove a closure",
         "parameters": [
           {
@@ -7428,9 +7741,7 @@
     },
     "/api/supervisor/staff": {
       "get": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Desk officers and supervisors",
         "responses": {
           "200": {
@@ -7466,9 +7777,7 @@
         }
       },
       "post": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Give someone desk access",
         "requestBody": {
           "required": true,
@@ -7526,9 +7835,7 @@
     },
     "/api/supervisor/staff/remove": {
       "post": {
-        "tags": [
-          "supervisor"
-        ],
+        "tags": ["supervisor"],
         "summary": "Remove desk access",
         "requestBody": {
           "required": true,
@@ -7594,11 +7901,116 @@
         }
       }
     },
+    "/api/supervisor/flags": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "Accounts to review: repeat no-shows, paused claimants, wrong recipients",
+        "responses": {
+          "200": {
+            "description": "Flags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/flags/{userId}/clear": {
+      "post": {
+        "tags": ["supervisor"],
+        "summary": "Review done: clear the flags (lifts a claim pause)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dev/clock": {
       "get": {
-        "tags": [
-          "dev"
-        ],
+        "tags": ["dev"],
         "summary": "Dev only: the server clock",
         "responses": {
           "200": {
@@ -7614,9 +8026,7 @@
         }
       },
       "post": {
-        "tags": [
-          "dev"
-        ],
+        "tags": ["dev"],
         "summary": "Dev only: move the server clock forward, or reset it",
         "requestBody": {
           "required": true,
@@ -7633,23 +8043,17 @@
                         "maximum": 31622400000
                       }
                     },
-                    "required": [
-                      "advanceMs"
-                    ]
+                    "required": ["advanceMs"]
                   },
                   {
                     "type": "object",
                     "properties": {
                       "reset": {
                         "type": "boolean",
-                        "enum": [
-                          true
-                        ]
+                        "enum": [true]
                       }
                     },
-                    "required": [
-                      "reset"
-                    ]
+                    "required": ["reset"]
                   }
                 ]
               }
@@ -7672,9 +8076,7 @@
     },
     "/api/dev/sms": {
       "get": {
-        "tags": [
-          "dev"
-        ],
+        "tags": ["dev"],
         "summary": "Dev only: text messages the dev SMS adapter would have sent",
         "responses": {
           "200": {
@@ -7700,17 +8102,11 @@
                             "format": "date-time"
                           }
                         },
-                        "required": [
-                          "to",
-                          "body",
-                          "at"
-                        ]
+                        "required": ["to", "body", "at"]
                       }
                     }
                   },
-                  "required": [
-                    "messages"
-                  ]
+                  "required": ["messages"]
                 }
               }
             }

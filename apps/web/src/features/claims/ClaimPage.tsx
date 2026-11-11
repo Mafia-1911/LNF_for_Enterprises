@@ -5,7 +5,7 @@ import { getRouteApi } from '@tanstack/react-router';
 import { Clock, IdCard, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '../../api/client';
-import { photoUrl, useClaim, useClaimAction } from '../../api/hooks';
+import { photoUrl, useClaim, useClaimAction, useMyDispute, useRaiseDispute } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusTrack } from '../../components/StatusTrack';
 import { dhakaDateTime } from '../../lib/clock';
@@ -184,6 +184,77 @@ export function ClaimPage() {
           </Button>
         ) : null}
       </div>
+      {c.canDispute ? <DisputeSection claimId={c.id} kind={c.canDispute} /> : null}
     </div>
+  );
+}
+
+/** WF-06: a losing claimant disputes within 7 days; an owner reports the wrong item. */
+function DisputeSection({
+  claimId,
+  kind,
+}: {
+  claimId: string;
+  kind: 'second_claimant' | 'wrong_handover';
+}) {
+  const mine = useMyDispute(claimId, true);
+  const raise = useRaiseDispute(claimId);
+  const [statement, setStatement] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const dispute = mine.data?.dispute;
+
+  async function send() {
+    setError(null);
+    try {
+      await raise.mutateAsync({ statement });
+    } catch (e) {
+      setError(
+        e instanceof ApiError ? (e.fields['statement'] ?? e.message) : 'Sending failed; try again.',
+      );
+    }
+  }
+
+  if (dispute)
+    return (
+      <Card className="mt-6 !p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-heading-s font-bold text-ink">Your dispute</h2>
+          <Badge tone={dispute.state === 'OPEN' ? 'warning' : 'neutral'}>
+            {dispute.state === 'OPEN'
+              ? 'With the supervisor'
+              : dispute.outcome === 'upheld'
+                ? 'Upheld'
+                : 'Not upheld'}
+          </Badge>
+        </div>
+        <p className="mt-2 text-body text-muted">“{dispute.statement}”</p>
+      </Card>
+    );
+  return (
+    <Card className="mt-6 !p-5">
+      <h2 className="text-heading-s font-bold text-ink">
+        {kind === 'wrong_handover' ? 'Was this the wrong item?' : 'Think this item is yours?'}
+      </h2>
+      <p className="mt-1 text-body text-muted">
+        {kind === 'wrong_handover'
+          ? 'Tell the supervisor what went wrong. They will check the handover record and contact you.'
+          : 'You can dispute the decision within 7 days. The supervisor reviews the handover and contacts you.'}
+      </p>
+      <TextAreaField
+        label="Why is it yours?"
+        className="mt-4"
+        value={statement}
+        onChange={(e) => setStatement(e.target.value)}
+        error={error ?? undefined}
+      />
+      <Button
+        className="mt-3"
+        variant="secondary"
+        loading={raise.isPending}
+        onClick={() => void send()}
+      >
+        Send dispute
+      </Button>
+    </Card>
   );
 }

@@ -6,6 +6,7 @@ export * from './lifecycles/machine';
 export * from './lifecycles/lost-report';
 export * from './lifecycles/found-item';
 export * from './lifecycles/claim';
+export * from './lifecycles/dispute';
 export * from './catalog';
 export * from './custody';
 export * from './matching';

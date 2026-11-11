@@ -7,7 +7,13 @@ import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
 import { Conflict, Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
-import { approvedClaimByCode, claimFor, collectClaim, type ClaimsDeps } from '../claims';
+import {
+  approvalOf,
+  approvedClaimByCode,
+  claimFor,
+  collectClaim,
+  type ClaimsDeps,
+} from '../claims';
 import { memberNames, memberProfiles } from '../identity';
 import {
   firstPhotoOf,
@@ -32,7 +38,8 @@ function deskActor(ctx: RequestCtx) {
   return actor;
 }
 
-async function toView(tx: Tx, row: DispatchRow): Promise<Dispatch> {
+/** The DSP record as the desk and the directory show it. */
+export async function dispatchView(tx: Tx, row: DispatchRow): Promise<Dispatch> {
   const item = await foundItemFor(tx, row.foundItemId);
   const names = await memberNames(tx, [row.officerId]);
   return {
@@ -81,6 +88,7 @@ export async function findPickup(
         },
         highValue,
         needsSupervisor: highValue && who?.role === 'visitor',
+        approval: approvalOf(claim),
         pickupEndsAt: (claim.pickupEndsAt ?? tx.now).toISOString(),
       };
     },
@@ -114,13 +122,12 @@ export async function handOver(
           'This is a high-value item; record the second check (unlock, serial, recount or supervisor).',
       });
     const supervisorNeeded = highValue && who?.role === 'visitor';
-    if (
-      (supervisorNeeded || input.secondCheck === 'supervisor_approved') &&
-      actor.role !== 'supervisor'
-    )
+    // A supervisor finishes it on their own account, or approved it from the Approvals page.
+    const approvedBySupervisor = actor.role === 'supervisor' || claim.supervisorApprovedAt !== null;
+    if ((supervisorNeeded || input.secondCheck === 'supervisor_approved') && !approvedBySupervisor)
       throw new ValidationFailed({
         secondCheck:
-          'This handover needs a supervisor; ask the supervisor to finish it on their account.',
+          'This handover needs a supervisor; tap "Ask a supervisor" and wait for their approval.',
       });
     if (supervisorNeeded && input.secondCheck !== 'supervisor_approved')
       throw new ValidationFailed({
@@ -174,7 +181,7 @@ export async function handOver(
         body: `${itemTitle(item)} (${item.id}) was returned to its owner. Thank you for handing it in.`,
         link: '/activity',
       });
-    return toView(tx, row);
+    return dispatchView(tx, row);
   });
 }
 
@@ -185,7 +192,7 @@ export async function getDispatch(ctx: RequestCtx, id: string): Promise<Dispatch
     async (tx) => {
       const row = await findDispatch(tx, tx.tenantId, id);
       if (!row) throw new NotFound("We couldn't find that handover record; check the DSP ID.");
-      return toView(tx, row);
+      return dispatchView(tx, row);
     },
     { readOnly: true },
   );

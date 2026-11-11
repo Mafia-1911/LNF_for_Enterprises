@@ -74,6 +74,8 @@ export const ClaimSchema = z
     createdAt: z.iso.datetime({ offset: true }),
     desk: deskInfo,
     canReRequest: z.boolean(),
+    /** WF-06: a closed claim can be disputed within 7 days; a collected one if it was the wrong item. */
+    canDispute: z.enum(['second_claimant', 'wrong_handover']).nullable(),
   })
   .meta({ id: 'Claim' });
 export type Claim = z.infer<typeof ClaimSchema>;
@@ -183,6 +185,8 @@ export const PickupSchema = z
     highValue: z.boolean(),
     /** Visitor collecting a high-value item: a supervisor must approve (CC-10). */
     needsSupervisor: z.boolean(),
+    /** A supervisor's approval for this handover (requested from the desk, CC-08, CC-10). */
+    approval: z.enum(['none', 'requested', 'approved']),
     pickupEndsAt: z.iso.datetime({ offset: true }),
   })
   .meta({ id: 'Pickup' });

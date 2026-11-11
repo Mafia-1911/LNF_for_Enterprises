@@ -6,6 +6,7 @@ export {
   lastEventOf,
   latestEvents,
   recordAuditEvent,
+  recordHistory,
   verifyAuditChain,
   type AuditEntry,
   type StatefulRecord,

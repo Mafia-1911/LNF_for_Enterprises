@@ -1,7 +1,7 @@
 // Phase 4a smoke: the supervisor's overview, retention, policies (with a closure) and staff screens
 // load, work, and pass axe at both viewports.
 import { expect, test } from '@playwright/test';
-import { expectAccessible, resetServerClock, signInAs } from './support';
+import { expectAccessible, query, resetServerClock, signInAs } from './support';
 
 const unique = () => Math.random().toString(36).slice(2, 7);
 
@@ -60,4 +60,44 @@ test('a supervisor sees the overview, runs retention, edits a closure and adds s
     .click();
   await page.getByRole('button', { name: 'Remove access' }).click();
   await expect(page.getByText(email, { exact: false })).toHaveCount(0);
+});
+
+test('a supervisor checks approvals, the dispatch directory, disputes and flags', async ({
+  page,
+}) => {
+  await resetServerClock(page.request);
+  await signInAs(page.request, 'farhana.islam@northsouth.edu');
+  const nav = page.getByRole('navigation', { name: 'Supervisor' });
+
+  await page.goto('/supervisor/approvals');
+  await expect(page.getByRole('heading', { name: 'High-value approvals' })).toBeVisible();
+  await expectAccessible(page, 'approvals');
+
+  await nav.getByRole('link', { name: 'Dispatch directory' }).click();
+  await expect(page.getByRole('heading', { name: 'Dispatch directory' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'CSV' })).toHaveAttribute(
+    'href',
+    /\/api\/supervisor\/exports\/dispatches\.csv/,
+  );
+  await expectAccessible(page, 'dispatch directory');
+  const [dsp] = await query<{ id: string }>(
+    `select d.id from dispatches d join tenants t on t.id = d.tenant_id where t.slug = 'nsu' order by d.created_at desc limit 1`,
+  );
+  if (dsp) {
+    await page.getByLabel('Search').fill(dsp.id);
+    await page.getByRole('link', { name: `Open ${dsp.id}` }).click();
+    await expect(page.getByRole('heading', { name: dsp.id })).toBeVisible();
+    await page.getByLabel('Add a correction').fill('E2E: the ID checked was the NID card.');
+    await page.getByRole('button', { name: 'Add amendment' }).click();
+    await expect(page.getByText('E2E: the ID checked was the NID card.').first()).toBeVisible();
+    await expectAccessible(page, 'handover record');
+  }
+
+  await nav.getByRole('link', { name: /Disputes/ }).click();
+  await expect(page.getByRole('heading', { name: 'Disputes' })).toBeVisible();
+  await expectAccessible(page, 'disputes');
+
+  await nav.getByRole('link', { name: /Flags/ }).click();
+  await expect(page.getByRole('heading', { name: 'Flagged accounts' })).toBeVisible();
+  await expectAccessible(page, 'flags');
 });

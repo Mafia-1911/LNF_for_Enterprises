@@ -50,6 +50,20 @@
       "when": 1794415246399,
       "tag": "0006_retention_closures_staff",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794416518308,
+      "tag": "0007_disputes_flags_amendments",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794416537766,
+      "tag": "0008_validate_claim_approval_fks",
+      "breakpoints": true
     }
   ]
 }

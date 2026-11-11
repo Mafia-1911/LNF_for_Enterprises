@@ -1,5 +1,6 @@
 // Supervisor routes: overview, policies and closures, staff. Supervisors only.
 import {
+  FlagListSchema,
   AddClosureSchema,
   AddStaffSchema,
   PoliciesSchema,
@@ -13,6 +14,8 @@ import { createRoute, createRouter, errorResponses, z } from '../../platform/htt
 import {
   addClosure,
   addStaffMember,
+  clearFlag,
+  listFlags,
   getPolicySettings,
   getStaff,
   removeClosure,
@@ -150,6 +153,35 @@ export function supervisionRoutes(guards: Guards) {
       },
     }),
     async (c) => c.json(await removeStaffMember(c.var.ctx, c.req.valid('json').email), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/supervisor/flags',
+      tags: ['supervisor'],
+      summary: 'Accounts to review: repeat no-shows, paused claimants, wrong recipients',
+      middleware: [guards.requireRole('supervisor')] as const,
+      responses: { 200: { description: 'Flags.', content: json(FlagListSchema) }, ...read },
+    }),
+    async (c) => c.json(await listFlags(c.var.ctx), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/supervisor/flags/{userId}/clear',
+      tags: ['supervisor'],
+      summary: 'Review done: clear the flags (lifts a claim pause)',
+      middleware: [guards.requireRole('supervisor')] as const,
+      request: { params: z.object({ userId: z.uuid() }) },
+      responses: {
+        200: { description: 'Flags.', content: json(FlagListSchema) },
+        404: errorResponses[404],
+        ...write,
+      },
+    }),
+    async (c) => c.json(await clearFlag(c.var.ctx, c.req.valid('param').userId), 200),
   );
 
   return router;

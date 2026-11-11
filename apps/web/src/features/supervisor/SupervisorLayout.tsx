@@ -5,20 +5,33 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import {
   Archive,
   ClipboardList,
+  Flag,
+  Gavel,
   LayoutDashboard,
+  NotebookTabs,
   Settings,
+  ShieldCheck,
   Users,
   type LucideIcon,
 } from 'lucide-react';
 import { useSupervisorOverview } from '../../api/hooks';
 
-type Item = { to: string; label: string; icon: LucideIcon; badge?: 'retention' };
+type Item = {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: 'retention' | 'approvals' | 'disputes' | 'flags';
+};
 const SECTIONS: { title: string; items: Item[] }[] = [
   {
     title: 'Supervise',
     items: [
       { to: '/supervisor', label: 'Overview', icon: LayoutDashboard },
+      { to: '/supervisor/approvals', label: 'Approvals', icon: ShieldCheck, badge: 'approvals' },
       { to: '/supervisor/retention', label: 'Retention', icon: Archive, badge: 'retention' },
+      { to: '/supervisor/dispatch', label: 'Dispatch directory', icon: NotebookTabs },
+      { to: '/supervisor/disputes', label: 'Disputes', icon: Gavel, badge: 'disputes' },
+      { to: '/supervisor/flags', label: 'Flags', icon: Flag, badge: 'flags' },
     ],
   },
   { title: 'Desk', items: [{ to: '/desk', label: 'Desk actions', icon: ClipboardList }] },
@@ -39,7 +52,7 @@ export function SupervisorLayout() {
     to === '/supervisor' ? pathname === to || pathname === `${to}/` : pathname.startsWith(to);
   return (
     <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
-      <nav aria-label="Supervisor" className="mb-6 lg:mb-0">
+      <nav aria-label="Supervisor" className="mb-6 print:hidden lg:mb-0">
         <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
           {SECTIONS.map((section) => (
             <li key={section.title} className="contents lg:block">

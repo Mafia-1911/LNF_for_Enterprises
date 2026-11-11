@@ -17,7 +17,13 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, ArrowRight, CircleCheck, IdCard } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { ApiError } from '../../api/client';
-import { photoUrl, useHandOver, usePickupLookup, useUploadPhoto } from '../../api/hooks';
+import {
+  photoUrl,
+  useHandOver,
+  usePickupLookup,
+  useRequestApproval,
+  useUploadPhoto,
+} from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { SignaturePad, signatureBlob } from '../../components/SignaturePad';
 import { dhakaDateTime, now } from '../../lib/clock';
@@ -31,10 +37,17 @@ const CHECK_LABEL: Record<SecondCheck, string> = {
   supervisor_approved: 'Supervisor approved this handover',
 };
 
+const APPROVAL_TEXT: Record<Pickup['approval'], string> = {
+  none: 'No supervisor approval yet. Ask one if you need it for the second check.',
+  requested: 'Waiting for a supervisor to approve this on their Approvals page.',
+  approved: 'A supervisor approved this handover. You can choose "Supervisor approved".',
+};
+
 export function HandOverFlow() {
   const { step } = route.useSearch();
   const navigate = useNavigate();
   const lookup = usePickupLookup();
+  const requestApproval = useRequestApproval();
   const handOver = useHandOver();
   const upload = useUploadPhoto();
   const [code, setCode] = useState('');
@@ -192,6 +205,35 @@ export function HandOverFlow() {
                   ...SECOND_CHECKS.map((c) => ({ value: c, label: CHECK_LABEL[c] })),
                 ]}
               />
+            ) : null}
+            {pickup.highValue ? (
+              <div className="flex flex-wrap items-center gap-3 rounded-md bg-subtle p-3">
+                <p className="min-w-0 flex-1 text-body text-ink" role="status">
+                  {APPROVAL_TEXT[pickup.approval]}
+                </p>
+                {pickup.approval === 'none' ? (
+                  <Button
+                    variant="secondary"
+                    loading={requestApproval.isPending}
+                    onClick={() =>
+                      void requestApproval
+                        .mutateAsync(pickup.claimId)
+                        .then((r) => setPickup({ ...pickup, approval: r.approval }))
+                    }
+                  >
+                    Ask a supervisor
+                  </Button>
+                ) : null}
+                {pickup.approval === 'requested' ? (
+                  <Button
+                    variant="ghost"
+                    loading={lookup.isPending}
+                    onClick={() => void lookup.mutateAsync(code.trim()).then(setPickup)}
+                  >
+                    Check again
+                  </Button>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}

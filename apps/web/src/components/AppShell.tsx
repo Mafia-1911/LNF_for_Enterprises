@@ -81,7 +81,7 @@ export function AppShell({ me }: { me: Me }) {
           Practice mode: sample records only. Nothing you do here affects real items.
         </div>
       ) : null}
-      <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur-[8px]">
+      <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur-[8px] print:hidden">
         <div className="mx-auto flex h-16 max-w-[1152px] items-center gap-6 px-4 md:px-6">
           <Link to="/" className="shrink-0 rounded-md">
             <Logo />
@@ -114,7 +114,7 @@ export function AppShell({ me }: { me: Me }) {
       </main>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-canvas/95 backdrop-blur-[8px] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-canvas/95 backdrop-blur-[8px] md:hidden print:hidden"
       >
         {items.map((item) => (
           <TabBarItem key={item.to} active={active(item.to)}>

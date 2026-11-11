@@ -2,6 +2,7 @@
 // staff. Messages follow the error rule: what happened, then what to do next.
 import { DISPOSAL_DECISIONS } from '@lf/domain';
 import { z } from 'zod';
+import { DispatchSchema } from './claims';
 import { DeskTodaySchema, FoundItemStateSchema } from './found-item';
 
 // ── Policies (Figma 39:26930) ─────────────────────────────────────────────────────────────────────
@@ -142,7 +143,7 @@ export type RetentionRun = z.infer<typeof RetentionRunSchema>;
 
 export const NeedsDecisionSchema = z
   .object({
-    kind: z.enum(['retention', 'claim_overdue']),
+    kind: z.enum(['retention', 'claim_overdue', 'dispute', 'approval', 'flag']),
     title: z.string(),
     detail: z.string(),
     link: z.string(),
@@ -170,7 +171,12 @@ export const SupervisorOverviewSchema = z
       expiringThisWeek: z.number().int(),
     }),
     /** Sidebar badges. */
-    badges: z.object({ retention: z.number().int() }),
+    badges: z.object({
+      retention: z.number().int(),
+      approvals: z.number().int(),
+      disputes: z.number().int(),
+      flags: z.number().int(),
+    }),
     needsDecision: z.array(NeedsDecisionSchema),
     activity: z.array(ActivityEntrySchema),
     today: DeskTodaySchema,
@@ -202,6 +208,7 @@ export type StaffMember = z.infer<typeof StaffMemberSchema>;
 export const StaffListSchema = z
   .object({ staff: z.array(StaffMemberSchema) })
   .meta({ id: 'StaffList' });
+export type StaffList = z.infer<typeof StaffListSchema>;
 
 export const AddStaffSchema = z
   .object({
@@ -224,3 +231,185 @@ export const RemoveStaffSchema = z
   .object({ email: z.string().trim().toLowerCase().min(3) })
   .meta({ id: 'RemoveStaff' });
 export type RemoveStaff = z.infer<typeof RemoveStaffSchema>;
+
+// ── Dispatch directory (FR-16, FR-17, FR-18, Figma 39:22656) ─────────────────────────────────────
+
+export const DispatchListQuerySchema = z.object({
+  /** DSP ID, FND ID, claimant name or the last 4 of their ID. */
+  q: z.string().trim().max(100).optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
+  category: z.string().max(40).optional(),
+});
+export type DispatchListQuery = z.infer<typeof DispatchListQuerySchema>;
+
+export const DispatchRowSchema = z
+  .object({
+    id: z.string(),
+    foundItemId: z.string(),
+    itemTitle: z.string(),
+    category: z.string(),
+    claimantName: z.string(),
+    /** "••••5042": only the last 4 of the checked ID are ever stored. */
+    idMasked: z.string(),
+    createdAt: z.iso.datetime({ offset: true }),
+    locked: z.boolean(),
+    disputed: z.boolean(),
+    amendments: z.number().int(),
+  })
+  .meta({ id: 'DispatchRow' });
+export type DispatchRow = z.infer<typeof DispatchRowSchema>;
+
+export const DispatchListSchema = z
+  .object({ dispatches: z.array(DispatchRowSchema) })
+  .meta({ id: 'DispatchList' });
+export type DispatchList = z.infer<typeof DispatchListSchema>;
+
+export const HistoryEntrySchema = z
+  .object({
+    label: z.string(),
+    actor: z.string(),
+    at: z.iso.datetime({ offset: true }),
+    note: z.string().nullable(),
+  })
+  .meta({ id: 'HistoryEntry' });
+export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
+
+export const AmendmentSchema = z
+  .object({
+    seq: z.number().int(),
+    reason: z.string(),
+    by: z.string(),
+    at: z.iso.datetime({ offset: true }),
+  })
+  .meta({ id: 'Amendment' });
+
+export const AddAmendmentSchema = z
+  .object({
+    reason: z
+      .string()
+      .trim()
+      .min(5, { error: 'Say what was wrong and what is correct, in a sentence.' })
+      .max(500, { error: 'Keep the correction under 500 characters; shorten it.' }),
+  })
+  .meta({ id: 'AddAmendment' });
+export type AddAmendment = z.infer<typeof AddAmendmentSchema>;
+
+// ── Disputes (WF-06, CC-01, CC-14, Figma 39:23422) ───────────────────────────────────────────────
+
+export const DisputeKindSchema = z.enum(['second_claimant', 'wrong_handover']);
+export type DisputeKind = z.infer<typeof DisputeKindSchema>;
+
+export const DisputeSchema = z
+  .object({
+    id: z.uuid(),
+    state: z.enum(['OPEN', 'RESOLVED']),
+    kind: DisputeKindSchema,
+    foundItemId: z.string(),
+    itemTitle: z.string(),
+    claimId: z.string().nullable(),
+    dispatchId: z.string().nullable(),
+    raisedBy: z.string(),
+    statement: z.string(),
+    outcome: z.enum(['upheld', 'rejected']).nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    /** Notes and the outcome, oldest first (append-only). */
+    history: z.array(HistoryEntrySchema),
+  })
+  .meta({ id: 'Dispute' });
+export type Dispute = z.infer<typeof DisputeSchema>;
+
+export const DisputeListSchema = z
+  .object({ disputes: z.array(DisputeSchema) })
+  .meta({ id: 'DisputeList' });
+export type DisputeList = z.infer<typeof DisputeListSchema>;
+
+export const RaiseDisputeSchema = z
+  .object({
+    statement: z
+      .string()
+      .trim()
+      .min(10, { error: 'Say why you think the item is yours, in a sentence or two.' })
+      .max(1000, { error: 'Keep it under 1000 characters; shorten it.' }),
+  })
+  .meta({ id: 'RaiseDispute' });
+export type RaiseDispute = z.infer<typeof RaiseDisputeSchema>;
+
+export const MyDisputeSchema = z
+  .object({ dispute: DisputeSchema.omit({ history: true }).nullable() })
+  .meta({ id: 'MyDispute' });
+
+export const DisputeNoteSchema = z
+  .object({
+    note: z
+      .string()
+      .trim()
+      .min(3, { error: 'Write the note first.' })
+      .max(500, { error: 'Keep the note under 500 characters; shorten it.' }),
+  })
+  .meta({ id: 'DisputeNote' });
+
+export const ResolveDisputeSchema = z
+  .object({
+    outcome: z.enum(['upheld', 'rejected'], { error: 'Choose whether the dispute is upheld.' }),
+    note: z
+      .string()
+      .trim()
+      .min(3, { error: 'Record what was decided and why.' })
+      .max(500, { error: 'Keep the note under 500 characters; shorten it.' }),
+    /** CC-14: flag the account that received the wrong item. */
+    flagRecipient: z.boolean(),
+  })
+  .meta({ id: 'ResolveDispute' });
+export type ResolveDispute = z.infer<typeof ResolveDisputeSchema>;
+
+export const DispatchRecordSchema = z
+  .object({
+    dispatch: DispatchSchema,
+    locked: z.boolean(),
+    history: z.array(HistoryEntrySchema),
+    amendments: z.array(AmendmentSchema),
+    disputes: z.array(DisputeSchema),
+  })
+  .meta({ id: 'DispatchRecord' });
+export type DispatchRecord = z.infer<typeof DispatchRecordSchema>;
+
+// ── Flags (CC-03, CC-14, CC-15, Figma 39:23882) ──────────────────────────────────────────────────
+
+export const FLAG_KINDS = ['no_show_finder', 'failed_verifications', 'wrong_recipient'] as const;
+export const FlagSchema = z
+  .object({
+    userId: z.uuid(),
+    name: z.string(),
+    kinds: z.array(z.enum(FLAG_KINDS)),
+    /** One plain line per reason, e.g. "Repeat no-show: 2 found posts never handed in". */
+    reasons: z.array(z.string()),
+    since: z.iso.datetime({ offset: true }),
+  })
+  .meta({ id: 'Flag' });
+export type Flag = z.infer<typeof FlagSchema>;
+
+export const FlagListSchema = z.object({ flags: z.array(FlagSchema) }).meta({ id: 'FlagList' });
+export type FlagList = z.infer<typeof FlagListSchema>;
+
+// ── High-value approvals (CC-08, CC-10, Figma 39:21514) ──────────────────────────────────────────
+
+export const ApprovalSchema = z
+  .object({
+    claimId: z.string(),
+    foundItemId: z.string(),
+    itemTitle: z.string(),
+    category: z.string(),
+    claimantName: z.string(),
+    claimantRole: z.string(),
+    requestedBy: z.string(),
+    requestedAt: z.iso.datetime({ offset: true }),
+    approved: z.boolean(),
+  })
+  .meta({ id: 'Approval' });
+export type Approval = z.infer<typeof ApprovalSchema>;
+
+export const ApprovalListSchema = z
+  .object({ approvals: z.array(ApprovalSchema) })
+  .meta({ id: 'ApprovalList' });
+export type ApprovalList = z.infer<typeof ApprovalListSchema>;

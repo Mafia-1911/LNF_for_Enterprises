@@ -46,3 +46,47 @@ export const staffInvites = pgTable(
   },
   (t) => [primaryKey({ columns: [t.tenantId, t.email] })],
 );
+
+/** Accounts flagged for a supervisor's review, e.g. a wrong recipient after a dispute (CC-14). */
+export const accountFlags = pgTable(
+  'account_flags',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    id: uuid('id').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** wrong_recipient */
+    kind: text('kind').notNull(),
+    reason: text('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.id] }),
+    index('account_flags_user_idx').on(t.tenantId, t.userId),
+  ],
+);
+
+/**
+ * "Review done — clear" on the Flags page. A flag shows again only when new evidence arrives after
+ * the clear (another no-show, another failed verification). Clearing a paused claimant lifts the
+ * pause (CC-15 "pending review").
+ */
+export const flagClears = pgTable(
+  'flag_clears',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** no_show_finder | failed_verifications | wrong_recipient */
+    kind: text('kind').notNull(),
+    clearedAt: timestamp('cleared_at', { withTimezone: true }).notNull(),
+    clearedBy: uuid('cleared_by').references(() => users.id),
+  },
+  (t) => [primaryKey({ columns: [t.tenantId, t.userId, t.kind] })],
+);

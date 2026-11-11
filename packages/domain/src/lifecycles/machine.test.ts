@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ROLES } from '../roles';
 import { claimMachine, CLAIM_EVENTS, CLAIM_STATES, MAX_ACTIVE_CLAIMS } from './claim';
+import { disputeMachine, DISPUTE_WINDOW_DAYS } from './dispute';
 import { foundItemMachine, FOUND_ITEM_EVENTS, FOUND_ITEM_STATES } from './found-item';
 import { availableEvents, defineMachine, step, type Machine } from './machine';
 
@@ -177,5 +178,26 @@ describe('claim lifecycle', () => {
     expect(MAX_ACTIVE_CLAIMS).toBe(3);
     expect(CLAIM_STATES).toHaveLength(8);
     expect(CLAIM_EVENTS).toHaveLength(10);
+  });
+});
+
+describe('dispute lifecycle (WF-06)', () => {
+  it('is well formed', () => checkWellFormed(disputeMachine));
+
+  it('lets owners and desk staff raise, and only supervisors resolve', () => {
+    for (const role of ['student', 'visitor', 'desk_officer', 'supervisor'] as const)
+      expect(step(disputeMachine, null, 'RAISE', { kind: 'user', role })).toEqual({
+        ok: true,
+        to: 'OPEN',
+      });
+    expect(step(disputeMachine, null, 'RAISE', { kind: 'user', role: 'it_admin' }).ok).toBe(false);
+    for (const role of ROLES.filter((r) => r !== 'supervisor'))
+      expect(step(disputeMachine, 'OPEN', 'RESOLVE', { kind: 'user', role }).ok).toBe(false);
+    expect(step(disputeMachine, 'OPEN', 'RESOLVE', { kind: 'user', role: 'supervisor' })).toEqual({
+      ok: true,
+      to: 'RESOLVED',
+    });
+    expect(step(disputeMachine, 'RESOLVED', 'RESOLVE', { kind: 'system' }).ok).toBe(false);
+    expect(DISPUTE_WINDOW_DAYS).toBe(7);
   });
 });

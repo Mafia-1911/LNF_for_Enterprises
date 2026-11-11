@@ -1,6 +1,7 @@
 // Claims: the owner's side (WF-04 steps 1–4) and the desk's review (step 3, FR-12), plus the desk
 // "Today" list and withdrawing a lost report (CC-16), which cancels linked claims.
 import {
+  ApprovalListSchema,
   ClaimListSchema,
   ClaimSchema,
   ClaimStartSchema,
@@ -30,6 +31,9 @@ import {
   withdrawClaim,
   withdrawLostReport,
   type ClaimsDeps,
+  approveHandover,
+  listApprovals,
+  requestApproval,
 } from './service';
 
 const OWNERS = ['student', 'visitor'] as const;
@@ -286,6 +290,69 @@ export function claimsRoutes(guards: Guards, deps: ClaimsDeps) {
           recordId(c.req.valid('param').id, 'claim'),
           c.req.valid('json'),
         ),
+        200,
+      ),
+  );
+
+  // ── High-value approvals (CC-08, CC-10) ──────────────────────────────────────────────────────
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/desk/pickups/{id}/request-approval',
+      tags: ['desk'],
+      summary: 'Ask a supervisor to approve a high-value handover',
+      middleware: [guards.requireRole(...DESK)] as const,
+      request: { params: idParam },
+      responses: {
+        200: {
+          description: 'Where the approval stands.',
+          content: json(z.object({ approval: z.enum(['none', 'requested', 'approved']) })),
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+        404: errorResponses[404],
+      },
+    }),
+    async (c) =>
+      c.json(await requestApproval(c.var.ctx, recordId(c.req.valid('param').id, 'claim')), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/supervisor/approvals',
+      tags: ['supervisor'],
+      summary: 'High-value handovers waiting for a supervisor',
+      middleware: [guards.requireRole('supervisor')] as const,
+      responses: {
+        200: { description: 'Requests.', content: json(ApprovalListSchema) },
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json({ approvals: await listApprovals(c.var.ctx) }, 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/supervisor/approvals/{id}/approve',
+      tags: ['supervisor'],
+      summary: 'Approve a requested high-value handover',
+      middleware: [guards.requireRole('supervisor')] as const,
+      request: { params: idParam },
+      responses: {
+        200: { description: 'Requests.', content: json(ApprovalListSchema) },
+        401: errorResponses[401],
+        403: errorResponses[403],
+        404: errorResponses[404],
+      },
+    }),
+    async (c) =>
+      c.json(
+        { approvals: await approveHandover(c.var.ctx, recordId(c.req.valid('param').id, 'claim')) },
         200,
       ),
   );
