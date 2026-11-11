@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAlerts, useTenant } from '../api/hooks';
 import { authClient } from '../lib/auth-client';
+import { HelpButton } from './HelpButton';
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
 
@@ -100,6 +101,7 @@ export function AppShell({ me }: { me: Me }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <HelpButton />
             <div className="hidden text-right sm:block">
               <p className="text-label font-semibold text-ink">{me.name}</p>
               {me.title ? <p className="text-label text-muted">{me.title}</p> : null}

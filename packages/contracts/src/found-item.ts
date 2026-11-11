@@ -359,3 +359,25 @@ export const LikelyMatchSchema = GalleryItemSchema.extend({
   reasons: z.array(z.string()),
 }).meta({ id: 'LikelyMatch' });
 export type LikelyMatch = z.infer<typeof LikelyMatchSchema>;
+
+// ── Daily shelf check (FR-15) ─────────────────────────────────────────────────────────────────────
+
+export const ShelfCheckListSchema = z
+  .object({ bins: z.array(z.object({ binCode: z.string(), items: z.array(DeskItemRowSchema) })) })
+  .meta({ id: 'ShelfCheckList' });
+export type ShelfCheckList = z.infer<typeof ShelfCheckListSchema>;
+
+export const ShelfCheckSubmitSchema = z
+  .object({
+    results: z
+      .array(z.object({ id: z.string().trim().min(1), present: z.boolean() }))
+      .min(1, 'Tick at least one item, then save.')
+      .max(1000, 'Save at most 1000 items at a time.'),
+  })
+  .meta({ id: 'ShelfCheckSubmit' });
+export type ShelfCheckSubmit = z.infer<typeof ShelfCheckSubmitSchema>;
+
+export const ShelfCheckResultSchema = z
+  .object({ checked: z.number().int(), missing: z.array(DeskItemRowSchema) })
+  .meta({ id: 'ShelfCheckResult' });
+export type ShelfCheckResult = z.infer<typeof ShelfCheckResultSchema>;

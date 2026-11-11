@@ -2275,6 +2275,111 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/desk/shelf-check': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Items expected in each bin (FR-15) */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Bins and their items. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ShelfCheckList'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /** Record present or missing for each item (FR-15) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['ShelfCheckSubmit'];
+        };
+      };
+      responses: {
+        /** @description How many were checked and which are missing. */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ShelfCheckResult'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/desk/today': {
     parameters: {
       query?: never;
@@ -6477,6 +6582,22 @@ export interface components {
     };
     /** @enum {string} */
     Role: 'student' | 'visitor' | 'desk_officer' | 'supervisor' | 'it_admin';
+    ShelfCheckList: {
+      bins: {
+        binCode: string;
+        items: components['schemas']['DeskItemRow'][];
+      }[];
+    };
+    ShelfCheckResult: {
+      checked: number;
+      missing: components['schemas']['DeskItemRow'][];
+    };
+    ShelfCheckSubmit: {
+      results: {
+        id: string;
+        present: boolean;
+      }[];
+    };
     SimilarLostList: {
       reports: components['schemas']['SimilarLostReport'][];
     };

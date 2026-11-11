@@ -9,6 +9,7 @@ import type {
   Appearance,
   Policies,
   RegisterImport,
+  ShelfCheckSubmit,
   RetentionDecision,
   CorrectFoundItem,
   CreateFoundPost,
@@ -787,5 +788,20 @@ export function useMergeFoundItem(keptId: string) {
       qc.setQueryData(keys.deskItem(keptId), item);
       void qc.invalidateQueries({ queryKey: ['desk'] });
     },
+  });
+}
+
+export function useShelfCheck() {
+  return useQuery({
+    queryKey: ['desk', 'shelf-check'],
+    queryFn: () => unwrap(api.GET('/api/desk/shelf-check')),
+  });
+}
+
+export function useSaveShelfCheck() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ShelfCheckSubmit) => unwrap(api.POST('/api/desk/shelf-check', { body })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['desk'] }),
   });
 }

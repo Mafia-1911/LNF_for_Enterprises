@@ -63,12 +63,13 @@ export function MorePage() {
         </li>
 
         <li>
-          <Item
-            icon={ClipboardCheck}
-            title="Daily shelf check"
-            sub="Tick present or missing, bin by bin"
-            later
-          />
+          <Link to="/desk/shelf-check" className="block rounded-lg hover:shadow-hover">
+            <Item
+              icon={ClipboardCheck}
+              title="Daily shelf check"
+              sub="Tick present or missing, bin by bin"
+            />
+          </Link>
         </li>
         <li>
           <Link to="/desk/outage" className="block rounded-lg hover:shadow-hover">

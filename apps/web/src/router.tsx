@@ -320,6 +320,14 @@ const deskHandedOverRoute = createRoute({
   component: lazyRouteComponent(() => import('./features/desk/HandedOverPage'), 'HandedOverPage'),
 });
 
+const deskShelfCheckRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/shelf-check',
+  staticData: { title: 'Daily shelf check' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/ShelfCheckPage'), 'ShelfCheckPage'),
+});
+
 const deskWalkInRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/desk/walk-in',
@@ -504,6 +512,7 @@ const routeTree = rootRoute.addChildren([
     deskLabelRoute,
     deskOutageRoute,
     deskWalkInRoute,
+    deskShelfCheckRoute,
     deskClaimsRoute,
     deskClaimReviewRoute,
     deskHandOverRoute,

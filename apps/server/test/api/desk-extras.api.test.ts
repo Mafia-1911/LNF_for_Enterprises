@@ -12,6 +12,8 @@ import type {
   LostReportCreated,
   Pickup,
   PolicySettings,
+  ShelfCheckList,
+  ShelfCheckResult,
   UploadedPhoto,
 } from '@lf/contracts';
 import sharp from 'sharp';
@@ -259,5 +261,29 @@ describe('merge duplicates (CC-04)', () => {
         ).post(`/api/desk/found-items/${post.body.id}/merge`, { into: kept })
       ).status,
     ).toBe(403);
+  });
+});
+
+describe('daily shelf check (FR-15)', () => {
+  it('lists items bin by bin and records present or missing on each item', async () => {
+    const desk = await as(email.desk);
+    const logged = await desk.post<LoggedFoundItem>(
+      '/api/desk/found-items',
+      intake({ shortName: 'Navy bag', colour: 'navy', binCode: 'B-07' }),
+    );
+    const id = logged.body.item.id;
+    const list = await desk.get<ShelfCheckList>('/api/desk/shelf-check');
+    expect(list.status).toBe(200);
+    expect(list.body.bins.find((b) => b.binCode === 'B-07')?.items.map((i) => i.id)).toContain(id);
+
+    const saved = await desk.post<ShelfCheckResult>('/api/desk/shelf-check', {
+      results: [{ id, present: false }],
+    });
+    expect(saved.status).toBe(201);
+    expect(saved.body.missing.map((m) => m.id)).toEqual([id]);
+    const record = await desk.get<DeskFoundItem>(`/api/desk/found-items/${id}`);
+    expect(record.body.history.at(-1)?.label).toBe('Shelf check: missing');
+    expect((await desk.post('/api/desk/shelf-check', { results: [] })).status).toBe(400);
+    expect((await (await as(email.student)).get('/api/desk/shelf-check')).status).toBe(403);
   });
 });

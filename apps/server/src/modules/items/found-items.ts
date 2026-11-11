@@ -2,6 +2,9 @@
 // pings, NF-02 ID card fast lane). Same shape as the lost-report slice in service.ts: plain functions
 // (deps, ctx, input), one withTx per use case, state changes only through foundItemTransition.
 import type {
+  ShelfCheckList,
+  ShelfCheckResult,
+  ShelfCheckSubmit,
   OutageSheet,
   RegisterImport,
   CorrectFoundItem,
@@ -65,6 +68,7 @@ import {
   findReservedId,
   insertReservedIds,
   listFoundInWindow,
+  listFoundItemsByState,
   listFoundItemsSince,
   listLostReportsSince,
   listUnusedReserved,
@@ -933,6 +937,8 @@ const EVENT_LABEL: Record<string, string> = {
   CORRECT: 'Corrected',
   VOID: 'Marked VOID',
   MERGED: 'Duplicate merged in',
+  SHELF_CHECK_PRESENT: 'Shelf check: present',
+  SHELF_CHECK_MISSING: 'Shelf check: missing',
   TRANSFER: 'Transferred',
   EXPIRE: 'Retention ended',
 };
@@ -1484,4 +1490,55 @@ export async function openReportsOf(
   return (await listLostReportsByOwner(tx, tx.tenantId, ownerId)).filter(
     (r) => r.category === category && (r.state === 'OPEN' || r.state === 'POSSIBLE_MATCH'),
   );
+}
+
+// ── Daily shelf check (FR-15) ───────────────────────────────────────────────────────────────────
+
+const ON_SHELF: FoundItemState[] = ['IN_CUSTODY', 'CLAIM_PENDING', 'READY_FOR_PICKUP'];
+
+/** Items expected in each bin, bin by bin. */
+export async function shelfCheckList(ctx: RequestCtx): Promise<ShelfCheckList> {
+  if (!isDesk(ctx)) throw new Forbidden();
+  return withTx(
+    ctx,
+    async (tx) => {
+      const rows = (await listFoundItemsByState(tx, tx.tenantId, ON_SHELF)).filter(
+        (r) => r.binCode !== null,
+      );
+      const desk = await toRows(tx, rows, () => null);
+      const bins = new Map<string, DeskItemRow[]>();
+      for (const r of desk) if (r.binCode) bins.set(r.binCode, [...(bins.get(r.binCode) ?? []), r]);
+      return {
+        bins: [...bins]
+          .sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true }))
+          .map(([binCode, items]) => ({ binCode, items })),
+      };
+    },
+    { readOnly: true },
+  );
+}
+
+/** Records present or missing for each item (append-only, on each item's history). */
+export async function recordShelfCheck(
+  ctx: RequestCtx,
+  input: ShelfCheckSubmit,
+): Promise<ShelfCheckResult> {
+  if (!isDesk(ctx)) throw new Forbidden();
+  return withTx(ctx, async (tx) => {
+    const ids = [...new Set(input.results.map((r) => r.id))];
+    const rows = new Map((await findFoundItems(tx, tx.tenantId, ids)).map((r) => [r.id, r]));
+    const missing: FoundItemRow[] = [];
+    for (const result of input.results) {
+      const row = rows.get(result.id);
+      if (!row || !ON_SHELF.includes(row.state as FoundItemState) || !row.binCode) continue;
+      await recordAuditEvent(tx, {
+        recordType: 'found_item',
+        recordId: row.id,
+        event: result.present ? 'SHELF_CHECK_PRESENT' : 'SHELF_CHECK_MISSING',
+        note: `${result.present ? 'Present in' : 'Missing from'} bin ${row.binCode}`,
+      });
+      if (!result.present) missing.push(row);
+    }
+    return { checked: rows.size, missing: await toRows(tx, missing, () => null) };
+  });
 }

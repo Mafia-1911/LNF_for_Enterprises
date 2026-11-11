@@ -2132,6 +2132,69 @@
         },
         "required": ["into"]
       },
+      "ShelfCheckList": {
+        "type": "object",
+        "properties": {
+          "bins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "binCode": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeskItemRow"
+                  }
+                }
+              },
+              "required": ["binCode", "items"]
+            }
+          }
+        },
+        "required": ["bins"]
+      },
+      "ShelfCheckResult": {
+        "type": "object",
+        "properties": {
+          "checked": {
+            "type": "integer"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          }
+        },
+        "required": ["checked", "missing"]
+      },
+      "ShelfCheckSubmit": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "present": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["id", "present"]
+            },
+            "minItems": 1,
+            "maxItems": 1000
+          }
+        },
+        "required": ["results"]
+      },
       "UploadedPhoto": {
         "type": "object",
         "properties": {
@@ -5619,6 +5682,100 @@
           },
           "409": {
             "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/shelf-check": {
+      "get": {
+        "tags": ["desk"],
+        "summary": "Items expected in each bin (FR-15)",
+        "responses": {
+          "200": {
+            "description": "Bins and their items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShelfCheckList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["desk"],
+        "summary": "Record present or missing for each item (FR-15)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShelfCheckSubmit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "How many were checked and which are missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShelfCheckResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
             "content": {
               "application/json": {
                 "schema": {

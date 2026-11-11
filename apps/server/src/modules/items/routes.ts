@@ -32,6 +32,9 @@ import {
   RetentionItemSchema,
   RetentionListSchema,
   RetentionRunSchema,
+  ShelfCheckListSchema,
+  ShelfCheckResultSchema,
+  ShelfCheckSubmitSchema,
   SimilarLostListSchema,
   SimilarLostQuerySchema,
 } from '@lf/contracts';
@@ -56,7 +59,9 @@ import {
   getLabel,
   getOutageSheet,
   importRegister,
+  recordShelfCheck,
   reserveOutageIds,
+  shelfCheckList,
   listMyFoundPosts,
   logFoundItem,
   mergeFoundItem,
@@ -630,6 +635,43 @@ export function foundItemsRoutes(guards: Guards, deps: FoundItemsDeps) {
         ),
         200,
       ),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/desk/shelf-check',
+      tags: ['desk'],
+      summary: 'Items expected in each bin (FR-15)',
+      middleware: [guards.requireRole(...DESK)] as const,
+      responses: {
+        200: { description: 'Bins and their items.', content: json(ShelfCheckListSchema) },
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await shelfCheckList(c.var.ctx), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/desk/shelf-check',
+      tags: ['desk'],
+      summary: 'Record present or missing for each item (FR-15)',
+      middleware: [guards.requireRole(...DESK)] as const,
+      request: { body: { required: true, content: json(ShelfCheckSubmitSchema) } },
+      responses: {
+        201: {
+          description: 'How many were checked and which are missing.',
+          content: json(ShelfCheckResultSchema),
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await recordShelfCheck(c.var.ctx, c.req.valid('json')), 201),
   );
 
   return router;
