@@ -1,11 +1,12 @@
 # NSU Campus Lost & Found Portal
 
-A web portal where North South University students, staff and visitors report lost items, the Lost & Found desk logs found items, and the two are matched and returned. This repository is at **Phase 0.5**: the platform foundations plus one complete flow, "I lost something".
+A web portal where North South University students, staff and visitors report lost items, the Lost & Found desk logs found items, and the two are matched and returned. Phases 0, 1 and 3 to 5 are built **showable first** (every feature works end to end and is tested; edge cases are deepened later): reporting and intake, matching, claims and handover, the supervisor's tools and timers, and demo hardening. Phase 2 (AI photo assist) and phase 6 (integrations) are not built yet. Each phase has a report in [docs/reports/](docs/reports/).
 
 - What we are building and why: [docs/source/srs-v0.1.txt](docs/source/srs-v0.1.txt) (SRS) and [docs/plan/Lost-and-Found-Build-Plan-v0.3.md](docs/plan/Lost-and-Found-Build-Plan-v0.3.md) (build plan)
 - Decisions: [docs/adr/](docs/adr/README.md)
 - Rules for anyone (or any agent) writing code here: [AGENTS.md](AGENTS.md)
 - Known follow-ups: [docs/todo.md](docs/todo.md)
+- Public demo on Vercel (sample data, "sign in as" any role): [docs/deploy-vercel.md](docs/deploy-vercel.md)
 
 ## Run it locally
 
