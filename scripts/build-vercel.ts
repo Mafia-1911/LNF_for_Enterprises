@@ -129,6 +129,8 @@ writeFileSync(
         },
         { src: '^/(.*)$', headers: pageHeaders, continue: true },
         { handle: 'filesystem' },
+        // A missing script or style is a 404, not the app's HTML (which a browser would refuse).
+        { src: '^/assets/.*$', status: 404 },
         { src: '^/(.*)$', dest: '/index.html' },
       ],
       // 01:00 in Dhaka: timers still run on days with no visitors (Hobby plans allow one a day).

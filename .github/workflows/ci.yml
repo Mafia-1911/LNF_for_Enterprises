@@ -1,12 +1,17 @@
-# CI runs the same gates as `pnpm verify` on every push and pull request.
-# Actions are pinned to commit SHAs (tag in the comment). Everything runs on the free GitHub-hosted
-# runner with the local stand-ins from infra/docker-compose.dev.yml; no secrets are needed.
+# CI/CD. `verify` runs the same gates as `pnpm verify` on every push and pull request, on the free
+# GitHub-hosted runner with the local stand-ins from infra/docker-compose.dev.yml (no secrets).
+# `deploy` runs only for main, only after `verify` passes: it migrates and seeds the demo database,
+# builds the demo and deploys it to Vercel (docs/deploy-vercel.md#automatic-deploys). It needs the
+# repository secret VERCEL_TOKEN; until that is set it skips with a warning.
+# Actions are pinned to commit SHAs (tag in the comment).
 name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+  # Re-run CI (and the deploy, on main) by hand from the Actions tab.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -64,3 +69,82 @@ jobs:
             test-results/
             reports/mutation/
           retention-days: 7
+
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: demo
+      url: https://lnf-for-enterprises.vercel.app
+    # One deploy at a time, in order; a newer push waits instead of cancelling a half-done migration.
+    concurrency:
+      group: deploy-demo
+      cancel-in-progress: false
+    env:
+      # Identifiers of the Vercel team and project (not credentials); the token is the secret.
+      VERCEL_ORG_ID: team_kRkFCJbcHzzc6cd48DA2YszD
+      VERCEL_PROJECT_ID: prj_WBGiSM4Y3A1PZjO3I9Dh2mDLnE4a
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TELEMETRY_DISABLED: '1'
+      VERCEL_CLI: vercel@65.14.0
+    steps:
+      - name: Check that deploys are set up
+        id: setup
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning title=Deploy skipped::Add a Vercel token as the repository secret VERCEL_TOKEN to deploy main automatically (docs/deploy-vercel.md#automatic-deploys)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.setup.outputs.enabled == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - if: steps.setup.outputs.enabled == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm and dependencies
+        if: steps.setup.outputs.enabled == 'true'
+        run: |
+          npm install --global pnpm@12.18.0
+          pnpm install --frozen-lockfile
+
+      - name: Pull the demo's production settings from Vercel
+        if: steps.setup.outputs.enabled == 'true'
+        run: npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Migrate and seed the demo database
+        if: steps.setup.outputs.enabled == 'true'
+        run: |
+          set -a
+          . .vercel/.env.production.local
+          set +a
+          # Keep connection strings and secrets out of the log even if a tool prints them.
+          for name in DATABASE_URL NEON_DATABASE_URL_UNPOOLED BETTER_AUTH_SECRET PRIVATE_DETAILS_KEYS CRON_SECRET OIDC_CLIENT_SECRET; do
+            if [ -n "${!name:-}" ]; then echo "::add-mask::${!name}"; fi
+          done
+          # Migrations run as Neon's owner role; the app itself connects as lf_app.
+          export DATABASE_OWNER_URL="$NEON_DATABASE_URL_UNPOOLED"
+          pnpm db:migrate
+          pnpm db:seed
+
+      - name: Build the demo
+        if: steps.setup.outputs.enabled == 'true'
+        run: pnpm build:vercel
+
+      - name: Deploy to production
+        if: steps.setup.outputs.enabled == 'true'
+        run: npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+      - name: Check the live site
+        if: steps.setup.outputs.enabled == 'true'
+        run: |
+          curl --fail --silent --show-error --retry 6 --retry-delay 10 --retry-all-errors \
+            https://lnf-for-enterprises.vercel.app/healthz
