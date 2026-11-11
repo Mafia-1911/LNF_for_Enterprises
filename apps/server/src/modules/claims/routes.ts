@@ -13,6 +13,9 @@ import {
   ProvideMoreSchema,
   ReviewClaimSchema,
   SubmitClaimSchema,
+  SubmitWalkInClaimSchema,
+  WalkInClaimLookupSchema,
+  WalkInClaimStartSchema,
 } from '@lf/contracts';
 import { normaliseId } from '@lf/domain';
 import { NotFound } from '../../platform/errors';
@@ -28,7 +31,9 @@ import {
   reRequestClaim,
   reviewClaim,
   startClaim,
+  startWalkInClaim,
   submitClaim,
+  submitWalkInClaim,
   withdrawClaim,
   withdrawLostReport,
   type ClaimsDeps,
@@ -54,6 +59,60 @@ const err = (...codes: (400 | 401 | 403 | 404 | 409)[]) =>
 
 export function claimsRoutes(guards: Guards, deps: ClaimsDeps) {
   const router = createRouter();
+
+  // US-10: the desk files a claim for a walk-in student. POST so the email stays out of URLs and logs.
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/desk/walk-in-claims/start',
+      tags: ['desk'],
+      summary: "A walk-in student's claim: the item, its questions and whose claim it will be",
+      middleware: [guards.requireRole(...DESK)] as const,
+      request: { body: { required: true, content: json(WalkInClaimLookupSchema) } },
+      responses: {
+        200: { description: 'What to ask the student.', content: json(WalkInClaimStartSchema) },
+        ...err(400, 401, 403, 404),
+      },
+    }),
+    async (c) => {
+      const input = c.req.valid('json');
+      return c.json(
+        await startWalkInClaim(deps, c.var.ctx, {
+          ...input,
+          foundItemId: recordId(input.foundItemId, 'item'),
+        }),
+        200,
+      );
+    },
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/desk/walk-in-claims',
+      tags: ['desk'],
+      summary: 'File a claim for a walk-in student (the claim is theirs)',
+      middleware: [guards.requireRole(...DESK)] as const,
+      request: { body: { required: true, content: json(SubmitWalkInClaimSchema) } },
+      responses: {
+        201: {
+          description: "The student's claim, waiting for review.",
+          content: json(ClaimSchema),
+        },
+        ...err(400, 401, 403, 404, 409),
+      },
+    }),
+    async (c) => {
+      const input = c.req.valid('json');
+      return c.json(
+        await submitWalkInClaim(deps, c.var.ctx, {
+          ...input,
+          foundItemId: recordId(input.foundItemId, 'item'),
+        }),
+        201,
+      );
+    },
+  );
 
   router.openapi(
     createRoute({

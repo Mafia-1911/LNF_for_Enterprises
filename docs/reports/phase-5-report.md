@@ -6,15 +6,16 @@ Date: 12 Nov 2026 · Scope: plan v0.3 §14 phase 5 (accessibility audit, practic
 
 ## What was built
 
-| Area                      | What works                                                                                                                                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Help how-tos (NFR-01)     | A "Help" button on every screen opens short steps for that screen (`apps/web/src/lib/help.ts`), so a new officer can do intake and handover without training.                                     |
-| Daily shelf check (FR-15) | Desk → More → Shelf check: items in custody bin by bin; tick present or missing. Missing items get a "Shelf check: missing" line in their history and are listed for follow-up.                   |
-| Accessibility audit       | axe runs on every screen at 360 px and 1280 px in Playwright (32 tests). No serious or critical findings.                                                                                         |
-| Practice mode             | The practice tenant (`practice.localhost:5173`) has the same people and catalog with sample records, so officers can rehearse without touching real data.                                         |
-| Monitoring                | `/healthz` reports database, jobs and storage (503 when the database or jobs are down).                                                                                                           |
-| Public demo (Vercel)      | `pnpm build:vercel` builds the web app in demo mode and bundles the server into one Node function. Photos can live in Postgres, queued jobs run after requests, and a daily cron runs the timers. |
-| CI/CD                     | `verify` runs every gate on each push and pull request; `deploy` (main only, after `verify` passes) migrates and seeds the demo database, builds, deploys to Vercel and checks `/healthz`.        |
+| Area                      | What works                                                                                                                                                                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Help how-tos (NFR-01)     | A "Help" button on every screen opens short steps for that screen (`apps/web/src/lib/help.ts`), so a new officer can do intake and handover without training.                                                                                              |
+| Daily shelf check (FR-15) | Desk → More → Shelf check: items in custody bin by bin; tick present or missing. Missing items get a "Shelf check: missing" line in their history and are listed for follow-up.                                                                            |
+| Accessibility audit       | axe runs on every screen at 360 px and 1280 px in Playwright (32 tests). No serious or critical findings.                                                                                                                                                  |
+| Practice mode             | The practice tenant (`practice.localhost:5173`) has the same people and catalog with sample records, so officers can rehearse without touching real data.                                                                                                  |
+| Monitoring                | `/healthz` reports database, jobs and storage (503 when the database or jobs are down).                                                                                                                                                                    |
+| Public demo (Vercel)      | `pnpm build:vercel` builds the web app in demo mode and bundles the server into one Node function. Photos can live in Postgres, queued jobs run after requests, and a daily cron runs the timers.                                                          |
+| CI/CD                     | `verify` runs every gate on each push and pull request; `deploy` (main only, after `verify` passes) migrates and seeds the demo database, builds, deploys to Vercel and checks `/healthz`.                                                                 |
+| Walk-in claim (US-10)     | Desk → More → Help a walk-in student → "They're claiming an item we hold": type the FND ID and the student's email, ask the questions shown, file the claim. It is the student's (their 3-claim cap, alerts and pickup code); the audit names the officer. |
 
 ## Decisions and deviations
 
@@ -35,7 +36,6 @@ Date: 12 Nov 2026 · Scope: plan v0.3 §14 phase 5 (accessibility audit, practic
 | NFR-01 officer trial                   | Needs a new desk officer and 15 minutes with the app; the help how-tos are ready for it.                                                | `todo#officer-trial` |
 | Restore drill on the production server | Needs the production VM; `scripts/restore-test.sh` passed locally in phase 0 (restore into a throwaway container, then `verify-audit`). | `todo#restore-test`  |
 | Undo within 10 minutes                 | Corrections and amendments with a reason work; one-tap undo doesn't yet.                                                                | `todo#undo`          |
-| Desk filing a claim for a walk-in      | The desk can file a lost report for a walk-in student, not yet a claim.                                                                 | `todo#walk-in-claim` |
 
 ## Tests
 

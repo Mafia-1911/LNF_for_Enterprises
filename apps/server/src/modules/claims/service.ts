@@ -14,6 +14,8 @@ import type {
   DeskToday,
   ReviewClaimParsed,
   SubmitClaimParsed,
+  SubmitWalkInClaimParsed,
+  WalkInClaimStart,
 } from '@lf/contracts';
 import {
   addDaysToInstant,
@@ -40,7 +42,7 @@ import { Conflict, Forbidden, NotFound, ValidationFailed } from '../../platform/
 import { nextId } from '../../platform/ids';
 import { bindTransition, recordAuditEvent } from '../audit';
 import { deskInfo, readPolicies } from '../catalog';
-import { flagClearedAt, memberNames, memberProfiles } from '../identity';
+import { flagClearedAt, memberByEmail, memberNames, memberProfiles } from '../identity';
 import {
   deskRowsFor,
   expiringRows,
@@ -223,88 +225,163 @@ export async function submitClaim(
 ): Promise<Claim> {
   const actor = ctx.actor;
   if (actor.kind !== 'user') throw new Forbidden();
-  const id = await withTx(ctx, async (tx) => {
-    const item = await foundItemFor(tx, foundItemId);
-    if (!item || item.category === 'university_id' || item.state === 'REPORTED_BY_FINDER')
-      throw new NotFound("We couldn't find that item; check the ID and try again.");
-    const mine = (await listByClaimant(tx, tx.tenantId, actor.userId)).find(
-      (c) => c.foundItemId === item.id,
-    );
-    const blocked = await blockedReason(tx, item, actor.userId, mine);
-    if (blocked) throw new Conflict(blocked);
-
-    const details = await foundItemPrivateDetails(deps, tx, item.id);
-    const questions = claimQuestions(details.ticks);
-    const byKey = new Map(input.answers.map((a) => [a.key, a.answer]));
-    const missing = questions.find((q) => !byKey.get(q.key));
-    if (missing)
-      throw new ValidationFailed({
-        [`answers.${missing.key}`]: 'Answer the question; a few words are enough.',
-      });
-
-    let lostReportId: string | null = null;
-    if (input.lostReportId) {
-      const report = await lostReportFor(tx, input.lostReportId);
-      const linkable =
-        report &&
-        report.ownerId === actor.userId &&
-        ['OPEN', 'POSSIBLE_MATCH'].includes(report.state);
-      if (!linkable)
-        throw new ValidationFailed({
-          lostReportId: "That report isn't open any more; pick another or none.",
-        });
-      lostReportId = report.id;
-    }
-
-    const newId = await nextId(tx, 'CLM');
-    const answers: Answer[] = questions.map((q) => ({ ...q, answer: byKey.get(q.key) ?? '' }));
-    const encrypted = deps.crypto.encrypt(JSON.stringify(answers), answersAad(tx.tenantId, newId));
-    const calendar = await loadWorkingCalendar(tx);
-    await claimTransition(tx, { id: newId, state: null }, 'SUBMIT', {
-      values: {
-        foundItemId: item.id,
-        claimantId: actor.userId,
-        lostReportId,
-        questions,
-        answersCiphertext: encrypted.ciphertext,
-        keyVersion: encrypted.keyVersion,
-        verdicts: {},
-        reviewDueAt: reviewDue(tx.now, calendar),
-      },
-    });
-    await attachPhotos(
-      tx,
-      input.proofPhotoIds,
-      {
-        recordType: 'claim',
-        recordId: newId,
-        purpose: 'proof',
-        visibility: 'staff',
-      },
-      'proofPhotoIds',
-    );
-    if (item.state === 'IN_CUSTODY')
-      await foundItemTransition(
-        asSystem(tx),
-        { id: item.id, state: 'IN_CUSTODY' },
-        'CLAIM_SUBMITTED',
-        {},
-      );
-    if (lostReportId) {
-      const report = await lostReportFor(tx, lostReportId);
-      if (report && (report.state === 'OPEN' || report.state === 'POSSIBLE_MATCH'))
-        await lostReportTransition(tx, { id: report.id, state: report.state }, 'CLAIM', {});
-    }
-    await notify(deps, tx, {
-      userId: actor.userId,
-      kind: 'claim_update',
-      title: 'Claim received',
-      body: `We’ll check your answers for ${itemTitle(item).toLowerCase()} and decide within 2 working days.`,
-      link: `/claims/${newId}`,
-    });
-    return newId;
-  });
+  const id = await withTx(ctx, (tx) =>
+    createClaim(deps, tx, foundItemId, actor.userId, input, { filedAtDesk: false }),
+  );
   return getMyClaim(deps, ctx, id);
+}
+
+/**
+ * Creates a claim for `claimantId`: the person themselves, or a walk-in student when the desk
+ * files it for them (US-10). The cap, the questions and the alerts are the claimant's.
+ */
+async function createClaim(
+  deps: ClaimsDeps,
+  tx: Tx,
+  foundItemId: string,
+  claimantId: string,
+  input: SubmitClaimParsed,
+  opts: { filedAtDesk: boolean },
+): Promise<string> {
+  const item = await foundItemFor(tx, foundItemId);
+  if (!item || item.category === 'university_id' || item.state === 'REPORTED_BY_FINDER')
+    throw new NotFound("We couldn't find that item; check the ID and try again.");
+  const mine = (await listByClaimant(tx, tx.tenantId, claimantId)).find(
+    (c) => c.foundItemId === item.id,
+  );
+  const blocked = await blockedReason(tx, item, claimantId, mine);
+  if (blocked) throw new Conflict(blocked);
+
+  const details = await foundItemPrivateDetails(deps, tx, item.id);
+  const questions = claimQuestions(details.ticks);
+  const byKey = new Map(input.answers.map((a) => [a.key, a.answer]));
+  const missing = questions.find((q) => !byKey.get(q.key));
+  if (missing)
+    throw new ValidationFailed({
+      [`answers.${missing.key}`]: 'Answer the question; a few words are enough.',
+    });
+
+  let lostReportId: string | null = null;
+  if (input.lostReportId) {
+    const report = await lostReportFor(tx, input.lostReportId);
+    const linkable =
+      report && report.ownerId === claimantId && ['OPEN', 'POSSIBLE_MATCH'].includes(report.state);
+    if (!linkable)
+      throw new ValidationFailed({
+        lostReportId: "That report isn't open any more; pick another or none.",
+      });
+    lostReportId = report.id;
+  }
+
+  const newId = await nextId(tx, 'CLM');
+  const answers: Answer[] = questions.map((q) => ({ ...q, answer: byKey.get(q.key) ?? '' }));
+  const encrypted = deps.crypto.encrypt(JSON.stringify(answers), answersAad(tx.tenantId, newId));
+  const calendar = await loadWorkingCalendar(tx);
+  await claimTransition(tx, { id: newId, state: null }, 'SUBMIT', {
+    values: {
+      foundItemId: item.id,
+      claimantId,
+      lostReportId,
+      questions,
+      answersCiphertext: encrypted.ciphertext,
+      keyVersion: encrypted.keyVersion,
+      verdicts: {},
+      reviewDueAt: reviewDue(tx.now, calendar),
+    },
+  });
+  await attachPhotos(
+    tx,
+    input.proofPhotoIds,
+    {
+      recordType: 'claim',
+      recordId: newId,
+      purpose: 'proof',
+      visibility: 'staff',
+    },
+    'proofPhotoIds',
+  );
+  if (item.state === 'IN_CUSTODY')
+    await foundItemTransition(
+      asSystem(tx),
+      { id: item.id, state: 'IN_CUSTODY' },
+      'CLAIM_SUBMITTED',
+      {},
+    );
+  if (lostReportId) {
+    const report = await lostReportFor(tx, lostReportId);
+    if (report && (report.state === 'OPEN' || report.state === 'POSSIBLE_MATCH'))
+      await lostReportTransition(tx, { id: report.id, state: report.state }, 'CLAIM', {});
+  }
+  const what = itemTitle(item).toLowerCase();
+  await notify(deps, tx, {
+    userId: claimantId,
+    kind: 'claim_update',
+    title: 'Claim received',
+    body: opts.filedAtDesk
+      ? `The Lost & Found desk filed a claim for ${what} for you; we’ll decide within 2 working days.`
+      : `We’ll check your answers for ${what} and decide within 2 working days.`,
+    link: `/claims/${newId}`,
+  });
+  return newId;
+}
+
+/** The walk-in student the desk is filing for (US-10): a student or visitor who signed in once. */
+async function walkInClaimant(tx: Tx, email: string) {
+  const member = await memberByEmail(tx, email);
+  if (!member || (member.role !== 'student' && member.role !== 'visitor'))
+    throw new ValidationFailed({
+      ownerEmail:
+        'No student with that email has signed in yet; ask them to sign in once, then try again.',
+    });
+  return member;
+}
+
+/** US-10: what the desk asks a walk-in student before filing a claim for them. */
+export async function startWalkInClaim(
+  deps: ClaimsDeps,
+  ctx: RequestCtx,
+  input: { foundItemId: string; ownerEmail: string },
+): Promise<WalkInClaimStart> {
+  return withTx(
+    ctx,
+    async (tx) => {
+      const claimant = await walkInClaimant(tx, input.ownerEmail);
+      const item = await foundItemFor(tx, input.foundItemId);
+      if (!item || item.category === 'university_id' || item.state === 'REPORTED_BY_FINDER')
+        throw new NotFound("We couldn't find that item; check the ID and try again.");
+      const card = (await itemCards(tx, [item])).get(item.id);
+      if (!card) throw new NotFound("We couldn't find that item; check the ID and try again.");
+      const details = await foundItemPrivateDetails(deps, tx, item.id);
+      const mine = (await listByClaimant(tx, tx.tenantId, claimant.userId)).find(
+        (c) => c.foundItemId === item.id,
+      );
+      return {
+        item: card,
+        questions: claimQuestions(details.ticks),
+        claimant: { name: claimant.name },
+        blockedReason: await blockedReason(tx, item, claimant.userId, mine),
+      };
+    },
+    { readOnly: true },
+  );
+}
+
+/** US-10: the desk files the claim; it belongs to the student, and the audit shows who typed it. */
+export async function submitWalkInClaim(
+  deps: ClaimsDeps,
+  ctx: RequestCtx,
+  input: SubmitWalkInClaimParsed,
+): Promise<Claim> {
+  return withTx(ctx, async (tx) => {
+    const claimant = await walkInClaimant(tx, input.ownerEmail);
+    const id = await createClaim(deps, tx, input.foundItemId, claimant.userId, input, {
+      filedAtDesk: true,
+    });
+    const row = await findClaim(tx, tx.tenantId, id);
+    if (!row) throw new NotFound(NOT_FOUND);
+    const items = new Map((await foundItemsFor(tx, [row.foundItemId])).map((i) => [i.id, i]));
+    return toClaimView(deps, tx, row, items);
+  });
 }
 
 async function toClaimView(

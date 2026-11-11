@@ -48,6 +48,42 @@ export const SubmitClaimSchema = z
 export type SubmitClaim = z.input<typeof SubmitClaimSchema>;
 export type SubmitClaimParsed = z.output<typeof SubmitClaimSchema>;
 
+// US-10: the desk files a claim for a walk-in student. The claim is the student's (their claim
+// cap, alerts and pickup code); the audit records the officer who typed it.
+const walkIn = {
+  foundItemId: z
+    .string('Type or scan the FND ID on the label.')
+    .trim()
+    .min(3, 'Type or scan the FND ID on the label.')
+    .max(200),
+  ownerEmail: z
+    .string("Type the student's university email.")
+    .trim()
+    .toLowerCase()
+    .pipe(z.email({ error: "Type the student's university email." })),
+};
+
+export const WalkInClaimLookupSchema = z.object(walkIn).meta({ id: 'WalkInClaimLookup' });
+export type WalkInClaimLookup = z.input<typeof WalkInClaimLookupSchema>;
+
+/** The item, its questions and whose claim it will be, for the desk to ask the student. */
+export const WalkInClaimStartSchema = z
+  .object({
+    item: GalleryItemSchema,
+    questions: z.array(ClaimQuestionSchema),
+    claimant: z.object({ name: z.string() }),
+    /** Why this student can't claim it right now (one sentence), or null. */
+    blockedReason: z.string().nullable(),
+  })
+  .meta({ id: 'WalkInClaimStart' });
+export type WalkInClaimStart = z.infer<typeof WalkInClaimStartSchema>;
+
+export const SubmitWalkInClaimSchema = SubmitClaimSchema.extend(walkIn).meta({
+  id: 'SubmitWalkInClaim',
+});
+export type SubmitWalkInClaim = z.input<typeof SubmitWalkInClaimSchema>;
+export type SubmitWalkInClaimParsed = z.output<typeof SubmitWalkInClaimSchema>;
+
 export const ProvideMoreSchema = z
   .object({
     answer: z

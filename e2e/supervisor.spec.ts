@@ -145,9 +145,28 @@ test('the desk starts a lost report for a walk-in student', async ({ page }) => 
   await page.goto('/desk/more');
   await page.getByRole('link', { name: /Help a walk-in student/ }).click();
   await expectAccessible(page, 'walk-in');
-  await page.getByLabel("Student's university email").fill('rafiq.ahmed@northsouth.edu');
+  await page
+    .getByLabel("Student's university email", { exact: true })
+    .fill('rafiq.ahmed@northsouth.edu');
   await page.getByRole('button', { name: 'Start the report' }).click();
   await expect(page.getByText('Filing for a walk-in student')).toBeVisible();
   await expect(page.getByText('rafiq.ahmed@northsouth.edu', { exact: false })).toBeVisible();
   await expectAccessible(page, 'lost report for a walk-in student');
+});
+
+test('the desk looks up an item for a walk-in student’s claim', async ({ page }) => {
+  await resetServerClock(page.request);
+  await signInAs(page.request, 'nusrat.jahan@northsouth.edu');
+  const [item] = await query<{ id: string }>(
+    `select f.id from found_items f join tenants t on t.id = f.tenant_id
+     where t.slug = 'nsu' and f.state = 'IN_CUSTODY' and f.category <> 'university_id'
+     order by f.created_at limit 1`,
+  );
+  test.skip(!item, 'no item in custody to claim');
+  await page.goto('/desk/walk-in');
+  await page.getByLabel('FND ID on the label').fill(item?.id ?? '');
+  await page.getByLabel("Claiming student's university email").fill('rafiq.ahmed@northsouth.edu');
+  await page.getByRole('button', { name: 'Find the item' }).click();
+  await expect(page.getByText(`(${item?.id ?? ''}) for`)).toBeVisible();
+  await expectAccessible(page, 'walk-in claim');
 });

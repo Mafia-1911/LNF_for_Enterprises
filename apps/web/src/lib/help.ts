@@ -125,7 +125,7 @@ const HELP: Record<string, HowTo> = {
     title: 'More desk tools',
     steps: [
       'Outage label sheets: print IDs before a power or internet cut.',
-      'Help a walk-in student: file a lost report for someone without a phone.',
+      'Help a walk-in student: file a lost report or a claim for someone without a phone.',
       'Practice mode: train on sample data without touching real records.',
     ],
   },
@@ -149,7 +149,9 @@ const HELP: Record<string, HowTo> = {
     title: 'Help a walk-in student',
     steps: [
       "Type the student's university email (they must have signed in once).",
-      'Fill the lost report with them. It belongs to them and they get the alerts.',
+      'Lost something: fill the lost report with them. It belongs to them and they get the alerts.',
+      'Claiming an item we hold: type the FND ID, ask the questions shown and type their answers.',
+      'The claim is theirs: they get the decision and the pickup code by alert.',
     ],
   },
   Overview: {

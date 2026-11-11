@@ -1,5 +1,5 @@
-// Phase 4 desk extras: a lost report filed for a walk-in student (US-10), proxy pickup (CC-09), and
-// merging a duplicate record (CC-04). Two tenants.
+// Desk extras: a lost report and a claim filed for a walk-in student (US-10), proxy pickup (CC-09),
+// merging a duplicate record (CC-04) and the daily shelf check (FR-15). Two tenants.
 import type {
   Claim,
   ClaimStart,
@@ -15,6 +15,7 @@ import type {
   ShelfCheckList,
   ShelfCheckResult,
   UploadedPhoto,
+  WalkInClaimStart,
 } from '@lf/contracts';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -93,6 +94,114 @@ describe('walk-in student (US-10)', () => {
       await as(email.student2)
     ).post('/api/lost-reports', report({ ownerEmail: email.student }));
     expect(notDesk.status).toBe(400);
+  });
+});
+
+describe('walk-in claim (US-10)', () => {
+  it('lets the desk file a claim that belongs to the student, with the officer in the audit', async () => {
+    const desk = await as(email.desk);
+    const logged = await desk.post<LoggedFoundItem>(
+      '/api/desk/found-items',
+      intake({ shortName: 'Green bag', colour: 'green' }),
+    );
+    const itemId = logged.body.item.id;
+    const start = await desk.post<WalkInClaimStart>('/api/desk/walk-in-claims/start', {
+      foundItemId: itemId.toLowerCase().replace(/-/g, ''),
+      ownerEmail: email.student.toUpperCase(),
+    });
+    expect(start.status).toBe(200);
+    expect(start.body).toMatchObject({
+      item: { id: itemId },
+      claimant: { name: 'Rafiq Ahmed' },
+      blockedReason: null,
+    });
+    expect(start.body.questions.length).toBeGreaterThan(0);
+
+    const answers = start.body.questions.map((q) => ({ key: q.key, answer: 'A torn strap' }));
+    const filed = await desk.post<Claim>('/api/desk/walk-in-claims', {
+      foundItemId: itemId,
+      ownerEmail: email.student,
+      answers,
+    });
+    expect(filed.status).toBe(201);
+    expect(filed.body.item.id).toBe(itemId);
+
+    const student = await as(email.student);
+    expect((await student.get<Claim>(`/api/claims/${filed.body.id}`)).status).toBe(200);
+    const again = await desk.post<WalkInClaimStart>('/api/desk/walk-in-claims/start', {
+      foundItemId: itemId,
+      ownerEmail: email.student,
+    });
+    expect(again.body.blockedReason).not.toBeNull();
+
+    const audit = await ctx.owner.query<{ event: string; actor_id: string }>(
+      `select event, actor_id from audit_events where tenant_id = $1 and record_id = $2 and event = 'SUBMIT'`,
+      [ctx.tenantA, filed.body.id],
+    );
+    const deskId = await ctx.owner.query<{ id: string }>('select id from users where email = $1', [
+      email.desk,
+    ]);
+    expect(audit.rows).toEqual([{ event: 'SUBMIT', actor_id: deskId.rows[0]?.id }]);
+    const alert = await ctx.owner.query<{ body: string }>(
+      `select a.body from alerts a join users u on u.id = a.user_id where u.email = $1 and a.link = $2`,
+      [email.student, `/claims/${filed.body.id}`],
+    );
+    expect(alert.rows[0]?.body).toMatch(/desk filed a claim/);
+  });
+
+  it('refuses unknown students, other roles and other tenants’ items', async () => {
+    const desk = await as(email.desk);
+    const logged = await desk.post<LoggedFoundItem>(
+      '/api/desk/found-items',
+      intake({ shortName: 'White bag', colour: 'white' }),
+    );
+    const itemId = logged.body.item.id;
+    const unknown = await desk.post<{ error: { fields: Record<string, string> } }>(
+      '/api/desk/walk-in-claims/start',
+      { foundItemId: itemId, ownerEmail: 'nobody@northsouth.edu' },
+    );
+    expect(unknown.status).toBe(400);
+    expect(unknown.body.error.fields['ownerEmail']).toMatch(/signed in/);
+    expect(
+      (
+        await desk.post('/api/desk/walk-in-claims', {
+          foundItemId: itemId,
+          ownerEmail: email.desk,
+          answers: [{ key: 'x', answer: 'Something' }],
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await (
+          await as(email.student)
+        ).post('/api/desk/walk-in-claims/start', { foundItemId: itemId, ownerEmail: email.student })
+      ).status,
+    ).toBe(403);
+
+    // FND numbers count per tenant, so tenant B's ID may also name one of tenant A's own items;
+    // either way tenant A never sees B's item, and B's desk can't file for A's students.
+    const deskB = await ctx.as('nusrat.jahan@other.test', ctx.hosts.B);
+    const itemB = await deskB.post<LoggedFoundItem>(
+      '/api/desk/found-items',
+      intake({ shortName: 'Tenant B only parcel' }),
+    );
+    expect(itemB.status).toBe(201);
+    const crossed = await desk.post('/api/desk/walk-in-claims/start', {
+      foundItemId: itemB.body.item.id,
+      ownerEmail: email.student,
+    });
+    expect(crossed.text).not.toContain('Tenant B only parcel');
+    expect(
+      (
+        await deskB.post('/api/desk/walk-in-claims/start', {
+          foundItemId: itemB.body.item.id,
+          ownerEmail: email.student,
+        })
+      ).status,
+    ).toBe(400);
+    const rows = await ctx.owner.query('select 1 from claims where found_item_id = $1', [itemId]);
+    expect(rows.rowCount).toBe(0);
   });
 });
 

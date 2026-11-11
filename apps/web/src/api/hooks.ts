@@ -20,6 +20,8 @@ import type {
   ReceiveFoundItem,
   ReviewClaim,
   SubmitClaim,
+  SubmitWalkInClaim,
+  WalkInClaimLookup,
   SimilarLostQuery,
 } from '@lf/contracts';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -463,6 +465,24 @@ export function useReviewClaim(itemId: string) {
       qc.setQueryData(keys.deskItemClaims(itemId), data);
       invalidateDesk(qc);
     },
+  });
+}
+
+/** US-10: what to ask a walk-in student before the desk files a claim for them. */
+export function useStartWalkInClaim() {
+  return useMutation({
+    mutationFn: (body: WalkInClaimLookup) =>
+      unwrap(api.POST('/api/desk/walk-in-claims/start', { body })),
+  });
+}
+
+/** US-10: the desk files the claim; it belongs to the student. */
+export function useSubmitWalkInClaim() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SubmitWalkInClaim) =>
+      unwrap(api.POST('/api/desk/walk-in-claims', { body: body as never })),
+    onSuccess: () => invalidateDesk(qc),
   });
 }
 

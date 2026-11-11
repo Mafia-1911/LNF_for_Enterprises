@@ -57,7 +57,7 @@ export function MorePage() {
             <Item
               icon={UserRound}
               title="Help a walk-in student"
-              sub="File a lost report for someone without a phone"
+              sub="File a lost report or a claim for someone without a phone"
             />
           </Link>
         </li>

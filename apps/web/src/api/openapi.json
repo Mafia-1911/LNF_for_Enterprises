@@ -3039,7 +3039,7 @@
           "reasons"
         ]
       },
-      "ClaimStart": {
+      "WalkInClaimStart": {
         "type": "object",
         "properties": {
           "item": {
@@ -3051,41 +3051,16 @@
               "$ref": "#/components/schemas/ClaimQuestion"
             }
           },
-          "myClaim": {
-            "type": [
-              "object",
-              "null"
-            ],
+          "claimant": {
+            "type": "object",
             "properties": {
-              "id": {
+              "name": {
                 "type": "string"
-              },
-              "state": {
-                "$ref": "#/components/schemas/ClaimState"
               }
             },
             "required": [
-              "id",
-              "state"
+              "name"
             ]
-          },
-          "myLostReports": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "id",
-                "title"
-              ]
-            }
           },
           "blockedReason": {
             "type": [
@@ -3097,8 +3072,7 @@
         "required": [
           "item",
           "questions",
-          "myClaim",
-          "myLostReports",
+          "claimant",
           "blockedReason"
         ]
       },
@@ -3117,17 +3091,21 @@
           "question"
         ]
       },
-      "ClaimState": {
-        "type": "string",
-        "enum": [
-          "SUBMITTED",
-          "MORE_INFO_REQUESTED",
-          "APPROVED",
-          "REJECTED",
-          "COLLECTED",
-          "LAPSED",
-          "WITHDRAWN",
-          "CANCELLED"
+      "WalkInClaimLookup": {
+        "type": "object",
+        "properties": {
+          "foundItemId": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "ownerEmail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "foundItemId",
+          "ownerEmail"
         ]
       },
       "Claim": {
@@ -3275,6 +3253,141 @@
           "canDispute",
           "proxy",
           "canNominateProxy"
+        ]
+      },
+      "ClaimState": {
+        "type": "string",
+        "enum": [
+          "SUBMITTED",
+          "MORE_INFO_REQUESTED",
+          "APPROVED",
+          "REJECTED",
+          "COLLECTED",
+          "LAPSED",
+          "WITHDRAWN",
+          "CANCELLED"
+        ]
+      },
+      "SubmitWalkInClaim": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                "answer": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 300
+                }
+              },
+              "required": [
+                "key",
+                "answer"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "lostReportId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 32,
+            "default": null
+          },
+          "proofPhotoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 3,
+            "default": []
+          },
+          "foundItemId": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "ownerEmail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answers",
+          "foundItemId",
+          "ownerEmail"
+        ]
+      },
+      "ClaimStart": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/GalleryItem"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimQuestion"
+            }
+          },
+          "myClaim": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "state": {
+                "$ref": "#/components/schemas/ClaimState"
+              }
+            },
+            "required": [
+              "id",
+              "state"
+            ]
+          },
+          "myLostReports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "title"
+              ]
+            }
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "item",
+          "questions",
+          "myClaim",
+          "myLostReports",
+          "blockedReason"
         ]
       },
       "SubmitClaim": {
@@ -7290,6 +7403,156 @@
           },
           "404": {
             "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/walk-in-claims/start": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "A walk-in student's claim: the item, its questions and whose claim it will be",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalkInClaimLookup"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What to ask the student.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalkInClaimStart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/walk-in-claims": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "File a claim for a walk-in student (the claim is theirs)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitWalkInClaim"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The student's claim, waiting for review.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
             "content": {
               "application/json": {
                 "schema": {

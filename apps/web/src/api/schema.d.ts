@@ -2434,6 +2434,167 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/desk/walk-in-claims': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** File a claim for a walk-in student (the claim is theirs) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['SubmitWalkInClaim'];
+        };
+      };
+      responses: {
+        /** @description The student's claim, waiting for review. */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Claim'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not found. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Conflicts with the current state. */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/desk/walk-in-claims/start': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** A walk-in student's claim: the item, its questions and whose claim it will be */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['WalkInClaimLookup'];
+        };
+      };
+      responses: {
+        /** @description What to ask the student. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['WalkInClaimStart'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not found. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/dev/clock': {
     parameters: {
       query?: never;
@@ -6712,6 +6873,18 @@ export interface components {
       /** @default [] */
       proofPhotoIds: string[];
     };
+    SubmitWalkInClaim: {
+      answers: {
+        answer: string;
+        key: string;
+      }[];
+      foundItemId: string;
+      /** @default null */
+      lostReportId: string | null;
+      ownerEmail: string;
+      /** @default [] */
+      proofPhotoIds: string[];
+    };
     SupervisorOverview: {
       activity: components['schemas']['ActivityEntry'][];
       badges: {
@@ -6750,6 +6923,18 @@ export interface components {
       /** Format: uuid */
       id: string;
       width: number;
+    };
+    WalkInClaimLookup: {
+      foundItemId: string;
+      ownerEmail: string;
+    };
+    WalkInClaimStart: {
+      blockedReason: string | null;
+      claimant: {
+        name: string;
+      };
+      item: components['schemas']['GalleryItem'];
+      questions: components['schemas']['ClaimQuestion'][];
     };
     Zone: {
       /** Format: uuid */
