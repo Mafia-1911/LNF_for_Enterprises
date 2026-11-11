@@ -1,5 +1,5 @@
 // Desk home (Figma 39:11179, SRS authority interface): four large buttons, "More", and the Today
-// list. "Hand an item back" and "Check claims" arrive with phase 3 (claims and pickups).
+// list (to shelve, claims to review, pickups due, expiring this week).
 import type { DeskItemRow, Me } from '@lf/contracts';
 import { Badge, Card, Notice } from '@lf/ui';
 import { Link } from '@tanstack/react-router';
@@ -68,10 +68,11 @@ function TodayGroup({ title, rows, empty }: { title: string; rows: DeskItemRow[]
 }
 
 const BIG =
-  'group flex min-h-[160px] flex-col justify-between rounded-xl p-6 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&[href]]:hover:shadow-hover';
+  'group flex min-h-[160px] flex-col justify-between rounded-xl p-6 hover:shadow-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 export function DeskHome({ me }: { me: Me }) {
   const today = useDeskToday();
+  const waiting = today.data?.claimsToReview.length ?? 0;
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
       <div>
@@ -87,26 +88,26 @@ export function DeskHome({ me }: { me: Me }) {
               <span className="block text-body opacity-85">Walk-in or finder drop-off</span>
             </span>
           </Link>
-          <div className={`${BIG} border border-dashed border-line bg-surface text-ink`}>
-            <span className="flex items-start justify-between">
-              <Handshake size={36} aria-hidden="true" className="text-accent-strong" />
-              <Badge tone="neutral">Next update</Badge>
-            </span>
+          <Link
+            to="/desk/handover"
+            search={{ step: 1 }}
+            className={`${BIG} bg-accent text-on-accent`}
+          >
+            <Handshake size={36} aria-hidden="true" />
             <span>
               <span className="block text-heading-l font-bold">Hand an item back</span>
-              <span className="block text-body text-muted">Enter the pickup code</span>
+              <span className="block text-body">Enter the pickup code</span>
             </span>
-          </div>
-          <div className={`${BIG} border border-dashed border-line bg-surface text-ink`}>
-            <span className="flex items-start justify-between">
-              <ListChecks size={36} aria-hidden="true" />
-              <Badge tone="neutral">Next update</Badge>
-            </span>
+          </Link>
+          <Link to="/desk/claims" className={`${BIG} border border-line bg-surface text-ink`}>
+            <ListChecks size={36} aria-hidden="true" />
             <span>
               <span className="block text-heading-l font-bold">Check claims</span>
-              <span className="block text-body text-muted">Review claims side by side</span>
+              <span className="block text-body text-muted">
+                {waiting === 0 ? 'Nothing waiting' : `${waiting} waiting for review`}
+              </span>
             </span>
-          </div>
+          </Link>
           <Link to="/desk/find" className={`${BIG} border border-line bg-surface text-ink`}>
             <Search size={36} aria-hidden="true" />
             <span>

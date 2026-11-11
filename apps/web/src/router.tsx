@@ -149,6 +149,22 @@ const alertsRoute = createRoute({
   },
 });
 
+const galleryItemRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/gallery/$id',
+  staticData: { title: 'Found item' },
+  beforeLoad: only('student', 'visitor'),
+  component: lazyRouteComponent(() => import('./features/claims/ItemPage'), 'ItemPage'),
+});
+
+const claimRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/claims/$id',
+  staticData: { title: 'My claim' },
+  beforeLoad: only('student', 'visitor'),
+  component: lazyRouteComponent(() => import('./features/claims/ClaimPage'), 'ClaimPage'),
+});
+
 const foundNewRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/found/new',
@@ -261,6 +277,42 @@ const deskItemRoute = createRoute({
   component: lazyRouteComponent(() => import('./features/desk/ItemRecordPage'), 'ItemRecordPage'),
 });
 
+const deskClaimsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/claims',
+  staticData: { title: 'Check claims' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/ClaimsQueuePage'), 'ClaimsQueuePage'),
+});
+
+const deskClaimReviewRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/claims/$id',
+  staticData: { title: 'Review claims' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/ClaimReviewPage'), 'ClaimReviewPage'),
+});
+
+const deskHandOverRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/handover',
+  staticData: { title: 'Hand an item back' },
+  beforeLoad: deskOnly,
+  validateSearch: (search: Record<string, unknown>): { step: number } => {
+    const step = Number(search['step']);
+    return { step: Number.isInteger(step) && step >= 1 && step <= 3 ? step : 1 };
+  },
+  component: lazyRouteComponent(() => import('./features/desk/HandOverFlow'), 'HandOverFlow'),
+});
+
+const deskHandedOverRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/handover/$id',
+  staticData: { title: 'Handed over' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/HandedOverPage'), 'HandedOverPage'),
+});
+
 const deskLabelRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/desk/items/$id/label',
@@ -325,6 +377,8 @@ const routeTree = rootRoute.addChildren([
     lostNewRoute,
     submittedRoute,
     reportRoute,
+    galleryItemRoute,
+    claimRoute,
     foundNewRoute,
     foundPostedRoute,
     scanRoute,
@@ -334,6 +388,10 @@ const routeTree = rootRoute.addChildren([
     deskLogRoute,
     deskItemRoute,
     deskLabelRoute,
+    deskClaimsRoute,
+    deskClaimReviewRoute,
+    deskHandOverRoute,
+    deskHandedOverRoute,
     supervisorRoute,
     adminRoute,
   ]),

@@ -87,6 +87,15 @@ export function ItemRecordPage() {
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
+              {r.state === 'CLAIM_PENDING' ? (
+                <Link
+                  to="/desk/claims/$id"
+                  params={{ id: r.id }}
+                  className={buttonClasses('primary')}
+                >
+                  Review claims
+                </Link>
+              ) : null}
               {awaiting ? (
                 <Link
                   to="/desk/log"

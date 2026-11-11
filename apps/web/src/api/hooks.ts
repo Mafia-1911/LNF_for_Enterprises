@@ -4,8 +4,11 @@ import type {
   CorrectFoundItem,
   CreateFoundPost,
   CreateLostReport,
+  HandOver,
   LogFoundItem,
   ReceiveFoundItem,
+  ReviewClaim,
+  SubmitClaim,
   SimilarLostQuery,
 } from '@lf/contracts';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +31,12 @@ export const keys = {
   deskItem: (id: string) => ['desk', 'item', id] as const,
   deskLabel: (id: string) => ['desk', 'label', id] as const,
   bins: (category: string) => ['desk', 'bins', category] as const,
+  claimStart: (id: string) => ['claims', 'start', id] as const,
+  myClaims: ['claims', 'mine'] as const,
+  claim: (id: string) => ['claims', id] as const,
+  matches: (reportId: string) => ['lost-reports', reportId, 'matches'] as const,
+  deskClaims: ['desk', 'claims'] as const,
+  deskItemClaims: (itemId: string) => ['desk', 'item-claims', itemId] as const,
 };
 
 export type GalleryQuery = { q?: string; category?: string; building?: string; since?: string };
@@ -297,5 +306,167 @@ export function useVoidFoundItem(id: string) {
       invalidateDesk(qc);
       qc.setQueryData(keys.deskItem(id), item);
     },
+  });
+}
+
+// ── Claims (student) ────────────────────────────────────────────────────────────────────────────
+
+export function useClaimStart(itemId: string) {
+  return useQuery({
+    queryKey: keys.claimStart(itemId),
+    queryFn: () =>
+      unwrap(api.GET('/api/found-items/{id}/claim', { params: { path: { id: itemId } } })),
+  });
+}
+
+function invalidateClaims(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: ['claims'] });
+  void qc.invalidateQueries({ queryKey: ['lost-reports'] });
+  void qc.invalidateQueries({ queryKey: keys.alerts });
+}
+
+export function useSubmitClaim(itemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SubmitClaim) =>
+      unwrap(
+        api.POST('/api/found-items/{id}/claims', {
+          params: { path: { id: itemId } },
+          body: body as never,
+        }),
+      ),
+    onSuccess: (claim) => {
+      qc.setQueryData(keys.claim(claim.id), claim);
+      invalidateClaims(qc);
+    },
+  });
+}
+
+export function useMyClaims(enabled = true) {
+  return useQuery({
+    queryKey: keys.myClaims,
+    queryFn: () => unwrap(api.GET('/api/claims')),
+    enabled,
+  });
+}
+
+export function useClaim(id: string) {
+  return useQuery({
+    queryKey: keys.claim(id),
+    queryFn: () => unwrap(api.GET('/api/claims/{id}', { params: { path: { id } } })),
+  });
+}
+
+export function useClaimAction(id: string) {
+  const qc = useQueryClient();
+  const done = (claim: { id: string }) => {
+    qc.setQueryData(keys.claim(claim.id), claim);
+    invalidateClaims(qc);
+  };
+  return {
+    withdraw: useMutation({
+      mutationFn: () => unwrap(api.POST('/api/claims/{id}/withdraw', { params: { path: { id } } })),
+      onSuccess: done,
+    }),
+    more: useMutation({
+      mutationFn: (answer: string) =>
+        unwrap(api.POST('/api/claims/{id}/more', { params: { path: { id } }, body: { answer } })),
+      onSuccess: done,
+    }),
+    reRequest: useMutation({
+      mutationFn: () =>
+        unwrap(api.POST('/api/claims/{id}/re-request', { params: { path: { id } } })),
+      onSuccess: done,
+    }),
+  };
+}
+
+export function useLikelyMatches(reportId: string) {
+  return useQuery({
+    queryKey: keys.matches(reportId),
+    queryFn: () =>
+      unwrap(api.GET('/api/lost-reports/{id}/matches', { params: { path: { id: reportId } } })),
+  });
+}
+
+export function useReportAction(id: string) {
+  const qc = useQueryClient();
+  return {
+    renew: useMutation({
+      mutationFn: () =>
+        unwrap(api.POST('/api/lost-reports/{id}/renew', { params: { path: { id } } })),
+      onSuccess: (report) => {
+        qc.setQueryData(keys.report(id), report);
+        void qc.invalidateQueries({ queryKey: keys.myReports });
+      },
+      // The report may have moved on (e.g. a match arrived): show its current state.
+      onError: () => void qc.invalidateQueries({ queryKey: keys.report(id) }),
+    }),
+    withdraw: useMutation({
+      mutationFn: () =>
+        unwrap(api.POST('/api/lost-reports/{id}/withdraw', { params: { path: { id } } })),
+      onSuccess: () => invalidateClaims(qc),
+    }),
+  };
+}
+
+// ── Claims and handover (desk) ──────────────────────────────────────────────────────────────────
+
+export function useDeskClaimQueue() {
+  return useQuery({
+    queryKey: keys.deskClaims,
+    queryFn: () => unwrap(api.GET('/api/desk/claims')),
+  });
+}
+
+export function useDeskItemClaims(itemId: string) {
+  return useQuery({
+    queryKey: keys.deskItemClaims(itemId),
+    queryFn: () =>
+      unwrap(api.GET('/api/desk/found-items/{id}/claims', { params: { path: { id: itemId } } })),
+  });
+}
+
+export function useReviewClaim(itemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ claimId, body }: { claimId: string; body: ReviewClaim }) =>
+      unwrap(
+        api.POST('/api/desk/claims/{id}/review', {
+          params: { path: { id: claimId } },
+          body: body as never,
+        }),
+      ),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.deskItemClaims(itemId), data);
+      invalidateDesk(qc);
+    },
+  });
+}
+
+export function usePickupLookup() {
+  return useMutation({
+    mutationFn: (code: string) => unwrap(api.POST('/api/desk/pickups/lookup', { body: { code } })),
+  });
+}
+
+export function useHandOver() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ claimId, body }: { claimId: string; body: HandOver }) =>
+      unwrap(
+        api.POST('/api/desk/pickups/{id}/hand-over', {
+          params: { path: { id: claimId } },
+          body: body as never,
+        }),
+      ),
+    onSuccess: () => invalidateDesk(qc),
+  });
+}
+
+export function useDispatch(id: string) {
+  return useQuery({
+    queryKey: ['desk', 'dispatch', id],
+    queryFn: () => unwrap(api.GET('/api/desk/dispatches/{id}', { params: { path: { id } } })),
   });
 }

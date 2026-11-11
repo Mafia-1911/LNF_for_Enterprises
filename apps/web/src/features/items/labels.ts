@@ -35,3 +35,14 @@ export function placeLine(place: {
     'Place not sure'
   );
 }
+
+export const CLAIM_STATE: Record<string, { label: string; tone: BadgeTone }> = {
+  SUBMITTED: { label: 'In review', tone: 'info' },
+  MORE_INFO_REQUESTED: { label: 'Desk needs more', tone: 'warning' },
+  APPROVED: { label: 'Ready for pickup', tone: 'success' },
+  REJECTED: { label: 'Not approved', tone: 'danger' },
+  COLLECTED: { label: 'Collected', tone: 'success' },
+  LAPSED: { label: 'Pickup window missed', tone: 'warning' },
+  WITHDRAWN: { label: 'Withdrawn', tone: 'neutral' },
+  CANCELLED: { label: 'Closed', tone: 'neutral' },
+};

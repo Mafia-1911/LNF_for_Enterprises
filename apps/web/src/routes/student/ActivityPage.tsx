@@ -13,9 +13,9 @@ import {
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import { useMyFoundPosts, useMyLostReports } from '../../api/hooks';
+import { useMyClaims, useMyFoundPosts, useMyLostReports } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
-import { FOUND_STATE, LOST_STATE } from '../../features/items/labels';
+import { CLAIM_STATE, FOUND_STATE, LOST_STATE } from '../../features/items/labels';
 import { daysUntil, dhakaDateTime } from '../../lib/clock';
 
 function Row({
@@ -117,36 +117,66 @@ function FoundList() {
   );
 }
 
+function ClaimList() {
+  const claims = useMyClaims();
+  if (claims.isError) return <Notice tone="danger">{claims.error.message}</Notice>;
+  const list = claims.data?.claims ?? [];
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {claims.data && list.length === 0 ? (
+        <Card>
+          <p className="text-body text-ink">
+            No claims yet. If you see your item in the gallery or under a match, tap “This is mine”.
+          </p>
+        </Card>
+      ) : null}
+      {list.map((c) => (
+        <Row
+          key={c.id}
+          to={{ to: '/claims/$id', params: { id: c.id } }}
+          category={c.item.category}
+          title={c.item.title}
+          sub={`${c.id} · ${dhakaDateTime(c.createdAt).split(',')[0]}`}
+          badge={CLAIM_STATE[c.state]}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function ActivityPage({ me }: { me: Me }) {
   const lost = useMyLostReports();
   const canFind = me.role !== 'visitor';
   const found = useMyFoundPosts(canFind);
+  const claims = useMyClaims();
   const [tab, setTab] = useState('lost');
+  const tabs = [
+    { value: 'lost', label: `Lost (${lost.data?.reports.length ?? 0})`, content: <LostList /> },
+    ...(canFind
+      ? [
+          {
+            value: 'found',
+            label: `Found (${found.data?.items.length ?? 0})`,
+            content: <FoundList />,
+          },
+        ]
+      : []),
+    {
+      value: 'claims',
+      label: `Claims (${claims.data?.claims.length ?? 0})`,
+      content: <ClaimList />,
+    },
+  ];
   return (
     <div className="mx-auto max-w-[896px]">
       <PageHeader title="My activity" />
-      {canFind ? (
-        <Segmented
-          className="mt-6 max-w-[420px]"
-          label="My activity"
-          value={tab}
-          onValueChange={setTab}
-          items={[
-            {
-              value: 'lost',
-              label: `Lost (${lost.data?.reports.length ?? 0})`,
-              content: <LostList />,
-            },
-            {
-              value: 'found',
-              label: `Found (${found.data?.items.length ?? 0})`,
-              content: <FoundList />,
-            },
-          ]}
-        />
-      ) : (
-        <LostList />
-      )}
+      <Segmented
+        className="mt-6 max-w-[480px]"
+        label="My activity"
+        value={tab}
+        onValueChange={setTab}
+        items={tabs}
+      />
     </div>
   );
 }

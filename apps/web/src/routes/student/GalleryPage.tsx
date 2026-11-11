@@ -3,6 +3,7 @@
 import { addDays, dhakaDate } from '@lf/domain';
 import { Badge, CategoryIcon, Notice, SearchField, SelectField, cx } from '@lf/ui';
 import { Clock, EyeOff } from 'lucide-react';
+import { getRouteApi, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { photoUrl, useCatalog, useGallery, type GalleryQuery } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
@@ -16,6 +17,8 @@ const SINCE = [
 ];
 
 export function GalleryPage() {
+  const { me } = getRouteApi('/app').useRouteContext();
+  const desk = me.role === 'desk_officer' || me.role === 'supervisor';
   const catalog = useCatalog();
   const [words, setWords] = useState('');
   const [q, setQ] = useState('');
@@ -108,37 +111,43 @@ export function GalleryPage() {
           const state = item.state === 'IN_CUSTODY' ? null : FOUND_STATE[item.state];
           return (
             <li key={item.id} className="overflow-hidden rounded-lg border border-line bg-surface">
-              <div className="relative flex aspect-[4/3] items-center justify-center bg-subtle text-muted">
-                {item.photoId ? (
-                  <img
-                    src={photoUrl(item.photoId)}
-                    alt={item.title}
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <span className="flex flex-col items-center gap-2 text-body">
-                    <CategoryIcon code={item.category} size={32} />
-                    {item.sensitive ? (
-                      <span className="inline-flex items-center gap-1">
-                        <EyeOff size={16} aria-hidden="true" /> Photo hidden
-                      </span>
-                    ) : null}
-                  </span>
-                )}
-                {state ? (
-                  <Badge tone={state.tone} className="absolute top-3 left-3">
-                    {state.label}
-                  </Badge>
-                ) : null}
-              </div>
-              <div className="p-4">
-                <p className="truncate text-body-l font-semibold text-ink">{item.title}</p>
-                <p className="truncate text-body text-muted">{placeLine(item.place)}</p>
-                <p className="flex items-center gap-1 pt-1 text-body text-muted">
-                  <Clock size={16} aria-hidden="true" />
-                  {dhakaDateTime(item.foundAt).split(',')[0]}
-                </p>
-              </div>
+              <Link
+                to={desk ? '/desk/items/$id' : '/gallery/$id'}
+                params={{ id: item.id }}
+                className="block h-full hover:bg-subtle"
+              >
+                <div className="relative flex aspect-[4/3] items-center justify-center bg-subtle text-muted">
+                  {item.photoId ? (
+                    <img
+                      src={photoUrl(item.photoId)}
+                      alt={item.title}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex flex-col items-center gap-2 text-body">
+                      <CategoryIcon code={item.category} size={32} />
+                      {item.sensitive ? (
+                        <span className="inline-flex items-center gap-1">
+                          <EyeOff size={16} aria-hidden="true" /> Photo hidden
+                        </span>
+                      ) : null}
+                    </span>
+                  )}
+                  {state ? (
+                    <Badge tone={state.tone} className="absolute top-3 left-3">
+                      {state.label}
+                    </Badge>
+                  ) : null}
+                </div>
+                <div className="p-4">
+                  <p className="truncate text-body-l font-semibold text-ink">{item.title}</p>
+                  <p className="truncate text-body text-muted">{placeLine(item.place)}</p>
+                  <p className="flex items-center gap-1 pt-1 text-body text-muted">
+                    <Clock size={16} aria-hidden="true" />
+                    {dhakaDateTime(item.foundAt).split(',')[0]}
+                  </p>
+                </div>
+              </Link>
             </li>
           );
         })}
