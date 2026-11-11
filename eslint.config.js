@@ -14,6 +14,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '.vercel/**', // build output for the Vercel demo (pnpm build:vercel)
+      '.cache/**', // local tool caches (git-ignored)
       '**/coverage/**',
       '**/reports/**',
       '**/.stryker-tmp/**',

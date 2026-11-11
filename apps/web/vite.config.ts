@@ -17,5 +17,10 @@ export default defineConfig(({ mode }) => ({
     proxy: { '/api': { target: 'http://127.0.0.1:3000', changeOrigin: false, xfwd: true } },
   },
   preview: { port: 4173, strictPort: true },
-  build: { target: 'es2022', sourcemap: true },
+  build: {
+    target: 'es2022',
+    sourcemap: true,
+    // Never inline fonts as data: URIs; the Content-Security-Policy allows fonts from 'self' only.
+    assetsInlineLimit: (file: string) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
+  },
 }));

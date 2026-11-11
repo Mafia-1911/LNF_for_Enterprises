@@ -59,12 +59,19 @@ const MSG = {
     'This number belongs to a university account; sign in with your university email instead.',
 };
 
-export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
+/**
+ * Who may sign in how (plan §5). `openEmailSignIn` is the public demo (APP_ENV=demo), which has no
+ * SSO or SMS provider: any email address gets a code, staff included; a university address signs
+ * in as a student, any other as a visitor. Production keeps it off.
+ */
+export function createAuthPolicy(deps: IdentityDeps & { openEmailSignIn?: boolean }): AuthPolicy {
+  const open = deps.openEmailSignIn === true;
   const member = (tenant: Tenant, find: (ctx: RequestCtx) => Promise<Member | null>) =>
     find(systemCtx(deps, tenant, 'auth-policy'));
 
   return {
     async checkEmailCode(email, tenant) {
+      if (open) return;
       if (domainOf(email) !== tenant.emailDomain)
         throw new SignInRefused(MSG.wrongDomain(tenant.emailDomain));
       const [m, invite] = await withTx(
@@ -91,7 +98,7 @@ export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
       const wrongDomain = domainOf(email) !== tenant.emailDomain;
       if (method === 'sso' && wrongDomain)
         return Promise.reject(new SignInRefused(MSG.ssoWrongDomain(tenant.emailDomain)));
-      if (method === 'email_otp' && wrongDomain)
+      if (method === 'email_otp' && wrongDomain && !open)
         return Promise.reject(new SignInRefused(MSG.wrongDomain(tenant.emailDomain)));
       return Promise.resolve();
     },
@@ -103,7 +110,7 @@ export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
       if (!m) return;
       if (method === 'sso' && domainOf(m.email) !== tenant.emailDomain)
         throw new SignInRefused(MSG.ssoWrongDomain(tenant.emailDomain));
-      if (method === 'email_otp') {
+      if (method === 'email_otp' && !open) {
         if (domainOf(m.email) !== tenant.emailDomain)
           throw new SignInRefused(MSG.wrongDomain(tenant.emailDomain));
         if (m.role && isStaffRole(m.role)) throw new SignInRefused(MSG.staffUseSso);
@@ -113,12 +120,15 @@ export function createAuthPolicy(deps: IdentityDeps): AuthPolicy {
     },
 
     async afterSession(userId, method, tenant) {
-      const role: Role = method === 'phone_otp' ? 'visitor' : 'student';
       await withTx(systemCtx(deps, tenant, 'auth-default-role'), async (tx) => {
         const m = await findMember(tx, tenant.id, userId);
-        // A supervisor added this person as staff before they signed in (Staff page).
+        const outsider =
+          method === 'email_otp' && m !== null && domainOf(m.email) !== tenant.emailDomain;
+        const role: Role = method === 'phone_otp' || outsider ? 'visitor' : 'student';
+        // A supervisor added this person as staff before they signed in (Staff page). In the demo
+        // there is no SSO, so an email code counts as the staff sign-in.
         const invite =
-          m && method === 'sso'
+          m && (method === 'sso' || (open && method === 'email_otp'))
             ? await findStaffInvite(tx, tenant.id, m.email.toLowerCase())
             : null;
         if (m && invite && isRole(invite.role)) {

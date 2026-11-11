@@ -56,7 +56,7 @@ export function NavTab({ active, children }: { active: boolean; children: ReactN
     <Slot.Root
       aria-current={active ? 'page' : undefined}
       className={cx(
-        'inline-flex min-h-11 items-center gap-2 rounded-md px-4 text-body font-semibold',
+        'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md px-3 text-body font-semibold whitespace-nowrap lg:px-4',
         active ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-subtle hover:text-ink',
       )}
     >
@@ -78,7 +78,8 @@ export function NavTabContent({
   return (
     <>
       <Icon size={20} aria-hidden="true" />
-      {label}
+      {/* Icons only on narrow tablets so the bar never wraps; the label stays the link's name. */}
+      <span className="sr-only lg:not-sr-only">{label}</span>
       {count ? (
         <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1 text-label font-bold text-on-accent">
           <span className="sr-only">, </span>

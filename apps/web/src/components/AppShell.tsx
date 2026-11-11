@@ -102,9 +102,13 @@ export function AppShell({ me }: { me: Me }) {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <HelpButton />
-            <div className="hidden text-right sm:block">
-              <p className="text-label font-semibold text-ink">{me.name}</p>
-              {me.title ? <p className="text-label text-muted">{me.title}</p> : null}
+            <div className="hidden max-w-[200px] text-right xl:block">
+              <p className="truncate text-label font-semibold whitespace-nowrap text-ink">
+                {me.name}
+              </p>
+              {me.title ? (
+                <p className="truncate text-label whitespace-nowrap text-muted">{me.title}</p>
+              ) : null}
             </div>
             <Avatar name={me.name} size="m" />
             <IconButton icon={LogOut} label="Sign out" onClick={() => void signOut()} />

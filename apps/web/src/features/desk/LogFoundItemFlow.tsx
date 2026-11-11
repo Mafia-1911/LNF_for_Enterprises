@@ -113,6 +113,11 @@ export function LogFoundItemFlow({ me }: { me: Me }) {
       goTo(step + 1);
   }
 
+  // On a slow connection the bin suggestion can arrive after the last step opens; saving before
+  // there is a bin would only bounce back with "Pick the bin it goes in.".
+  const [category, binCode] = useWatch({ control: form.control, name: ['category', 'binCode'] });
+  const waitingForBin = step === 4 && !isRestricted(category) && !binCode;
+
   async function save() {
     setSubmitError(null);
     const result = toLogPayload(form.getValues());
@@ -247,7 +252,12 @@ export function LogFoundItemFlow({ me }: { me: Me }) {
                 Next
               </Button>
             ) : (
-              <Button icon={Printer} loading={busy} onClick={() => void save()}>
+              <Button
+                icon={Printer}
+                loading={busy || waitingForBin}
+                disabled={waitingForBin}
+                onClick={() => void save()}
+              >
                 Save and print label
               </Button>
             )}
