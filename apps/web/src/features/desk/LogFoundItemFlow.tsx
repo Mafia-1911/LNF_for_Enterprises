@@ -63,7 +63,9 @@ function fromPost(item: DeskFoundItem): LogForm {
 }
 
 export function LogFoundItemFlow({ me }: { me: Me }) {
-  const { step, receive } = route.useSearch();
+  const { step, receive, reserved } = route.useSearch();
+  // NF-04, CC-17: an item tagged on paper during an outage keeps its label's ID and intake time.
+  const [intakeAt, setIntakeAt] = useState(() => localInputValue(now()));
   const navigate = useNavigate();
   const catalog = useCatalog();
   const post = useDeskItem(receive ?? '');
@@ -98,7 +100,10 @@ export function LogFoundItemFlow({ me }: { me: Me }) {
   }, [step]);
 
   const goTo = (next: number) =>
-    void navigate({ to: '/desk/log', search: { step: next, ...(receive ? { receive } : {}) } });
+    void navigate({
+      to: '/desk/log',
+      search: { step: next, ...(receive ? { receive } : {}), ...(reserved ? { reserved } : {}) },
+    });
 
   async function next() {
     if (
@@ -118,7 +123,12 @@ export function LogFoundItemFlow({ me }: { me: Me }) {
     try {
       const saved = receive
         ? await receiveItem.mutateAsync({ id: receive, body: result.payload })
-        : await log.mutateAsync(result.payload);
+        : await log.mutateAsync({
+            ...result.payload,
+            ...(reserved
+              ? { reservedId: reserved, intakeAt: new Date(intakeAt).toISOString() }
+              : {}),
+          });
       await navigate({
         to: '/desk/items/$id/label',
         params: { id: saved.item.id },
@@ -191,7 +201,25 @@ export function LogFoundItemFlow({ me }: { me: Me }) {
           instead.
         </Notice>
       ) : null}
-      {step === 1 ? <OpenPost receive={receive} /> : null}
+      {reserved ? (
+        <Notice tone="info" className="mt-6" title={`Paper label ${reserved}`}>
+          <p className="text-body">
+            Entering an item tagged during an outage. It keeps this ID and the time it was tagged.
+          </p>
+          {step === 1 ? (
+            <TextField
+              label="When was it tagged?"
+              type="datetime-local"
+              className="mt-3 max-w-[320px]"
+              value={intakeAt}
+              onChange={(e) => setIntakeAt(e.target.value)}
+            />
+          ) : (
+            <p className="text-body">Tagged at {intakeAt.replace('T', ' ')}.</p>
+          )}
+        </Notice>
+      ) : null}
+      {step === 1 && !reserved ? <OpenPost receive={receive} /> : null}
       <Card className="mt-6">
         <form noValidate onSubmit={(e) => e.preventDefault()}>
           <h2 ref={headingRef} tabIndex={-1} className="sr-only">

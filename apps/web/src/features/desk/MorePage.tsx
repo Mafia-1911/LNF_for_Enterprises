@@ -11,6 +11,7 @@ import {
   ChevronRight,
   type LucideIcon,
 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { useTenant } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
 
@@ -26,7 +27,7 @@ function Item({
   later?: boolean;
 }) {
   return (
-    <li className="flex items-center gap-4 rounded-lg border border-line bg-surface p-4">
+    <div className="flex items-center gap-4 rounded-lg border border-line bg-surface p-4">
       <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-md bg-subtle text-primary">
         <Icon size={24} aria-hidden="true" />
       </span>
@@ -39,7 +40,7 @@ function Item({
       ) : (
         <ChevronRight size={20} aria-hidden="true" />
       )}
-    </li>
+    </div>
   );
 }
 
@@ -51,31 +52,47 @@ export function MorePage() {
     <div className="mx-auto max-w-[768px]">
       <PageHeader title="More" back={{ to: '/desk' }} />
       <ul className="mt-6 flex flex-col gap-3">
-        <Item
-          icon={UserRound}
-          title="Help a walk-in student"
-          sub="File a lost report or claim for someone without a phone"
-          later
-        />
-        <Item
-          icon={ClipboardCheck}
-          title="Daily shelf check"
-          sub="Tick present or missing, bin by bin"
-          later
-        />
-        <Item
-          icon={Printer}
-          title="Outage label sheets"
-          sub="Pre-reserved IDs for power or internet cuts"
-          later
-        />
-        <Item
-          icon={History}
-          title="Undo recent actions"
-          sub="Anything from the last 10 minutes"
-          later
-        />
-        <Item icon={Store} title="Drop points" sub="Security posts and department offices" later />
+        <li>
+          <Item
+            icon={UserRound}
+            title="Help a walk-in student"
+            sub="File a lost report or claim for someone without a phone"
+            later
+          />
+        </li>
+        <li>
+          <Item
+            icon={ClipboardCheck}
+            title="Daily shelf check"
+            sub="Tick present or missing, bin by bin"
+            later
+          />
+        </li>
+        <li>
+          <Link to="/desk/outage" className="block rounded-lg hover:shadow-hover">
+            <Item
+              icon={Printer}
+              title="Outage label sheets"
+              sub="Pre-reserved IDs for power or internet cuts"
+            />
+          </Link>
+        </li>
+        <li>
+          <Item
+            icon={History}
+            title="Undo recent actions"
+            sub="Anything from the last 10 minutes"
+            later
+          />
+        </li>
+        <li>
+          <Item
+            icon={Store}
+            title="Drop points"
+            sub="Security posts and department offices"
+            later
+          />
+        </li>
         <li className="flex flex-wrap items-center gap-4 rounded-lg border border-dashed border-accent bg-accent-soft p-4">
           <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-md bg-surface text-accent-strong">
             <FlaskConical size={24} aria-hidden="true" />

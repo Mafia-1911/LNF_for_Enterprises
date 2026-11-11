@@ -101,3 +101,40 @@ test('a supervisor checks approvals, the dispatch directory, disputes and flags'
   await expect(page.getByRole('heading', { name: 'Flagged accounts' })).toBeVisible();
   await expectAccessible(page, 'flags');
 });
+
+test('a supervisor reads loss hotspots and imports paper register rows', async ({ page }) => {
+  await resetServerClock(page.request);
+  await signInAs(page.request, 'farhana.islam@northsouth.edu');
+  await page.goto('/supervisor/reports');
+  await expect(page.getByRole('heading', { name: 'Loss hotspots' })).toBeVisible();
+  await expect(page.getByText('Records in range')).toBeVisible();
+  await page.getByRole('button', { name: '90 days' }).click();
+  await expectAccessible(page, 'loss hotspots');
+
+  await page.goto('/supervisor/register');
+  await expect(page.getByRole('heading', { name: 'Paper register import' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Fast table entry' }).click();
+  await page.getByLabel('Row 1 date').fill('2026-10-05');
+  await page.getByLabel('Row 1 item').fill(`E2E logbook bottle ${unique()}`);
+  await page.getByLabel('Row 1 category').selectOption('bottle');
+  await page.getByLabel('Row 1 colour').selectOption('blue');
+  await expect(page.getByText('1 ready')).toBeVisible();
+  await expectAccessible(page, 'paper register');
+  await page.getByRole('button', { name: 'Import 1 item' }).click();
+  await expect(page.getByText(/Imported 1 items into custody/).first()).toBeVisible();
+});
+
+test('the desk reserves outage labels and starts entering one', async ({ page }) => {
+  await resetServerClock(page.request);
+  await signInAs(page.request, 'nusrat.jahan@northsouth.edu');
+  await page.goto('/desk/more');
+  await page.getByRole('link', { name: /Outage label sheets/ }).click();
+  await expect(page.getByRole('heading', { name: 'Outage label sheets' })).toBeVisible();
+  await page.getByRole('button', { name: 'Reserve IDs' }).click();
+  await expect(page.getByRole('link', { name: 'Enter now' }).first()).toBeVisible();
+  await expectAccessible(page, 'outage sheet');
+  await page.getByRole('link', { name: 'Enter now' }).first().click();
+  await expect(page.getByText(/Paper label FND-/)).toBeVisible();
+  await expect(page.getByLabel('When was it tagged?')).toBeVisible();
+  await expectAccessible(page, 'enter a paper-tagged item');
+});

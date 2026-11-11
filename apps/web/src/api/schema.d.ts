@@ -1765,6 +1765,111 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/desk/outage-sheet': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reserved FND IDs not entered yet, with QR codes to print */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Unused labels. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['OutageSheet'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /** Reserve FND IDs for a printed outage label sheet */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['OutageSheetRequest'];
+        };
+      };
+      responses: {
+        /** @description Unused labels, including the new ones. */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['OutageSheet'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/desk/pickups/{id}/hand-over': {
     parameters: {
       query?: never;
@@ -4412,6 +4517,138 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/supervisor/register/import': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Bring paper logbook rows into custody as migrated found items (WF-07) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['RegisterImport'];
+        };
+      };
+      responses: {
+        /** @description The new FND IDs. */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['RegisterImportResult'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/supervisor/reports/hotspots': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Losses by building, floor, hour and category (NF-07) */
+    get: {
+      parameters: {
+        query?: {
+          days?: '30' | '90' | '180';
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description The report. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['HotspotReport'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/supervisor/retention': {
     parameters: {
       query?: never;
@@ -5639,6 +5876,26 @@ export interface components {
       label: string;
       note: string | null;
     };
+    HotspotReport: {
+      byBuilding: {
+        count: number;
+        label: string;
+      }[];
+      byCategory: {
+        count: number;
+        label: string;
+      }[];
+      byFloor: {
+        count: number;
+        label: string;
+      }[];
+      byHour: number[];
+      days: number;
+      peakHour: number | null;
+      returnRate: number | null;
+      topBuilding: string | null;
+      total: number;
+    };
     LikelyMatch: {
       category: string;
       colour: string | null;
@@ -5713,6 +5970,8 @@ export interface components {
       /** Format: date-time */
       foundAt: string;
       idNumber: string | null;
+      /** Format: date-time */
+      intakeAt?: string | null;
       model: string | null;
       /** @default [] */
       photoIds: string[];
@@ -5721,6 +5980,7 @@ export interface components {
       /** @default [] */
       privateTicks: string[];
       publicDescription: string | null;
+      reservedId?: string | null;
       shortName: string | null;
     };
     LoggedFoundItem: {
@@ -5823,6 +6083,18 @@ export interface components {
       kind: 'retention' | 'claim_overdue' | 'dispute' | 'approval' | 'flag';
       link: string;
       title: string;
+    };
+    OutageSheet: {
+      labels: {
+        id: string;
+        qrDataUri: string;
+        /** Format: date-time */
+        reservedAt: string;
+        url: string;
+      }[];
+    };
+    OutageSheetRequest: {
+      count: number;
     };
     Pickup: {
       /** @enum {string} */
@@ -5933,6 +6205,21 @@ export interface components {
       privateTicks: string[];
       publicDescription: string | null;
       shortName: string | null;
+    };
+    RegisterImport: {
+      rows: {
+        binCode: string | null;
+        buildingCode: string | null;
+        category: string;
+        colour: string | null;
+        /** Format: date */
+        date: string;
+        note: string | null;
+        shortName: string;
+      }[];
+    };
+    RegisterImportResult: {
+      ids: string[];
     };
     RemoveStaff: {
       email: string;

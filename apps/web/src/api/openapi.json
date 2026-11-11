@@ -1602,6 +1602,14 @@
           "idNumber": {
             "type": ["string", "null"],
             "maxLength": 40
+          },
+          "reservedId": {
+            "type": ["string", "null"],
+            "maxLength": 20
+          },
+          "intakeAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
           }
         },
         "required": [
@@ -1979,6 +1987,111 @@
           }
         },
         "required": ["recalculated", "expired", "lastChanceAlerts"]
+      },
+      "OutageSheet": {
+        "type": "object",
+        "properties": {
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "reservedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "qrDataUri": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": ["id", "reservedAt", "qrDataUri", "url"]
+            }
+          }
+        },
+        "required": ["labels"]
+      },
+      "OutageSheetRequest": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60
+          }
+        },
+        "required": ["count"]
+      },
+      "RegisterImportResult": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["ids"]
+      },
+      "RegisterImport": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "shortName": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 60
+                },
+                "category": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "colour": {
+                  "type": ["string", "null"],
+                  "maxLength": 20
+                },
+                "buildingCode": {
+                  "type": ["string", "null"],
+                  "maxLength": 10
+                },
+                "binCode": {
+                  "type": ["string", "null"],
+                  "maxLength": 10
+                },
+                "note": {
+                  "type": ["string", "null"],
+                  "maxLength": 300
+                }
+              },
+              "required": [
+                "date",
+                "shortName",
+                "category",
+                "colour",
+                "buildingCode",
+                "binCode",
+                "note"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": ["rows"]
       },
       "UploadedPhoto": {
         "type": "object",
@@ -3453,6 +3566,88 @@
           }
         },
         "required": ["userId", "name", "kinds", "reasons", "since"]
+      },
+      "HotspotReport": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "topBuilding": {
+            "type": ["string", "null"]
+          },
+          "peakHour": {
+            "type": ["integer", "null"]
+          },
+          "returnRate": {
+            "type": ["number", "null"]
+          },
+          "byBuilding": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": ["label", "count"]
+            }
+          },
+          "byFloor": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": ["label", "count"]
+            }
+          },
+          "byHour": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": ["label", "count"]
+            }
+          }
+        },
+        "required": [
+          "days",
+          "total",
+          "topBuilding",
+          "peakHour",
+          "returnRate",
+          "byBuilding",
+          "byFloor",
+          "byHour",
+          "byCategory"
+        ]
       },
       "DevClock": {
         "type": "object",
@@ -5073,6 +5268,158 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RetentionRun"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/outage-sheet": {
+      "get": {
+        "tags": ["desk"],
+        "summary": "Reserved FND IDs not entered yet, with QR codes to print",
+        "responses": {
+          "200": {
+            "description": "Unused labels.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutageSheet"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["desk"],
+        "summary": "Reserve FND IDs for a printed outage label sheet",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutageSheetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Unused labels, including the new ones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutageSheet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/register/import": {
+      "post": {
+        "tags": ["supervisor"],
+        "summary": "Bring paper logbook rows into custody as migrated found items (WF-07)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new FND IDs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterImportResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -7997,6 +8344,66 @@
           },
           "404": {
             "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supervisor/reports/hotspots": {
+      "get": {
+        "tags": ["supervisor"],
+        "summary": "Losses by building, floor, hour and category (NF-07)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["30", "90", "180"],
+              "default": "30"
+            },
+            "required": false,
+            "name": "days",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The report.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HotspotReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
             "content": {
               "application/json": {
                 "schema": {

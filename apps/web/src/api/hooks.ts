@@ -8,6 +8,7 @@ import type {
   AddStaff,
   Appearance,
   Policies,
+  RegisterImport,
   RetentionDecision,
   CorrectFoundItem,
   CreateFoundPost,
@@ -726,5 +727,38 @@ export function useClearFlag() {
       qc.setQueryData(keys.flags, data);
       invalidateSupervisor(qc);
     },
+  });
+}
+
+export function useOutageSheet() {
+  return useQuery({
+    queryKey: ['desk', 'outage-sheet'],
+    queryFn: () => unwrap(api.GET('/api/desk/outage-sheet')),
+  });
+}
+
+export function useReserveOutageIds() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (count: number) => unwrap(api.POST('/api/desk/outage-sheet', { body: { count } })),
+    onSuccess: (data) => qc.setQueryData(['desk', 'outage-sheet'], data),
+  });
+}
+
+export function useHotspots(days: '30' | '90' | '180') {
+  return useQuery({
+    queryKey: ['supervisor', 'hotspots', days],
+    queryFn: () =>
+      unwrap(api.GET('/api/supervisor/reports/hotspots', { params: { query: { days } } })),
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useImportRegister() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RegisterImport) =>
+      unwrap(api.POST('/api/supervisor/register/import', { body })),
+    onSuccess: () => invalidateSupervisor(qc),
   });
 }

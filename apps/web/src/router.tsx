@@ -256,12 +256,17 @@ const deskLogRoute = createRoute({
   path: '/desk/log',
   staticData: { title: 'Log a found item' },
   beforeLoad: deskOnly,
-  validateSearch: (search: Record<string, unknown>): { step: number; receive?: string } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { step: number; receive?: string; reserved?: string } => {
     const step = Number(search['step']);
     return {
       step: Number.isInteger(step) && step >= 1 && step <= 4 ? step : 1,
       ...(typeof search['receive'] === 'string' && search['receive']
         ? { receive: search['receive'] }
+        : {}),
+      ...(typeof search['reserved'] === 'string' && search['reserved']
+        ? { reserved: search['reserved'] }
         : {}),
     };
   },
@@ -310,6 +315,14 @@ const deskHandedOverRoute = createRoute({
   staticData: { title: 'Handed over' },
   beforeLoad: deskOnly,
   component: lazyRouteComponent(() => import('./features/desk/HandedOverPage'), 'HandedOverPage'),
+});
+
+const deskOutageRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/outage',
+  staticData: { title: 'Outage label sheets' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/OutageSheetPage'), 'OutageSheetPage'),
 });
 
 const deskLabelRoute = createRoute({
@@ -401,6 +414,23 @@ const supervisorFlagsRoute = createRoute({
   component: lazyRouteComponent(() => import('./features/supervisor/FlagsPage'), 'FlagsPage'),
 });
 
+const supervisorReportsRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/reports',
+  staticData: { title: 'Loss hotspots' },
+  component: lazyRouteComponent(() => import('./features/supervisor/ReportsPage'), 'ReportsPage'),
+});
+
+const supervisorRegisterRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/register',
+  staticData: { title: 'Paper register import' },
+  component: lazyRouteComponent(
+    () => import('./features/supervisor/PaperRegisterPage'),
+    'PaperRegisterPage',
+  ),
+});
+
 const supervisorStaffRoute = createRoute({
   getParentRoute: () => supervisorRoute,
   path: '/staff',
@@ -461,6 +491,7 @@ const routeTree = rootRoute.addChildren([
     deskLogRoute,
     deskItemRoute,
     deskLabelRoute,
+    deskOutageRoute,
     deskClaimsRoute,
     deskClaimReviewRoute,
     deskHandOverRoute,
@@ -473,6 +504,8 @@ const routeTree = rootRoute.addChildren([
       supervisorDispatchRecordRoute,
       supervisorDisputesRoute,
       supervisorFlagsRoute,
+      supervisorReportsRoute,
+      supervisorRegisterRoute,
       supervisorPoliciesRoute,
       supervisorStaffRoute,
     ]),

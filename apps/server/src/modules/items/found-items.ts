@@ -2,6 +2,8 @@
 // pings, NF-02 ID card fast lane). Same shape as the lost-report slice in service.ts: plain functions
 // (deps, ctx, input), one withTx per use case, state changes only through foundItemTransition.
 import type {
+  OutageSheet,
+  RegisterImport,
   CorrectFoundItem,
   CreateFoundPostParsed,
   DeskFoundItem,
@@ -25,6 +27,7 @@ import {
   foundItemMachine,
   maskLast4,
   MATCH_REASON_LABEL,
+  normaliseId,
   scoreMatch,
   suggestBin,
   topMatches,
@@ -58,6 +61,12 @@ import {
   countItemsPerBin,
   countPings,
   findFoundItem,
+  findReservedId,
+  insertReservedIds,
+  listFoundItemsSince,
+  listLostReportsSince,
+  listUnusedReserved,
+  markReservedUsed,
   findFoundItems,
   findLostReports,
   findPrivateDetails,
@@ -587,14 +596,178 @@ async function idCardFastLane(
   return { ...patch, ownerEmailedAt: tx.now };
 }
 
-/** Retention for an item reaching the desk now (look-alikes get the shorter period, CC-02). */
-async function retentionEnd(tx: Tx, category: string): Promise<Date> {
+/** Retention for an item reaching the desk (look-alikes get the shorter period, CC-02). */
+async function retentionEnd(tx: Tx, category: string, intakeAt: Date = tx.now): Promise<Date> {
   return retentionEndOf(await loadRetentionRules(tx), {
     category,
-    receivedAt: tx.now,
-    createdAt: tx.now,
+    receivedAt: intakeAt,
+    createdAt: intakeAt,
     retentionExtraDays: 0,
   });
+}
+
+/**
+ * The new item's ID and intake time. Normally a fresh FND ID and now; for an item tagged on paper
+ * during an outage, its pre-printed ID and the time it was tagged (NF-04, CC-17).
+ */
+async function intakeIdentity(
+  tx: Tx,
+  input: { reservedId?: string | null | undefined; intakeAt?: string | null | undefined },
+): Promise<{ id: string; intakeAt: Date }> {
+  if (!input.reservedId) return { id: await nextId(tx, 'FND'), intakeAt: tx.now };
+  const id = normaliseId(input.reservedId);
+  const reserved = id ? await findReservedId(tx, tx.tenantId, id) : null;
+  if (!id || !reserved || reserved.usedAt)
+    throw new ValidationFailed({
+      reservedId: "That ID isn't on an unused outage sheet; check the label and try again.",
+    });
+  let intakeAt = tx.now;
+  if (input.intakeAt) {
+    intakeAt = new Date(input.intakeAt);
+    if (intakeAt > tx.now)
+      throw new ValidationFailed({
+        intakeAt: 'That time is in the future; pick when it was tagged.',
+      });
+    if (intakeAt < reserved.reservedAt)
+      throw new ValidationFailed({
+        intakeAt: "That's before the sheet was printed; check the time written on the label.",
+      });
+  }
+  await markReservedUsed(tx, tx.tenantId, id);
+  return { id, intakeAt };
+}
+
+// ── Outage label sheets (NF-04) ──────────────────────────────────────────────────────────────────
+
+async function outageSheet(deps: FoundItemsDeps, tx: Tx): Promise<OutageSheet> {
+  const rows = await listUnusedReserved(tx, tx.tenantId);
+  const labels: OutageSheet['labels'] = [];
+  for (const r of rows) {
+    const url = recordUrl(deps, r.id);
+    labels.push({
+      id: r.id,
+      reservedAt: r.reservedAt.toISOString(),
+      qrDataUri: await qrDataUri(url),
+      url,
+    });
+  }
+  return { labels };
+}
+
+/** Unused reserved IDs, ready to print. */
+export function getOutageSheet(deps: FoundItemsDeps, ctx: RequestCtx): Promise<OutageSheet> {
+  if (!isDesk(ctx)) throw new Forbidden();
+  return withTx(ctx, (tx) => outageSheet(deps, tx), { readOnly: true });
+}
+
+/** Reserves `count` FND IDs for a printed sheet. Same ID series, no gaps or a second series. */
+export function reserveOutageIds(
+  deps: FoundItemsDeps,
+  ctx: RequestCtx,
+  count: number,
+): Promise<OutageSheet> {
+  const actor = ctx.actor;
+  if (actor.kind !== 'user' || !isDesk(ctx)) throw new Forbidden();
+  return withTx(ctx, async (tx) => {
+    const ids: string[] = [];
+    for (let i = 0; i < count; i += 1) ids.push(await nextId(tx, 'FND'));
+    await insertReservedIds(tx, tx.tenantId, ids, actor.userId);
+    await recordAuditEvent(tx, {
+      recordType: 'outage_sheet',
+      recordId: `${ids[0] ?? ''}..${ids.at(-1) ?? ''}`,
+      event: 'IDS_RESERVED',
+      note: `${count} labels`,
+    });
+    return outageSheet(deps, tx);
+  });
+}
+
+// ── Paper register import (WF-07, NF-05) ────────────────────────────────────────────────────────
+
+/**
+ * Old logbook rows become found items marked "migrated" (source register), in custody from their
+ * logbook date. Retention counts from that date, so old items go straight to the retention list.
+ */
+export async function importRegister(
+  deps: FoundItemsDeps,
+  ctx: RequestCtx,
+  input: RegisterImport,
+): Promise<{ ids: string[] }> {
+  const actor = ctx.actor;
+  if (actor.kind !== 'user') throw new Forbidden();
+  return withTx(ctx, async (tx) => {
+    const errors: Record<string, string> = {};
+    const bins = new Set(await listDeskBins(tx));
+    const { buildings } = await resolvePlaceNames(
+      tx,
+      input.rows.map((r) => r.buildingCode).filter((v): v is string => Boolean(v)),
+      [],
+    );
+    const earliest = addDaysToInstant(tx.now, -5 * 365);
+    input.rows.forEach((r, i) => {
+      const at = new Date(`${r.date}T12:00:00+06:00`);
+      if (Number.isNaN(at.getTime()) || at > tx.now || at < earliest)
+        errors[`rows.${i}.date`] = 'Use a logbook date from the last 5 years, not in the future.';
+      const category = categoryOf(r.category);
+      if (!category || category.restricted)
+        errors[`rows.${i}.category`] = 'Pick a category from the list.';
+      if (r.colour && !colourByCode(r.colour))
+        errors[`rows.${i}.colour`] = 'Pick a colour from the list or leave it empty.';
+      if (r.buildingCode && !buildings.has(r.buildingCode))
+        errors[`rows.${i}.buildingCode`] = 'Pick a building from the list or leave it empty.';
+      if (r.binCode && !bins.has(r.binCode))
+        errors[`rows.${i}.binCode`] = "That bin isn't at this desk; pick one from the list.";
+    });
+    if (Object.keys(errors).length > 0) throw new ValidationFailed(errors);
+
+    const ids: string[] = [];
+    for (const r of input.rows) {
+      const at = new Date(`${r.date}T12:00:00+06:00`);
+      const id = await nextId(tx, 'FND');
+      await foundItemTransition(
+        tx,
+        { id, state: null },
+        'LOG_INTAKE',
+        {
+          values: {
+            category: r.category,
+            colour: r.colour,
+            brand: null,
+            model: null,
+            shortName: r.shortName,
+            publicDescription: null,
+            buildingCode: r.buildingCode,
+            floorId: null,
+            zoneId: null,
+            foundAt: at,
+            source: 'register',
+            finderId: null,
+            loggedBy: actor.userId,
+            binCode: r.binCode,
+            condition: null,
+            receivedAt: at,
+            retentionEndsAt: await retentionEnd(tx, r.category, at),
+          },
+        },
+        'Migrated from the paper register',
+      );
+      if (r.note) await savePrivateDetails(deps, tx, id, [], r.note);
+      await queueMatch(deps, tx, id);
+      ids.push(id);
+    }
+    return { ids };
+  });
+}
+
+/** Records in a date range for the loss hotspot report (NF-07). */
+export async function hotspotRecords(
+  tx: Tx,
+  since: Date,
+): Promise<{ lost: LostReportRow[]; found: FoundItemRow[] }> {
+  return {
+    lost: await listLostReportsSince(tx, tx.tenantId, since),
+    found: await listFoundItemsSince(tx, tx.tenantId, since),
+  };
 }
 
 /** WF-03: an officer logs a walk-in item. It goes straight to IN_CUSTODY with a bin and a label. */
@@ -613,7 +786,7 @@ export async function logFoundItem(
     if (input.category === 'university_id' && !input.idNumber)
       throw new ValidationFailed({ idNumber: 'Type the ID number printed on the card.' });
 
-    const newId = await nextId(tx, 'FND');
+    const { id: newId, intakeAt } = await intakeIdentity(tx, input);
     let row = await foundItemTransition(tx, { id: newId, state: null }, 'LOG_INTAKE', {
       values: {
         category: input.category,
@@ -631,8 +804,8 @@ export async function logFoundItem(
         loggedBy: actor.userId,
         binCode,
         condition: input.condition,
-        receivedAt: tx.now,
-        retentionEndsAt: await retentionEnd(tx, input.category),
+        receivedAt: intakeAt,
+        retentionEndsAt: await retentionEnd(tx, input.category, intakeAt),
       },
     });
     await savePrivateDetails(deps, tx, newId, input.privateTicks, input.privateNote);
@@ -804,7 +977,9 @@ export async function getDeskItem(
         sourceLabel:
           row.source === 'finder'
             ? 'Student post'
-            : `Desk, by ${(row.loggedBy && names.get(row.loggedBy)) || 'staff'}`,
+            : row.source === 'register'
+              ? `Migrated from the paper register by ${(row.loggedBy && names.get(row.loggedBy)) || 'staff'}`
+              : `Desk, by ${(row.loggedBy && names.get(row.loggedBy)) || 'staff'}`,
         binCode: row.binCode,
         condition: row.condition,
         handInDeadline: row.handInDeadline?.toISOString() ?? null,

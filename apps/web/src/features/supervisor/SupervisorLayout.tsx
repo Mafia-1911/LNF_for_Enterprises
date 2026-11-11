@@ -4,6 +4,8 @@ import { Badge, cx } from '@lf/ui';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import {
   Archive,
+  BarChart3,
+  BookOpen,
   ClipboardList,
   Flag,
   Gavel,
@@ -38,6 +40,8 @@ const SECTIONS: { title: string; items: Item[] }[] = [
   {
     title: 'Manage',
     items: [
+      { to: '/supervisor/reports', label: 'Reports', icon: BarChart3 },
+      { to: '/supervisor/register', label: 'Paper register', icon: BookOpen },
       { to: '/supervisor/policies', label: 'Policies', icon: Settings },
       { to: '/supervisor/staff', label: 'Staff', icon: Users },
     ],

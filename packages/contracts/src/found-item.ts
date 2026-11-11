@@ -78,13 +78,24 @@ export const LogFoundItemSchema = z
     binCode: z.string().trim().max(10).nullable(),
     /** University ID or card number (CC-06). Stored encrypted; only the last 4 are ever shown. */
     idNumber: optionalText(40, 'Keep the number to 40 characters.'),
+    /** NF-04, CC-17: an ID from an outage label sheet, entered after the outage. */
+    reservedId: z.string().trim().max(20).nullable().optional(),
+    /** When the item was tagged on paper; retention counts from then. */
+    intakeAt: z.iso
+      .datetime({ offset: true, error: 'Pick when the item was tagged.' })
+      .nullable()
+      .optional(),
   })
   .meta({ id: 'LogFoundItem' });
 export type LogFoundItem = z.input<typeof LogFoundItemSchema>;
 export type LogFoundItemParsed = z.output<typeof LogFoundItemSchema>;
 
 /** A student post brought to the desk: what the officer confirms or adds (WF-02 step 4). */
-export const ReceiveFoundItemSchema = LogFoundItemSchema.omit({ photoIds: true })
+export const ReceiveFoundItemSchema = LogFoundItemSchema.omit({
+  photoIds: true,
+  reservedId: true,
+  intakeAt: true,
+})
   .extend({ photoIds })
   .meta({ id: 'ReceiveFoundItem' });
 export type ReceiveFoundItem = z.input<typeof ReceiveFoundItemSchema>;

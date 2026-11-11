@@ -18,7 +18,7 @@ import {
 import type { FoundItemState, LostReportState } from '@lf/domain';
 import type { Tx } from '../../platform/db/types';
 import { Conflict } from '../../platform/errors';
-import { foundItemPings, foundItems, lostReports, privateDetails } from './schema';
+import { foundItemPings, foundItems, lostReports, privateDetails, reservedIds } from './schema';
 
 export type LostReportRow = typeof lostReports.$inferSelect;
 
@@ -567,4 +567,66 @@ export async function patchLostReport(
     .returning();
   if (!row) throw new Conflict();
   return row;
+}
+
+// ── Outage label sheets (NF-04) ──────────────────────────────────────────────────────────────────
+
+export async function insertReservedIds(
+  tx: Tx,
+  tenantId: string,
+  ids: string[],
+  reservedBy: string | null,
+): Promise<void> {
+  if (ids.length === 0) return;
+  await tx.db
+    .insert(reservedIds)
+    .values(ids.map((id) => ({ tenantId, id, reservedBy, reservedAt: tx.now })));
+}
+
+export function listUnusedReserved(tx: Tx, tenantId: string) {
+  return tx.db
+    .select()
+    .from(reservedIds)
+    .where(and(eq(reservedIds.tenantId, tenantId), isNull(reservedIds.usedAt)))
+    .orderBy(asc(reservedIds.reservedAt), asc(reservedIds.id))
+    .limit(200);
+}
+
+export async function findReservedId(tx: Tx, tenantId: string, id: string) {
+  const [row] = await tx.db
+    .select()
+    .from(reservedIds)
+    .where(and(eq(reservedIds.tenantId, tenantId), eq(reservedIds.id, id)))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Marks a reserved ID used; Conflict if someone used it first. */
+export async function markReservedUsed(tx: Tx, tenantId: string, id: string): Promise<void> {
+  const rows = await tx.db
+    .update(reservedIds)
+    .set({ usedAt: tx.now })
+    .where(
+      and(eq(reservedIds.tenantId, tenantId), eq(reservedIds.id, id), isNull(reservedIds.usedAt)),
+    )
+    .returning({ id: reservedIds.id });
+  if (rows.length === 0) throw new Conflict('That outage label was already entered; check the ID.');
+}
+
+// ── Reports (NF-07) ──────────────────────────────────────────────────────────────────────────────
+
+export function listLostReportsSince(tx: Tx, tenantId: string, since: Date) {
+  return tx.db
+    .select()
+    .from(lostReports)
+    .where(and(eq(lostReports.tenantId, tenantId), gte(lostReports.createdAt, since)))
+    .limit(20000);
+}
+
+export function listFoundItemsSince(tx: Tx, tenantId: string, since: Date) {
+  return tx.db
+    .select()
+    .from(foundItems)
+    .where(and(eq(foundItems.tenantId, tenantId), gte(foundItems.foundAt, since)))
+    .limit(20000);
 }

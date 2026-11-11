@@ -21,7 +21,11 @@ import {
   LostReportListSchema,
   LostReportSchema,
   ReasonSchema,
+  OutageSheetRequestSchema,
+  OutageSheetSchema,
   ReceiveFoundItemSchema,
+  RegisterImportResultSchema,
+  RegisterImportSchema,
   RetentionDecisionResultSchema,
   RetentionDecisionSchema,
   RetentionItemSchema,
@@ -49,6 +53,9 @@ import {
   getDeskItem,
   getFoundPost,
   getLabel,
+  getOutageSheet,
+  importRegister,
+  reserveOutageIds,
   listMyFoundPosts,
   logFoundItem,
   postFoundItem,
@@ -535,6 +542,63 @@ export function foundItemsRoutes(guards: Guards, deps: FoundItemsDeps) {
       },
     }),
     async (c) => c.json(await runRetentionNow(deps, c.var.ctx), 200),
+  );
+
+  // ── Outage label sheets (NF-04) and the paper register (WF-07) ──────────────────────────────
+
+  router.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/desk/outage-sheet',
+      tags: ['desk'],
+      summary: 'Reserved FND IDs not entered yet, with QR codes to print',
+      middleware: [guards.requireRole(...DESK)] as const,
+      responses: {
+        200: { description: 'Unused labels.', content: json(OutageSheetSchema) },
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await getOutageSheet(deps, c.var.ctx), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/desk/outage-sheet',
+      tags: ['desk'],
+      summary: 'Reserve FND IDs for a printed outage label sheet',
+      middleware: [guards.requireRole(...DESK)] as const,
+      request: { body: { required: true, content: json(OutageSheetRequestSchema) } },
+      responses: {
+        201: {
+          description: 'Unused labels, including the new ones.',
+          content: json(OutageSheetSchema),
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await reserveOutageIds(deps, c.var.ctx, c.req.valid('json').count), 201),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/supervisor/register/import',
+      tags: ['supervisor'],
+      summary: 'Bring paper logbook rows into custody as migrated found items (WF-07)',
+      middleware: [guards.requireRole('supervisor')] as const,
+      request: { body: { required: true, content: json(RegisterImportSchema) } },
+      responses: {
+        201: { description: 'The new FND IDs.', content: json(RegisterImportResultSchema) },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+      },
+    }),
+    async (c) => c.json(await importRegister(deps, c.var.ctx, c.req.valid('json')), 201),
   );
 
   return router;

@@ -6,11 +6,13 @@ import type {
   AddClosure,
   AddStaff,
   Flag,
+  HotspotReport,
   Policies,
   PolicySettings,
   StaffMember,
   SupervisorOverview,
 } from '@lf/contracts';
+import { categoryByCode, dhakaParts } from '@lf/domain';
 import {
   addDays,
   deleteClosure,
@@ -23,7 +25,7 @@ import type { RequestCtx, Tx } from '../../platform/db/types';
 import { NotFound, ValidationFailed } from '../../platform/errors';
 import { tenantEmailDomain } from '../../platform/tenancy';
 import { latestEvents, recordAuditEvent } from '../audit';
-import { readPolicies, writePolicies } from '../catalog';
+import { readPolicies, resolvePlaceNames, writePolicies } from '../catalog';
 import { approvalRows, failedVerifiers, todayLists } from '../claims';
 import { openDisputes, returnedSince } from '../dispatch';
 import {
@@ -36,7 +38,7 @@ import {
   removeStaff,
   type FlagKind,
 } from '../identity';
-import { custodyCounts, noShowFinders, recalculateRetention } from '../items';
+import { custodyCounts, hotspotRecords, noShowFinders, recalculateRetention } from '../items';
 
 const DAY = 86_400_000;
 const MAX_CLOSURE_DAYS = 120;
@@ -325,4 +327,66 @@ export function clearFlag(ctx: RequestCtx, userId: string): Promise<{ flags: Fla
     });
     return { flags: await flagsIn(tx) };
   });
+}
+
+// ── Loss hotspots (NF-07, Figma 39:25136) ────────────────────────────────────────────────────────
+
+const CLOSED = ['DISPATCHED', 'DONATED', 'DISPOSED', 'TRANSFERRED'];
+
+function tally(values: (string | null)[]): { label: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const v of values) if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+  return [...counts]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+/** Where and when things go missing: lost reports and found items in the last N days. */
+export function hotspots(ctx: RequestCtx, days: number): Promise<HotspotReport> {
+  return withTx(
+    ctx,
+    async (tx) => {
+      const { lost, found } = await hotspotRecords(tx, new Date(tx.now.getTime() - days * DAY));
+      const places = [
+        ...lost.map((r) => ({ ...r, at: r.timeFrom })),
+        ...found.map((r) => ({ ...r, at: r.foundAt })),
+      ];
+      const names = await resolvePlaceNames(
+        tx,
+        [...new Set(places.map((p) => p.buildingCode).filter((v): v is string => v !== null))],
+        [...new Set(places.map((p) => p.floorId).filter((v): v is string => v !== null))],
+      );
+      const byBuilding = tally(
+        places.map((p) =>
+          p.buildingCode ? (names.buildings.get(p.buildingCode) ?? p.buildingCode) : null,
+        ),
+      );
+      const byFloor = tally(
+        places.map((p) => (p.floorId ? (names.floorsAndZones.get(p.floorId) ?? null) : null)),
+      );
+      const byHour = Array.from({ length: 24 }, () => 0);
+      for (const p of places)
+        byHour[dhakaParts(p.at).hour] = (byHour[dhakaParts(p.at).hour] ?? 0) + 1;
+      const peak = Math.max(...byHour);
+      const closed = found.filter((f) => CLOSED.includes(f.state));
+      return {
+        days,
+        total: places.length,
+        topBuilding: byBuilding[0]?.label ?? null,
+        peakHour: peak > 0 ? byHour.indexOf(peak) : null,
+        returnRate:
+          closed.length > 0
+            ? closed.filter((f) => f.state === 'DISPATCHED').length / closed.length
+            : null,
+        byBuilding,
+        byFloor,
+        byHour,
+        byCategory: tally(places.map((p) => categoryByCode(p.category)?.label ?? p.category)).slice(
+          0,
+          8,
+        ),
+      };
+    },
+    { readOnly: true },
+  );
 }

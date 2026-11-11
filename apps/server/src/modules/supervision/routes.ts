@@ -1,6 +1,8 @@
 // Supervisor routes: overview, policies and closures, staff. Supervisors only.
 import {
   FlagListSchema,
+  HotspotQuerySchema,
+  HotspotReportSchema,
   AddClosureSchema,
   AddStaffSchema,
   PoliciesSchema,
@@ -15,6 +17,7 @@ import {
   addClosure,
   addStaffMember,
   clearFlag,
+  hotspots,
   listFlags,
   getPolicySettings,
   getStaff,
@@ -182,6 +185,23 @@ export function supervisionRoutes(guards: Guards) {
       },
     }),
     async (c) => c.json(await clearFlag(c.var.ctx, c.req.valid('param').userId), 200),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'get',
+      path: '/api/supervisor/reports/hotspots',
+      tags: ['supervisor'],
+      summary: 'Losses by building, floor, hour and category (NF-07)',
+      middleware: [guards.requireRole('supervisor')] as const,
+      request: { query: HotspotQuerySchema },
+      responses: {
+        200: { description: 'The report.', content: json(HotspotReportSchema) },
+        400: errorResponses[400],
+        ...read,
+      },
+    }),
+    async (c) => c.json(await hotspots(c.var.ctx, Number(c.req.valid('query').days)), 200),
   );
 
   return router;

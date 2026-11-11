@@ -413,3 +413,91 @@ export const ApprovalListSchema = z
   .object({ approvals: z.array(ApprovalSchema) })
   .meta({ id: 'ApprovalList' });
 export type ApprovalList = z.infer<typeof ApprovalListSchema>;
+
+// ── Loss hotspots (NF-07, Figma 39:25136) ────────────────────────────────────────────────────────
+
+export const HOTSPOT_RANGES = ['30', '90', '180'] as const;
+export const HotspotQuerySchema = z.object({ days: z.enum(HOTSPOT_RANGES).default('30') });
+
+const countRow = z.object({ label: z.string(), count: z.number().int() });
+export const HotspotReportSchema = z
+  .object({
+    days: z.number().int(),
+    /** Lost reports plus found items in the range. */
+    total: z.number().int(),
+    topBuilding: z.string().nullable(),
+    /** Hour of day (0–23, Dhaka) with the most records. */
+    peakHour: z.number().int().nullable(),
+    /** Returned to owners ÷ all items closed in the range (0–1). */
+    returnRate: z.number().nullable(),
+    byBuilding: z.array(countRow),
+    byFloor: z.array(countRow),
+    /** 24 counts, index = hour of day. */
+    byHour: z.array(z.number().int()),
+    byCategory: z.array(countRow),
+  })
+  .meta({ id: 'HotspotReport' });
+export type HotspotReport = z.infer<typeof HotspotReportSchema>;
+
+// ── Paper register import (WF-07, NF-05, Figma 39:26196) ─────────────────────────────────────────
+
+export const RegisterRowSchema = z.object({
+  date: z.iso.date({ error: 'Type the logbook date as YYYY-MM-DD.' }),
+  shortName: z
+    .string()
+    .trim()
+    .min(2, { error: 'Say what the item is, e.g. "Blue bottle".' })
+    .max(60, { error: 'Keep the item name to 60 characters.' }),
+  category: z.string().trim().min(1, { error: 'Pick a category.' }),
+  colour: z.string().trim().max(20).nullable(),
+  buildingCode: z.string().trim().max(10).nullable(),
+  binCode: z.string().trim().max(10).nullable(),
+  /** Stored as a private note (staff only): logbooks often hold names and numbers. */
+  note: z
+    .string()
+    .trim()
+    .max(300, { error: 'Keep the logbook note to 300 characters.' })
+    .nullable(),
+});
+export type RegisterRow = z.infer<typeof RegisterRowSchema>;
+
+export const RegisterImportSchema = z
+  .object({
+    rows: z
+      .array(RegisterRowSchema)
+      .min(1, { error: 'Add at least one row, then import.' })
+      .max(200, { error: 'Import at most 200 rows at a time; split the sheet.' }),
+  })
+  .meta({ id: 'RegisterImport' });
+export type RegisterImport = z.infer<typeof RegisterImportSchema>;
+
+export const RegisterImportResultSchema = z
+  .object({ ids: z.array(z.string()) })
+  .meta({ id: 'RegisterImportResult' });
+
+// ── Outage label sheets (NF-04, CC-17) ───────────────────────────────────────────────────────────
+
+export const OutageSheetRequestSchema = z
+  .object({
+    count: z
+      .number({ error: 'Choose how many labels to print.' })
+      .int()
+      .min(1, { error: 'Print at least 1 label.' })
+      .max(60, { error: 'Print at most 60 labels at a time.' }),
+  })
+  .meta({ id: 'OutageSheetRequest' });
+
+export const OutageSheetSchema = z
+  .object({
+    /** Unused reserved IDs, oldest first, each with its QR code for printing. */
+    labels: z.array(
+      z.object({
+        id: z.string(),
+        reservedAt: z.iso.datetime({ offset: true }),
+        qrDataUri: z.string(),
+        url: z.string(),
+      }),
+    ),
+  })
+  .meta({ id: 'OutageSheet' });
+export type OutageSheet = z.infer<typeof OutageSheetSchema>;
