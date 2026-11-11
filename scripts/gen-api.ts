@@ -32,6 +32,13 @@ execFileSync(
     stdio: ['ignore', 'ignore', 'inherit'],
   },
 );
+// Format both files the way the commit hook does, so a fresh run matches what was committed and the
+// CI "client up to date" check compares content, not whitespace.
+execFileSync(
+  'pnpm',
+  ['exec', 'prettier', '--write', 'apps/web/src/api/openapi.json', 'apps/web/src/api/schema.d.ts'],
+  { cwd: repoRoot(), stdio: ['ignore', 'ignore', 'inherit'] },
+);
 out(
   `Wrote ${path.relative(repoRoot(), jsonFile)} and src/api/schema.d.ts (${Object.keys(document.paths ?? {}).length} paths).`,
 );

@@ -4,7 +4,6 @@ dist
 coverage
 /reports
 apps/server/migrations/meta
-apps/web/src/api/schema.d.ts
 packages/ui/src/tokens/tokens.css
 packages/ui/src/tokens/tokens.ts
 docs/design/figma-ref
