@@ -22,6 +22,7 @@ import {
   addDaysToInstant,
   CATEGORIES,
   categoryByCode,
+  dhakaDate,
   colourByCode,
   DESK_ROLES,
   foundItemMachine,
@@ -63,6 +64,7 @@ import {
   findFoundItem,
   findReservedId,
   insertReservedIds,
+  listFoundInWindow,
   listFoundItemsSince,
   listLostReportsSince,
   listUnusedReserved,
@@ -930,6 +932,7 @@ const EVENT_LABEL: Record<string, string> = {
   REOPEN: 'Reopened',
   CORRECT: 'Corrected',
   VOID: 'Marked VOID',
+  MERGED: 'Duplicate merged in',
   TRANSFER: 'Transferred',
   EXPIRE: 'Retention ended',
 };
@@ -1000,10 +1003,78 @@ export async function getDeskItem(
           note: h.note,
         })),
         ownerEmailed: row.ownerEmailedAt !== null,
+        mergedInto: row.mergedInto,
+        possibleDuplicates: (await duplicatesOf(tx, row)).map((d) => ({
+          id: d.id,
+          title: itemTitle(d),
+          state: d.state as FoundItemState,
+          source: d.source,
+        })),
       };
     },
     { readOnly: true },
   );
+}
+
+// ── Duplicates (CC-04): same category, same place, same day ─────────────────────────────────────
+
+async function duplicatesOf(tx: Tx, row: FoundItemRow): Promise<FoundItemRow[]> {
+  if (row.mergedInto || !['REPORTED_BY_FINDER', 'IN_CUSTODY'].includes(row.state)) return [];
+  const day = dhakaDate(row.foundAt);
+  const from = new Date(`${day}T00:00:00+06:00`);
+  const to = new Date(`${day}T23:59:59.999+06:00`);
+  return (await listFoundInWindow(tx, tx.tenantId, row.category, from, to)).filter(
+    (o) =>
+      o.id !== row.id &&
+      !o.mergedInto &&
+      o.buildingCode === row.buildingCode &&
+      (row.zoneId === null || o.zoneId === null || o.zoneId === row.zoneId),
+  );
+}
+
+/**
+ * CC-04: the same item was posted twice (two finders, or a finder and the desk). The duplicate is
+ * marked VOID with "Merged into …", and its ID points to the record that is kept.
+ */
+export async function mergeFoundItem(
+  deps: FoundItemsDeps,
+  ctx: RequestCtx,
+  id: string,
+  into: string,
+): Promise<DeskFoundItem> {
+  if (!isDesk(ctx)) throw new Forbidden();
+  await withTx(ctx, async (tx) => {
+    const duplicate = await findFoundItem(tx, tx.tenantId, id);
+    const kept = await findFoundItem(tx, tx.tenantId, into);
+    if (!duplicate || !kept)
+      throw new NotFound("We couldn't find one of those records; check the IDs and try again.");
+    if (!(await duplicatesOf(tx, kept)).some((d) => d.id === id))
+      throw new ValidationFailed({
+        into: 'These records are not the same category, place and day; check them first.',
+      });
+    await foundItemTransition(
+      tx,
+      { id, state: duplicate.state as FoundItemState },
+      'VOID',
+      { patch: { mergedInto: kept.id } },
+      `Merged into ${kept.id}`,
+    );
+    await recordAuditEvent(tx, {
+      recordType: 'found_item',
+      recordId: kept.id,
+      event: 'MERGED',
+      note: `${id} was a duplicate of this record`,
+    });
+    if (duplicate.finderId)
+      await notify(deps, tx, {
+        userId: duplicate.finderId,
+        kind: 'general',
+        title: 'Your found-item post was matched at the desk',
+        body: `${id} is the same item as ${kept.id}, which is already at the desk. Thank you for posting it.`,
+        link: `/found/${id}/posted`,
+      });
+  });
+  return getDeskItem(deps, ctx, into);
 }
 
 async function toRows(

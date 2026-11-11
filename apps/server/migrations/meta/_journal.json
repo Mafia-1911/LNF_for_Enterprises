@@ -64,6 +64,13 @@
       "when": 1794416537766,
       "tag": "0008_validate_claim_approval_fks",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794418222417,
+      "tag": "0009_proxy_merge",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,7 @@ import type {
   CreateLostReport,
   HandOver,
   LogFoundItem,
+  NominateProxy,
   ReceiveFoundItem,
   ReviewClaim,
   SubmitClaim,
@@ -760,5 +761,31 @@ export function useImportRegister() {
     mutationFn: (body: RegisterImport) =>
       unwrap(api.POST('/api/supervisor/register/import', { body })),
     onSuccess: () => invalidateSupervisor(qc),
+  });
+}
+
+export function useNominateProxy(claimId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: NominateProxy) =>
+      unwrap(api.POST('/api/claims/{id}/proxy', { params: { path: { id: claimId } }, body })),
+    onSuccess: (claim) => qc.setQueryData(keys.claim(claimId), claim),
+  });
+}
+
+export function useMergeFoundItem(keptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (duplicateId: string) =>
+      unwrap(
+        api.POST('/api/desk/found-items/{id}/merge', {
+          params: { path: { id: duplicateId } },
+          body: { into: keptId },
+        }),
+      ),
+    onSuccess: (item) => {
+      qc.setQueryData(keys.deskItem(keptId), item);
+      void qc.invalidateQueries({ queryKey: ['desk'] });
+    },
   });
 }

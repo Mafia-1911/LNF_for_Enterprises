@@ -49,6 +49,13 @@ export const CreateLostReportSchema = z
     timeFrom: z.iso.datetime({ offset: true, error: 'Enter when you last had it.' }),
     /** When they noticed it was gone. */
     timeTo: z.iso.datetime({ offset: true, error: 'Enter when you noticed it was gone.' }),
+    /** US-10: desk staff filing for a walk-in student give the student's university email. */
+    ownerEmail: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .pipe(z.email({ error: "Type the student's university email." }))
+      .optional(),
   })
   .refine((v) => Date.parse(v.timeTo) >= Date.parse(v.timeFrom), {
     message: 'The "To" time must be after the "From" time.',

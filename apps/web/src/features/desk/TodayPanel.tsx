@@ -16,6 +16,8 @@ function dueLabel(
       ? { label: 'overdue', tone: 'danger' }
       : { label: `due in ${hours} h`, tone: 'warning' };
   const days = daysUntil(row.due);
+  if (days < 0) return { label: 'retention ended', tone: 'danger' };
+  if (days === 0) return { label: 'ends today', tone: 'warning' };
   return { label: `ends in ${days} ${days === 1 ? 'day' : 'days'}`, tone: 'warning' };
 }
 

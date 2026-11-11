@@ -7,6 +7,8 @@ export {
   approveHandover,
   failedVerifiers,
   listApprovals,
+  nominateProxy,
+  proxyOf,
   requestApproval,
   claimFor,
   claimTransition,

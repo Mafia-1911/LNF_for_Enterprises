@@ -54,6 +54,7 @@ export function HandOverFlow() {
   const [pickup, setPickup] = useState<Pickup | null>(null);
   const [photoMatches, setPhotoMatches] = useState(false);
   const [idLast4, setIdLast4] = useState('');
+  const [collectedBy, setCollectedBy] = useState<'owner' | 'proxy'>('owner');
   const [secondCheck, setSecondCheck] = useState<SecondCheck | ''>('');
   const [signed, setSigned] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +101,7 @@ export function HandOverFlow() {
           idLast4: idLast4.trim(),
           secondCheck: secondCheck || null,
           signaturePhotoId: photo.id,
+          collectedBy,
         },
       });
       await navigate({ to: '/desk/handover/$id', params: { id: dsp.id } });
@@ -173,6 +175,23 @@ export function HandOverFlow() {
                 </p>
               </div>
             </div>
+            {pickup.proxy ? (
+              <fieldset className="flex flex-col gap-2">
+                <legend className="pb-1 text-body font-semibold text-ink">
+                  Who is collecting?
+                </legend>
+                <TickTile
+                  label={`${pickup.claimant.name} (the owner)`}
+                  checked={collectedBy === 'owner'}
+                  onCheckedChange={() => setCollectedBy('owner')}
+                />
+                <TickTile
+                  label={`${pickup.proxy.name}, their proxy (ID ending ${pickup.proxy.idLast4})`}
+                  checked={collectedBy === 'proxy'}
+                  onCheckedChange={() => setCollectedBy('proxy')}
+                />
+              </fieldset>
+            ) : null}
             <TickTile
               label={
                 pickup.claimant.role === 'visitor'

@@ -18,6 +18,8 @@ export const LOG_DENY_LIST = [
   'univIdNumber',
   'idNumber',
   'nationalId',
+  'universityId',
+  'proxyIdCiphertext',
   'otp',
   'code',
   'pickupCode',

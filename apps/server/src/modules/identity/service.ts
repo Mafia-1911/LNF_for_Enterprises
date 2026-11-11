@@ -223,9 +223,9 @@ export function memberNames(tx: Tx, userIds: string[]): Promise<Map<string, stri
 export async function memberByEmail(
   tx: Tx,
   email: string,
-): Promise<{ userId: string; name: string } | null> {
+): Promise<{ userId: string; name: string; role: Role } | null> {
   const m = await findMemberByEmail(tx, tx.tenantId, email.toLowerCase());
-  return m && m.role ? { userId: m.userId, name: m.name } : null;
+  return m && m.role ? { userId: m.userId, name: m.name, role: m.role } : null;
 }
 
 export type MemberProfile = { name: string; title: string | null; role: string };

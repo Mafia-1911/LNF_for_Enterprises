@@ -265,8 +265,23 @@ export const DeskFoundItemSchema = z
     history: z.array(historyEntry),
     /** Owners told about this item: by finder ping or the ID card fast lane. */
     ownerEmailed: z.boolean(),
+    /** CC-04: the record this one was merged into, if it was a duplicate. */
+    mergedInto: z.string().nullable(),
+    /** CC-04: same category, place and day; the desk may merge them. */
+    possibleDuplicates: z.array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        state: FoundItemStateSchema,
+        source: z.string(),
+      }),
+    ),
   })
   .meta({ id: 'DeskFoundItem' });
+
+export const MergeFoundItemSchema = z
+  .object({ into: z.string().trim().min(1, 'Pick the record to keep.') })
+  .meta({ id: 'MergeFoundItem' });
 export type DeskFoundItem = z.infer<typeof DeskFoundItemSchema>;
 
 export const DeskItemRowSchema = z

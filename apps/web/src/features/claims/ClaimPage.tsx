@@ -1,11 +1,18 @@
 // My claim (WF-04 steps 3–4): where it stands, what the desk asked, and — once approved — the
 // 6-digit pickup code, the pickup deadline and where to go. Withdraw or re-request from here.
-import { Badge, Button, Card, CategoryIcon, Notice, TextAreaField } from '@lf/ui';
+import { Badge, Button, Card, CategoryIcon, Notice, TextAreaField, TextField } from '@lf/ui';
 import { getRouteApi } from '@tanstack/react-router';
 import { Clock, IdCard, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '../../api/client';
-import { photoUrl, useClaim, useClaimAction, useMyDispute, useRaiseDispute } from '../../api/hooks';
+import {
+  photoUrl,
+  useClaim,
+  useClaimAction,
+  useMyDispute,
+  useNominateProxy,
+  useRaiseDispute,
+} from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusTrack } from '../../components/StatusTrack';
 import { dhakaDateTime } from '../../lib/clock';
@@ -184,6 +191,14 @@ export function ClaimPage() {
           </Button>
         ) : null}
       </div>
+      {c.proxy ? (
+        <Notice tone="info" className="mt-6" title="Someone can collect for you">
+          {c.proxy.name} (university ID {c.proxy.idMasked}) may collect this item with the pickup
+          code and their own university ID.
+        </Notice>
+      ) : c.canNominateProxy ? (
+        <ProxySection claimId={c.id} />
+      ) : null}
       {c.canDispute ? <DisputeSection claimId={c.id} kind={c.canDispute} /> : null}
     </div>
   );
@@ -254,6 +269,57 @@ function DisputeSection({
         onClick={() => void send()}
       >
         Send dispute
+      </Button>
+    </Card>
+  );
+}
+
+/** CC-09: the owner can't come in person and nominates someone by university ID. */
+function ProxySection({ claimId }: { claimId: string }) {
+  const nominate = useNominateProxy(claimId);
+  const [name, setName] = useState('');
+  const [universityId, setUniversityId] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  async function send() {
+    setErrors({});
+    try {
+      await nominate.mutateAsync({ name, universityId });
+    } catch (e) {
+      setErrors(
+        e instanceof ApiError
+          ? { ...e.fields, ...(Object.keys(e.fields).length ? {} : { name: e.message }) }
+          : {},
+      );
+    }
+  }
+  return (
+    <Card className="mt-6 !p-5">
+      <h2 className="text-heading-s font-bold text-ink">Can't come in person?</h2>
+      <p className="mt-1 text-body text-muted">
+        Nominate someone to collect it. They bring the pickup code and their own university ID.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <TextField
+          label="Their full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={errors['name']}
+        />
+        <TextField
+          label="Their university ID"
+          autoComplete="off"
+          value={universityId}
+          onChange={(e) => setUniversityId(e.target.value)}
+          error={errors['universityId']}
+        />
+      </div>
+      <Button
+        className="mt-3"
+        variant="secondary"
+        loading={nominate.isPending}
+        onClick={() => void send()}
+      >
+        Nominate
       </Button>
     </Card>
   );

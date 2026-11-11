@@ -18,6 +18,7 @@ import { Conflict, Forbidden, NotFound, ValidationFailed } from '../../platform/
 import { nextId } from '../../platform/ids';
 import { bindTransition } from '../audit';
 import { resolvePlaceNames, resolveReportPlace } from '../catalog';
+import { memberByEmail } from '../identity';
 import { JOB, type MatchLostReportData } from '../../platform/jobs/names';
 import { attachPhotos, photosForRecords } from '../photos';
 import { similarInCustody, type FoundItemsDeps } from './found-items';
@@ -109,6 +110,29 @@ function toView(
 }
 
 /** US-01 / WF-01: a student, visitor or desk officer submits a lost report. */
+/**
+ * Whose report this is. Normally the person filing it; desk staff helping a walk-in student
+ * (US-10) give the student's university email, and the report is theirs.
+ */
+async function reportOwner(
+  tx: Tx,
+  actor: { userId: string; role: string },
+  ownerEmail: string | undefined,
+): Promise<string> {
+  if (!ownerEmail) return actor.userId;
+  if (!DESK_ROLES.some((r) => r === actor.role))
+    throw new ValidationFailed({
+      ownerEmail: 'Only desk staff can file a report for someone else.',
+    });
+  const owner = await memberByEmail(tx, ownerEmail);
+  if (!owner || (owner.role !== 'student' && owner.role !== 'visitor'))
+    throw new ValidationFailed({
+      ownerEmail:
+        'No student with that email has signed in yet; ask them to sign in once, then try again.',
+    });
+  return owner.userId;
+}
+
 export async function submitLostReport(
   deps: ItemsDeps,
   ctx: RequestCtx,
@@ -126,10 +150,11 @@ export async function submitLostReport(
           "That place isn't on the campus list; pick the building and floor again.",
       });
 
+    const ownerId = await reportOwner(tx, actor, input.ownerEmail);
     const id = await nextId(tx, 'LST');
     const report = await lostReportTransition(tx, { id, state: null }, 'SUBMIT', {
       values: {
-        ownerId: actor.userId,
+        ownerId,
         filedBy: actor.userId,
         category: input.category,
         colour: input.colour,

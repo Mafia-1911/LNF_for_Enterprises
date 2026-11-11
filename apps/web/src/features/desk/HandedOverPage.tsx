@@ -22,7 +22,9 @@ export function HandedOverPage() {
         </p>
         {dsp.data ? (
           <p className="pt-3 text-body text-ink">
-            {dsp.data.itemTitle} returned to {dsp.data.recipientName}. Lost report resolved.
+            {dsp.data.itemTitle} returned to {dsp.data.recipientName}
+            {dsp.data.proxyName ? `, collected by their proxy ${dsp.data.proxyName}` : ''}. Lost
+            report resolved.
           </p>
         ) : null}
         <p className="max-w-[520px] pt-3 text-body text-muted">

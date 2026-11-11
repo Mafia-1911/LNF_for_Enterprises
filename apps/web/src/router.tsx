@@ -198,9 +198,12 @@ const lostNewRoute = createRoute({
   path: '/lost/new',
   staticData: { title: 'I lost something' },
   beforeLoad: only('student', 'visitor', 'desk_officer', 'supervisor'),
-  validateSearch: (search: Record<string, unknown>): { step: number } => {
+  validateSearch: (search: Record<string, unknown>): { step: number; for?: string } => {
     const step = Number(search['step']);
-    return { step: Number.isInteger(step) && step >= 1 && step <= 4 ? step : 1 };
+    return {
+      step: Number.isInteger(step) && step >= 1 && step <= 4 ? step : 1,
+      ...(typeof search['for'] === 'string' && search['for'] ? { for: search['for'] } : {}),
+    };
   },
   component: lazyRouteComponent(() => import('./features/lost-report/LostReportFlow')),
 });
@@ -315,6 +318,14 @@ const deskHandedOverRoute = createRoute({
   staticData: { title: 'Handed over' },
   beforeLoad: deskOnly,
   component: lazyRouteComponent(() => import('./features/desk/HandedOverPage'), 'HandedOverPage'),
+});
+
+const deskWalkInRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/desk/walk-in',
+  staticData: { title: 'Help a walk-in student' },
+  beforeLoad: deskOnly,
+  component: lazyRouteComponent(() => import('./features/desk/WalkInPage'), 'WalkInPage'),
 });
 
 const deskOutageRoute = createRoute({
@@ -492,6 +503,7 @@ const routeTree = rootRoute.addChildren([
     deskItemRoute,
     deskLabelRoute,
     deskOutageRoute,
+    deskWalkInRoute,
     deskClaimsRoute,
     deskClaimReviewRoute,
     deskHandOverRoute,

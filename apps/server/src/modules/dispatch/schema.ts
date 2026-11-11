@@ -35,6 +35,8 @@ export const dispatches = pgTable(
     photoMatch: boolean('photo_match').notNull(),
     /** device_unlocked | serial_matched | cash_recounted | supervisor_approved (CC-07, CC-08, CC-10). */
     secondCheck: text('second_check'),
+    /** Set when a nominated proxy collected for the owner (CC-09); the DSP records both. */
+    proxyName: text('proxy_name'),
     officerId: uuid('officer_id')
       .notNull()
       .references(() => users.id),

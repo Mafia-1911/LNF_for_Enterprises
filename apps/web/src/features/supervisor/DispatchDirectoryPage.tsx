@@ -76,7 +76,7 @@ export function DispatchDirectoryPage() {
         <p className="mt-6 text-body text-muted">No handovers match.</p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
-          <table className="w-full min-w-[720px] text-left text-body">
+          <table className="w-full min-w-[860px] text-left text-body">
             <caption className="sr-only">Handovers</caption>
             <thead className="border-b border-line text-muted">
               <tr>
@@ -103,16 +103,20 @@ export function DispatchDirectoryPage() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-line last:border-0">
-                  <td className="px-4 py-3 font-mono text-ink">{r.id}</td>
+                  <td className="px-4 py-3 font-mono whitespace-nowrap text-ink">{r.id}</td>
                   <td className="px-4 py-3">
                     <span className="block text-ink">{r.itemTitle}</span>
-                    <span className="block font-mono text-muted">{r.foundItemId}</span>
+                    <span className="block font-mono whitespace-nowrap text-muted">
+                      {r.foundItemId}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="block text-ink">{r.claimantName}</span>
-                    <span className="block text-muted">ID {r.idMasked}</span>
+                    <span className="block whitespace-nowrap text-ink">{r.claimantName}</span>
+                    <span className="block whitespace-nowrap text-muted">ID {r.idMasked}</span>
                   </td>
-                  <td className="px-4 py-3 text-ink">{dhakaDateTime(r.createdAt)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink">
+                    {dhakaDateTime(r.createdAt)}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="flex flex-wrap gap-1">
                       <Badge tone={r.locked ? 'neutral' : 'success'}>

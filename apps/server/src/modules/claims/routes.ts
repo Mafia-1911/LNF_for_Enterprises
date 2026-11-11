@@ -2,6 +2,7 @@
 // "Today" list and withdrawing a lost report (CC-16), which cancels linked claims.
 import {
   ApprovalListSchema,
+  NominateProxySchema,
   ClaimListSchema,
   ClaimSchema,
   ClaimStartSchema,
@@ -33,6 +34,7 @@ import {
   type ClaimsDeps,
   approveHandover,
   listApprovals,
+  nominateProxy,
   requestApproval,
 } from './service';
 
@@ -353,6 +355,34 @@ export function claimsRoutes(guards: Guards, deps: ClaimsDeps) {
     async (c) =>
       c.json(
         { approvals: await approveHandover(c.var.ctx, recordId(c.req.valid('param').id, 'claim')) },
+        200,
+      ),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/claims/{id}/proxy',
+      tags: ['claims'],
+      summary: 'Nominate someone to collect an approved item (CC-09)',
+      middleware: [guards.requireRole('student')] as const,
+      request: { params: idParam, body: { required: true, content: json(NominateProxySchema) } },
+      responses: {
+        200: { description: 'The claim with the proxy.', content: json(ClaimSchema) },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+        404: errorResponses[404],
+      },
+    }),
+    async (c) =>
+      c.json(
+        await nominateProxy(
+          deps,
+          c.var.ctx,
+          recordId(c.req.valid('param').id, 'claim'),
+          c.req.valid('json'),
+        ),
         200,
       ),
   );

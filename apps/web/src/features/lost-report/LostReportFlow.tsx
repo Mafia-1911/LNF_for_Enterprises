@@ -42,7 +42,7 @@ import {
 const route = getRouteApi('/app/lost/new');
 
 export function LostReportFlow({ me }: { me: Me }) {
-  const { step } = route.useSearch();
+  const { step, for: ownerEmail } = route.useSearch();
   const navigate = useNavigate();
   const catalog = useCatalog();
   const submit = useSubmitLostReport();
@@ -74,7 +74,11 @@ export function LostReportFlow({ me }: { me: Me }) {
     headingRef.current?.focus();
   }, [step]);
 
-  const goTo = (next: number) => void navigate({ to: '/lost/new', search: { step: next } });
+  const goTo = (next: number) =>
+    void navigate({
+      to: '/lost/new',
+      search: { step: next, ...(ownerEmail ? { for: ownerEmail } : {}) },
+    });
 
   async function next() {
     if (
@@ -93,7 +97,10 @@ export function LostReportFlow({ me }: { me: Me }) {
       return;
     }
     try {
-      const created = await submit.mutateAsync(result.payload);
+      const created = await submit.mutateAsync({
+        ...result.payload,
+        ...(ownerEmail ? { ownerEmail } : {}),
+      });
       clearDraft(me.id);
       await navigate({ to: '/lost/$id/submitted', params: { id: created.report.id } });
     } catch (err) {
@@ -138,6 +145,11 @@ export function LostReportFlow({ me }: { me: Me }) {
           savedAt ? <Badge icon={Save}>Draft saved {timeLabel(new Date(savedAt))}</Badge> : null
         }
       />
+      {ownerEmail ? (
+        <Notice tone="info" className="mt-4" title="Filing for a walk-in student">
+          This report will belong to {ownerEmail}. They get the match alerts and can track it.
+        </Notice>
+      ) : null}
       <Stepper className="pt-6" step={step} total={4} title={title} />
       <Card className="mt-6">
         <form noValidate onSubmit={(e) => e.preventDefault()}>

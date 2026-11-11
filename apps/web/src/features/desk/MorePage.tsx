@@ -53,13 +53,15 @@ export function MorePage() {
       <PageHeader title="More" back={{ to: '/desk' }} />
       <ul className="mt-6 flex flex-col gap-3">
         <li>
-          <Item
-            icon={UserRound}
-            title="Help a walk-in student"
-            sub="File a lost report or claim for someone without a phone"
-            later
-          />
+          <Link to="/desk/walk-in" className="block rounded-lg hover:shadow-hover">
+            <Item
+              icon={UserRound}
+              title="Help a walk-in student"
+              sub="File a lost report for someone without a phone"
+            />
+          </Link>
         </li>
+
         <li>
           <Item
             icon={ClipboardCheck}

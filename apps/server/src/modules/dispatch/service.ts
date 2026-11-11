@@ -10,6 +10,7 @@ import { nextId } from '../../platform/ids';
 import {
   approvalOf,
   approvedClaimByCode,
+  proxyOf,
   claimFor,
   collectClaim,
   type ClaimsDeps,
@@ -51,6 +52,7 @@ export async function dispatchView(tx: Tx, row: DispatchRow): Promise<Dispatch> 
     idLast4: row.idLast4,
     secondCheck: row.secondCheck,
     officerName: names.get(row.officerId) ?? 'Staff',
+    proxyName: row.proxyName,
     createdAt: row.createdAt.toISOString(),
     locksAt: row.locksAt.toISOString(),
   };
@@ -89,6 +91,7 @@ export async function findPickup(
         highValue,
         needsSupervisor: highValue && who?.role === 'visitor',
         approval: approvalOf(claim),
+        proxy: proxyOf(claim),
         pickupEndsAt: (claim.pickupEndsAt ?? tx.now).toISOString(),
       };
     },
@@ -135,6 +138,15 @@ export async function handOver(
           'A visitor collecting a high-value item needs supervisor approval; tick it to confirm.',
       });
 
+    // CC-09: a nominated proxy shows their own university ID; the DSP records both people.
+    const proxy = input.collectedBy === 'proxy' ? proxyOf(claim) : null;
+    if (input.collectedBy === 'proxy' && !proxy)
+      throw new ValidationFailed({ collectedBy: 'No proxy was nominated for this claim.' });
+    if (proxy && proxy.idLast4 !== input.idLast4.toUpperCase())
+      throw new ValidationFailed({
+        idLast4: "That doesn't match the proxy's university ID; check the ID they show.",
+      });
+
     const id = await nextId(tx, 'DSP');
     const row = await insertDispatch(tx, tx.tenantId, {
       id,
@@ -145,6 +157,7 @@ export async function handOver(
       idLast4: input.idLast4.toUpperCase(),
       photoMatch: input.photoMatches,
       secondCheck: input.secondCheck,
+      proxyName: proxy?.name ?? null,
       officerId: actor.userId,
     });
     await attachPhotos(

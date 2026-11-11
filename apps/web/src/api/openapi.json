@@ -622,6 +622,9 @@
           "timeTo": {
             "type": "string",
             "format": "date-time"
+          },
+          "ownerEmail": {
+            "type": "string"
           }
         },
         "required": [
@@ -1423,6 +1426,30 @@
           },
           "ownerEmailed": {
             "type": "boolean"
+          },
+          "mergedInto": {
+            "type": ["string", "null"]
+          },
+          "possibleDuplicates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/FoundItemState"
+                },
+                "source": {
+                  "type": "string"
+                }
+              },
+              "required": ["id", "title", "state", "source"]
+            }
           }
         },
         "required": [
@@ -1450,7 +1477,9 @@
           "photoIds",
           "conditionPhotoIds",
           "history",
-          "ownerEmailed"
+          "ownerEmailed",
+          "mergedInto",
+          "possibleDuplicates"
         ]
       },
       "FoundItemLabel": {
@@ -2093,6 +2122,16 @@
         },
         "required": ["rows"]
       },
+      "MergeFoundItem": {
+        "type": "object",
+        "properties": {
+          "into": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["into"]
+      },
       "UploadedPhoto": {
         "type": "object",
         "properties": {
@@ -2396,6 +2435,21 @@
           "canDispute": {
             "type": ["string", "null"],
             "enum": ["second_claimant", "wrong_handover", null]
+          },
+          "proxy": {
+            "type": ["object", "null"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "idMasked": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "idMasked"]
+          },
+          "canNominateProxy": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -2412,7 +2466,9 @@
           "createdAt",
           "desk",
           "canReRequest",
-          "canDispute"
+          "canDispute",
+          "proxy",
+          "canNominateProxy"
         ]
       },
       "SubmitClaim": {
@@ -2759,6 +2815,21 @@
           "approved"
         ]
       },
+      "NominateProxy": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "universityId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]{4,20}$"
+          }
+        },
+        "required": ["name", "universityId"]
+      },
       "Pickup": {
         "type": "object",
         "properties": {
@@ -2811,6 +2882,18 @@
             "type": "string",
             "enum": ["none", "requested", "approved"]
           },
+          "proxy": {
+            "type": ["object", "null"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "idLast4": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "idLast4"]
+          },
           "pickupEndsAt": {
             "type": "string",
             "format": "date-time"
@@ -2823,6 +2906,7 @@
           "highValue",
           "needsSupervisor",
           "approval",
+          "proxy",
           "pickupEndsAt"
         ]
       },
@@ -2863,6 +2947,9 @@
           "officerName": {
             "type": "string"
           },
+          "proxyName": {
+            "type": ["string", "null"]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -2881,6 +2968,7 @@
           "idLast4",
           "secondCheck",
           "officerName",
+          "proxyName",
           "createdAt",
           "locksAt"
         ]
@@ -2910,6 +2998,11 @@
           "signaturePhotoId": {
             "type": "string",
             "format": "uuid"
+          },
+          "collectedBy": {
+            "type": "string",
+            "enum": ["owner", "proxy"],
+            "default": "owner"
           }
         },
         "required": ["photoMatches", "idLast4", "signaturePhotoId"]
@@ -5447,6 +5540,96 @@
         }
       }
     },
+    "/api/desk/found-items/{id}/merge": {
+      "post": {
+        "tags": ["desk"],
+        "summary": "Merge a duplicate record into another (CC-04); the duplicate becomes VOID",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeFoundItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The record that was kept.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskFoundItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/photos": {
       "post": {
         "tags": ["photos"],
@@ -6759,6 +6942,86 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApprovalList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/proxy": {
+      "post": {
+        "tags": ["claims"],
+        "summary": "Nominate someone to collect an approved item (CC-09)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NominateProxy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The claim with the proxy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }

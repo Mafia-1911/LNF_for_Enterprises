@@ -34,6 +34,7 @@ export {
   type FoundItemRow,
   type LostReportRow,
   logFoundItem,
+  mergeFoundItem,
   postFoundItem,
   receiveFoundItem,
   runHandInTimer,

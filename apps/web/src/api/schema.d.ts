@@ -668,6 +668,84 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/claims/{id}/proxy': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Nominate someone to collect an approved item (CC-09) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['NominateProxy'];
+        };
+      };
+      responses: {
+        /** @description The claim with the proxy. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Claim'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not found. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/claims/{id}/re-request': {
     parameters: {
       query?: never;
@@ -1585,6 +1663,93 @@ export interface paths {
     };
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/desk/found-items/{id}/merge': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Merge a duplicate record into another (CC-04); the duplicate becomes VOID */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['MergeFoundItem'];
+        };
+      };
+      responses: {
+        /** @description The record that was kept. */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['DeskFoundItem'];
+          };
+        };
+        /** @description The request has invalid fields. */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not signed in. */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Signed in, but not allowed. */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Not found. */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Conflicts with the current state. */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -5325,6 +5490,7 @@ export interface components {
       }[];
       /** @enum {string|null} */
       canDispute: 'second_claimant' | 'wrong_handover' | null;
+      canNominateProxy: boolean;
       canReRequest: boolean;
       /** Format: date-time */
       createdAt: string;
@@ -5341,6 +5507,10 @@ export interface components {
       pickupCode: string | null;
       /** Format: date-time */
       pickupEndsAt: string | null;
+      proxy: {
+        idMasked: string;
+        name: string;
+      } | null;
       /** Format: date-time */
       reviewDueAt: string;
       state: components['schemas']['ClaimState'];
@@ -5514,6 +5684,7 @@ export interface components {
         | 'gold'
         | 'multi'
         | null;
+      ownerEmail?: string;
       /** @default [] */
       photoIds: string[];
       place: components['schemas']['LostReportPlace'];
@@ -5581,6 +5752,7 @@ export interface components {
       }[];
       id: string;
       idNumberMasked: string | null;
+      mergedInto: string | null;
       model: string | null;
       ownerEmailed: boolean;
       photoIds: string[];
@@ -5590,6 +5762,12 @@ export interface components {
         floorName: string | null;
         zoneName: string | null;
       };
+      possibleDuplicates: {
+        id: string;
+        source: string;
+        state: components['schemas']['FoundItemState'];
+        title: string;
+      }[];
       privateDetails: {
         note: string | null;
         ticks: string[];
@@ -5660,6 +5838,7 @@ export interface components {
       /** Format: date-time */
       locksAt: string;
       officerName: string;
+      proxyName: string | null;
       recipientName: string;
       secondCheck: string | null;
     };
@@ -5857,6 +6036,11 @@ export interface components {
       items: components['schemas']['GalleryItem'][];
     };
     HandOver: {
+      /**
+       * @default owner
+       * @enum {string}
+       */
+      collectedBy: 'owner' | 'proxy';
       idLast4: string;
       /** @enum {boolean} */
       photoMatches: true;
@@ -6055,6 +6239,9 @@ export interface components {
     MeResponse: {
       me: components['schemas']['Me'];
     };
+    MergeFoundItem: {
+      into: string;
+    };
     MyDispute: {
       dispute: {
         claimId: string | null;
@@ -6083,6 +6270,10 @@ export interface components {
       kind: 'retention' | 'claim_overdue' | 'dispute' | 'approval' | 'flag';
       link: string;
       title: string;
+    };
+    NominateProxy: {
+      name: string;
+      universityId: string;
     };
     OutageSheet: {
       labels: {
@@ -6116,6 +6307,10 @@ export interface components {
       needsSupervisor: boolean;
       /** Format: date-time */
       pickupEndsAt: string;
+      proxy: {
+        idLast4: string;
+        name: string;
+      } | null;
     };
     PickupLookup: {
       code: string;

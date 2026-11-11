@@ -7,7 +7,13 @@ import { getRouteApi, Link } from '@tanstack/react-router';
 import { Ban, History, MapPin, Pencil, Printer, QrCode } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '../../api/client';
-import { photoUrl, useCorrectFoundItem, useDeskItem, useVoidFoundItem } from '../../api/hooks';
+import {
+  photoUrl,
+  useCorrectFoundItem,
+  useDeskItem,
+  useMergeFoundItem,
+  useVoidFoundItem,
+} from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { daysUntil, dhakaDateTime } from '../../lib/clock';
 import { FOUND_STATE, placeLine } from '../items/labels';
@@ -40,6 +46,22 @@ export function ItemRecordPage() {
   return (
     <div>
       <PageHeader title={r.title} back={{ to: '/desk/find' }} />
+      {r.mergedInto ? (
+        <Notice tone="info" className="mt-4" title="Merged duplicate">
+          This record was a duplicate of{' '}
+          <Link
+            to="/desk/items/$id"
+            params={{ id: r.mergedInto }}
+            className="font-semibold underline"
+          >
+            {r.mergedInto}
+          </Link>
+          . Use that record.
+        </Notice>
+      ) : null}
+      {r.possibleDuplicates.length > 0 ? (
+        <Duplicates id={r.id} rows={r.possibleDuplicates} />
+      ) : null}
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="flex flex-col gap-6">
           <Card className="!p-5">
@@ -341,5 +363,52 @@ function VoidDialog({
         error={error}
       />
     </Modal>
+  );
+}
+
+/** CC-04: same category, place and day. Merging marks the other record VOID and points it here. */
+function Duplicates({
+  id,
+  rows,
+}: {
+  id: string;
+  rows: { id: string; title: string; state: string; source: string }[];
+}) {
+  const merge = useMergeFoundItem(id);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <Notice tone="warning" className="mt-4" title="Possible duplicate">
+      <p>Same category, place and day. If it is the same item, merge it into this record.</p>
+      <ul className="mt-2 flex flex-col gap-2">
+        {rows.map((d) => (
+          <li key={d.id} className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/desk/items/$id"
+              params={{ id: d.id }}
+              className="font-mono font-semibold underline"
+            >
+              {d.id}
+            </Link>
+            <span>
+              {d.title} · {d.source === 'finder' ? 'student post' : 'desk record'}
+            </span>
+            <Button
+              variant="secondary"
+              loading={merge.isPending && merge.variables === d.id}
+              onClick={() =>
+                void merge
+                  .mutateAsync(d.id)
+                  .catch((e: unknown) =>
+                    setError(e instanceof Error ? e.message : 'Merging failed; try again.'),
+                  )
+              }
+            >
+              Merge into this record
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {error ? <p className="mt-2 font-semibold">{error}</p> : null}
+    </Notice>
   );
 }

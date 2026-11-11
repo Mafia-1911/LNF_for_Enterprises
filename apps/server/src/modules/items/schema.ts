@@ -124,6 +124,8 @@ export const foundItems = pgTable(
     retentionExtraDays: bigint('retention_extra_days', { mode: 'number' }).notNull().default(0),
     /** When owners of similar reports got the last-chance alert (WF-05, 7 days before expiry). */
     lastChanceSentAt: ts('last_chance_sent_at'),
+    /** CC-04: this record was a duplicate and was merged into another; its ID points there. */
+    mergedInto: text('merged_into'),
     /** University ID or card number, AES-256-GCM (CC-06). Only the last 4 are ever shown. */
     idNumberCiphertext: text('id_number_ciphertext'),
     idNumberLast4: text('id_number_last4'),

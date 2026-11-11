@@ -20,6 +20,7 @@ import {
   LostReportCreatedSchema,
   LostReportListSchema,
   LostReportSchema,
+  MergeFoundItemSchema,
   ReasonSchema,
   OutageSheetRequestSchema,
   OutageSheetSchema,
@@ -58,6 +59,7 @@ import {
   reserveOutageIds,
   listMyFoundPosts,
   logFoundItem,
+  mergeFoundItem,
   postFoundItem,
   receiveFoundItem,
   similarLostReports,
@@ -599,6 +601,35 @@ export function foundItemsRoutes(guards: Guards, deps: FoundItemsDeps) {
       },
     }),
     async (c) => c.json(await importRegister(deps, c.var.ctx, c.req.valid('json')), 201),
+  );
+
+  router.openapi(
+    createRoute({
+      method: 'post',
+      path: '/api/desk/found-items/{id}/merge',
+      tags: ['desk'],
+      summary: 'Merge a duplicate record into another (CC-04); the duplicate becomes VOID',
+      middleware: [guards.requireRole(...DESK)] as const,
+      request: { params: itemParam, body: { required: true, content: json(MergeFoundItemSchema) } },
+      responses: {
+        200: { description: 'The record that was kept.', content: json(DeskFoundItemSchema) },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        403: errorResponses[403],
+        404: errorResponses[404],
+        409: errorResponses[409],
+      },
+    }),
+    async (c) =>
+      c.json(
+        await mergeFoundItem(
+          deps,
+          c.var.ctx,
+          itemId(c.req.valid('param').id),
+          itemId(c.req.valid('json').into),
+        ),
+        200,
+      ),
   );
 
   return router;

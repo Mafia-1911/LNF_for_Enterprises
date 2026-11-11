@@ -630,3 +630,26 @@ export function listFoundItemsSince(tx: Tx, tenantId: string, since: Date) {
     .where(and(eq(foundItems.tenantId, tenantId), gte(foundItems.foundAt, since)))
     .limit(20000);
 }
+
+/** Active records of one category found in a time window (CC-04 duplicate check). */
+export function listFoundInWindow(
+  tx: Tx,
+  tenantId: string,
+  category: string,
+  from: Date,
+  to: Date,
+): Promise<FoundItemRow[]> {
+  return tx.db
+    .select()
+    .from(foundItems)
+    .where(
+      and(
+        eq(foundItems.tenantId, tenantId),
+        eq(foundItems.category, category),
+        inArray(foundItems.state, ['REPORTED_BY_FINDER', 'IN_CUSTODY']),
+        gte(foundItems.foundAt, from),
+        lte(foundItems.foundAt, to),
+      ),
+    )
+    .limit(50);
+}

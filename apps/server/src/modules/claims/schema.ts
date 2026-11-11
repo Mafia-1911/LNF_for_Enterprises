@@ -55,6 +55,11 @@ export const claims = pgTable(
     approvalRequestedBy: uuid('approval_requested_by').references(() => users.id),
     supervisorApprovedBy: uuid('supervisor_approved_by').references(() => users.id),
     supervisorApprovedAt: ts('supervisor_approved_at'),
+    /** Proxy pickup (CC-09): who the owner nominated. The university ID is encrypted. */
+    proxyName: text('proxy_name'),
+    proxyIdCiphertext: text('proxy_id_ciphertext'),
+    proxyKeyVersion: bigint('proxy_key_version', { mode: 'number' }),
+    proxyIdLast4: text('proxy_id_last4'),
     createdAt: ts('created_at').notNull(),
     updatedAt: ts('updated_at').notNull(),
   },

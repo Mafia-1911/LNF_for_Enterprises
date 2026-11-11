@@ -5,6 +5,7 @@ import { randomInt } from 'node:crypto';
 import type {
   Approval,
   Claim,
+  NominateProxy,
   ClaimStart,
   DeskClaim,
   DeskClaimQueue,
@@ -331,6 +332,15 @@ async function toClaimView(
     desk: await deskInfo(tx),
     canReRequest: row.state === 'LAPSED' && !row.reRequested && item.state === 'IN_CUSTODY',
     canDispute: disputable(tx, row, item),
+    proxy:
+      row.proxyName && row.proxyIdLast4
+        ? { name: row.proxyName, idMasked: `••••${row.proxyIdLast4}` }
+        : null,
+    canNominateProxy:
+      row.state === 'APPROVED' &&
+      tx.actor.kind === 'user' &&
+      tx.actor.role === 'student' &&
+      (await readPolicies(tx)).proxyPickup,
   };
 }
 
@@ -1006,4 +1016,53 @@ export async function disputableClaim(
   const item = await foundItemFor(tx, row.foundItemId);
   const kind = item ? disputable(tx, row, item) : null;
   return kind ? { row, kind } : null;
+}
+
+// ── Proxy pickup (CC-09) ──────────────────────────────────────────────────────────────────────────
+
+const proxyAad = (tenantId: string, id: string) => `${tenantId}:claim-proxy:${id}`;
+
+/** The proxy the desk may hand over to, with the last 4 of their ID (pickup screen). */
+export function proxyOf(row: ClaimRow): { name: string; idLast4: string } | null {
+  return row.proxyName && row.proxyIdLast4
+    ? { name: row.proxyName, idLast4: row.proxyIdLast4 }
+    : null;
+}
+
+/** The owner nominates someone, by university ID, to collect an approved item for them. */
+export async function nominateProxy(
+  deps: ClaimsDeps,
+  ctx: RequestCtx,
+  claimId: string,
+  input: NominateProxy,
+): Promise<Claim> {
+  const actor = ctx.actor;
+  if (actor.kind !== 'user') throw new Forbidden();
+  const id = await withTx(ctx, async (tx) => {
+    const row = await findClaim(tx, tx.tenantId, claimId);
+    if (!row || row.claimantId !== actor.userId) throw new NotFound(NOT_FOUND);
+    if (!(await readPolicies(tx)).proxyPickup)
+      throw new ValidationFailed(
+        {},
+        "Proxy pickup isn't allowed at this university; collect the item yourself.",
+      );
+    if (row.state !== 'APPROVED')
+      throw new ValidationFailed({}, 'You can nominate someone once your claim is approved.');
+    const number = input.universityId.toUpperCase();
+    const encrypted = deps.crypto.encrypt(number, proxyAad(tx.tenantId, row.id));
+    await patchClaim(tx, tx.tenantId, row.id, 'APPROVED', {
+      proxyName: input.name,
+      proxyIdCiphertext: encrypted.ciphertext,
+      proxyKeyVersion: encrypted.keyVersion,
+      proxyIdLast4: number.slice(-4),
+    });
+    await recordAuditEvent(tx, {
+      recordType: 'claim',
+      recordId: row.id,
+      event: 'PROXY_NOMINATED',
+      note: input.name,
+    });
+    return row.id;
+  });
+  return getMyClaim(deps, ctx, id);
 }

@@ -76,8 +76,28 @@ export const ClaimSchema = z
     canReRequest: z.boolean(),
     /** WF-06: a closed claim can be disputed within 7 days; a collected one if it was the wrong item. */
     canDispute: z.enum(['second_claimant', 'wrong_handover']).nullable(),
+    /** CC-09: someone the owner nominated to collect for them. */
+    proxy: z.object({ name: z.string(), idMasked: z.string() }).nullable(),
+    canNominateProxy: z.boolean(),
   })
   .meta({ id: 'Claim' });
+
+export const NominateProxySchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, { error: "Type the person's full name." })
+      .max(80, { error: 'Keep the name to 80 characters.' }),
+    universityId: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z0-9-]{4,20}$/, {
+        error: 'Type their university ID number, e.g. 2214450613.',
+      }),
+  })
+  .meta({ id: 'NominateProxy' });
+export type NominateProxy = z.infer<typeof NominateProxySchema>;
 export type Claim = z.infer<typeof ClaimSchema>;
 
 export const ClaimListSchema = z.object({ claims: z.array(ClaimSchema) }).meta({ id: 'ClaimList' });
@@ -187,6 +207,8 @@ export const PickupSchema = z
     needsSupervisor: z.boolean(),
     /** A supervisor's approval for this handover (requested from the desk, CC-08, CC-10). */
     approval: z.enum(['none', 'requested', 'approved']),
+    /** CC-09: a nominated proxy who may collect instead, with the last 4 of their ID. */
+    proxy: z.object({ name: z.string(), idLast4: z.string() }).nullable(),
     pickupEndsAt: z.iso.datetime({ offset: true }),
   })
   .meta({ id: 'Pickup' });
@@ -201,6 +223,8 @@ export const HandOverSchema = z
       .regex(/^[A-Za-z0-9]{4}$/, 'Type the last 4 characters of the ID you checked.'),
     secondCheck: z.enum(SECOND_CHECKS).nullable().default(null),
     signaturePhotoId: z.uuid('Ask the claimant to sign first.'),
+    /** CC-09: the owner, or the proxy they nominated. */
+    collectedBy: z.enum(['owner', 'proxy']).default('owner'),
   })
   .meta({ id: 'HandOver' });
 export type HandOver = z.input<typeof HandOverSchema>;
@@ -216,6 +240,8 @@ export const DispatchSchema = z
     idLast4: z.string(),
     secondCheck: z.string().nullable(),
     officerName: z.string(),
+    /** Set when a nominated proxy collected for the owner (CC-09). */
+    proxyName: z.string().nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     locksAt: z.iso.datetime({ offset: true }),
   })

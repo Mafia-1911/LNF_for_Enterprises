@@ -138,3 +138,16 @@ test('the desk reserves outage labels and starts entering one', async ({ page })
   await expect(page.getByLabel('When was it tagged?')).toBeVisible();
   await expectAccessible(page, 'enter a paper-tagged item');
 });
+
+test('the desk starts a lost report for a walk-in student', async ({ page }) => {
+  await resetServerClock(page.request);
+  await signInAs(page.request, 'nusrat.jahan@northsouth.edu');
+  await page.goto('/desk/more');
+  await page.getByRole('link', { name: /Help a walk-in student/ }).click();
+  await expectAccessible(page, 'walk-in');
+  await page.getByLabel("Student's university email").fill('rafiq.ahmed@northsouth.edu');
+  await page.getByRole('button', { name: 'Start the report' }).click();
+  await expect(page.getByText('Filing for a walk-in student')).toBeVisible();
+  await expect(page.getByText('rafiq.ahmed@northsouth.edu', { exact: false })).toBeVisible();
+  await expectAccessible(page, 'lost report for a walk-in student');
+});
