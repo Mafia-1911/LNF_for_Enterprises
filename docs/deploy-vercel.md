@@ -1,0 +1,66 @@
+# Public demo on Vercel
+
+A showable copy of the portal on Vercel's free (Hobby) plan, with sample data. It is **not** the production setup in the plan (one VM, Cloudflare, real SSO); it exists so people can click through every role.
+
+## How it runs
+
+| Part            | Demo                                                                                     | Production (plan)        |
+| --------------- | ---------------------------------------------------------------------------------------- | ------------------------ |
+| Web app         | Vercel CDN, built with `--mode demo` (dev tools on `/dev/tools`, nothing on the top bar) | Served by the Node app   |
+| API             | One Node function, `apps/server/src/vercel.ts`, region `sin1` (Singapore)                | Long-running Node server |
+| Database        | Neon Postgres, free plan, `sin1`                                                         | Postgres on the VM       |
+| Photos          | Postgres (`STORAGE_DRIVER=database`, table `stored_objects`)                             | S3 bucket (R2)           |
+| Jobs and timers | Drained after requests (`drainJobs`), plus a daily Vercel cron to `/api/cron/tick`       | pg-boss workers and cron |
+| Sign-in         | "Sign in as" a seeded account on `/dev/tools`                                            | SSO, email and SMS codes |
+| Email           | Not sent (`EMAIL_TRANSPORT=memory`); in-app alerts work                                  | SMTP                     |
+| SMS codes       | Shown on `/dev/tools` (dev adapter)                                                      | Provider (`todo#sms`)    |
+| `APP_ENV`       | `demo`: needs https and real secrets, allows the dev adapters                            | `production`             |
+
+Known limits: the SSO button doesn't work (there is no identity provider), and email codes aren't delivered, so use `/dev/tools`. Time travel on `/dev/tools` only moves the clock of the function instance that handles the request. Only the main tenant is reachable; the practice tenant needs a second domain.
+
+## One-time setup
+
+The project `lnf-for-enterprises` (team `nsu-232`) is linked in `.vercel/project.json` (git-ignored).
+
+1. **Create the database.** You accept Neon's terms yourself, so run this in your own terminal:
+
+   ```bash
+   npx vercel@65.14.0 integration add neon --name lnf-demo-db --billing-plan free_v3 \
+     --meta region=sin1 --prefix NEON_ -e production --no-env-pull
+   ```
+
+   It adds `NEON_DATABASE_URL`, `NEON_DATABASE_URL_UNPOOLED` and friends to the project. The `NEON_` prefix keeps them apart from the app's own `DATABASE_URL`.
+
+2. **Roles.** The app connects as `lf_app`, which has only the privileges the migrations grant (ADR-0004). Connect with `NEON_DATABASE_URL_UNPOOLED` (Neon's owner role) and run:
+
+   ```sql
+   CREATE ROLE lf_app LOGIN PASSWORD '<random 32+ characters>';
+   GRANT CONNECT ON DATABASE neondb TO lf_app;
+   ```
+
+3. **Environment variables** (Vercel → Production). Generate the secrets fresh; never reuse `.env.example` values (demo mode refuses them).
+
+   | Name                                                  | Value                                                                                |
+   | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
+   | `NODE_ENV` / `APP_ENV`                                | `production` / `demo`                                                                |
+   | `APP_ORIGIN`                                          | `https://<production domain>` (for example `https://lnf-for-enterprises.vercel.app`) |
+   | `PORT`, `LOG_LEVEL`, `ENABLE_DEV_TOOLS`               | `3000`, `info`, `true`                                                               |
+   | `DATABASE_URL`                                        | the unpooled Neon URL with `lf_app` and its password                                 |
+   | `DATABASE_POOL_MAX`                                   | `3`                                                                                  |
+   | `BETTER_AUTH_SECRET`, `CRON_SECRET`                   | random, 32+ characters each                                                          |
+   | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | `https://sso.invalid/nsu`, `demo`, random (SSO is off in the demo)                   |
+   | `EMAIL_TRANSPORT`, `EMAIL_FROM`                       | `memory`, `NSU Lost & Found <no-reply@example.edu>`                                  |
+   | `SMS_PROVIDER`, `REGISTRAR_PROVIDER`                  | `dev`, `dev`                                                                         |
+   | `STORAGE_DRIVER`, `TRUSTED_CLIENT_IP_HEADER`          | `database`, `x-real-ip`                                                              |
+   | `PRIVATE_DETAILS_KEYS`, `PRIVATE_DETAILS_KEY_VERSION` | `1:<base64 of 32 random bytes>`, `1`                                                 |
+
+4. **Migrate and seed** from your machine with the same values (the seed encrypts private details, so it must use the same key ring). Set `DATABASE_OWNER_URL` to the unpooled owner URL, then run `pnpm db:migrate` and `pnpm db:seed`. The seed adds `APP_ORIGIN`'s host to the main tenant.
+
+## Deploy
+
+```bash
+pnpm build:vercel                         # writes .vercel/output (git-ignored)
+npx vercel@65.14.0 deploy --prebuilt --prod
+```
+
+Then open `https://<production domain>/dev/tools`, pick an account (Rafiq Ahmed is a student, Nusrat Jahan the desk officer, Farhana Islam a supervisor, Tanvir Alam the IT admin) and start from there. `GET /healthz` reports the database, jobs and storage.

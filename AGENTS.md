@@ -15,6 +15,7 @@ pnpm verify --quick    # without e2e, mutation and semgrep
 pnpm test:unit | test:api | test:e2e | test:mutation | lint | typecheck
 pnpm db:generate       # after editing a schema.ts
 pnpm gen:api           # after changing a route or contract (CI fails if the client is stale)
+pnpm build:vercel      # the public demo on Vercel (docs/deploy-vercel.md)
 ```
 
 ## Layout
@@ -35,6 +36,7 @@ apps/server/src
   app.ts                  composition root: middleware + module routes
   services.ts             builds db, boss, auth, adapters; lists every module's jobs
   main.ts                 starts HTTP + workers, graceful shutdown
+  vercel.ts               the demo's serverless entry: drains queued jobs after requests (APP_ENV=demo)
   seed/                   idempotent seed (NSU + practice tenant)
 apps/server/test          API tests (real Postgres, two tenants) and harness
 apps/web/src
