@@ -22,6 +22,8 @@ import {
 } from './repo';
 
 export type PhotosDeps = { storage: Storage };
+/** What a photo can belong to. */
+export type PhotoRecordType = 'lost_report' | 'found_item' | 'claim' | 'dispatch';
 export type { PhotoPurpose, PhotoVisibility };
 
 export const MAX_PHOTOS_PER_RECORD = 5;
@@ -124,7 +126,7 @@ export async function attachPhotos(
   tx: Tx,
   ids: readonly string[],
   record: {
-    recordType: 'lost_report' | 'found_item';
+    recordType: PhotoRecordType;
     recordId: string;
     purpose: PhotoPurpose;
     visibility: PhotoVisibility;
@@ -150,7 +152,7 @@ export async function attachPhotos(
 /** Changes who may see a record's photos, e.g. public once a found item is at the desk. */
 export function setRecordPhotoVisibility(
   tx: Tx,
-  recordType: 'lost_report' | 'found_item',
+  recordType: PhotoRecordType,
   recordId: string,
   purpose: PhotoPurpose,
   visibility: PhotoVisibility,
@@ -163,7 +165,7 @@ export type RecordPhoto = { id: string; purpose: PhotoPurpose; visibility: Photo
 /** Photo ids per record, oldest first. */
 export async function photosForRecords(
   tx: Tx,
-  recordType: 'lost_report' | 'found_item',
+  recordType: PhotoRecordType,
   recordIds: string[],
 ): Promise<Map<string, RecordPhoto[]>> {
   const rows = await listForRecord(tx, tx.tenantId, recordType, recordIds);

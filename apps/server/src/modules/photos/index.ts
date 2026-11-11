@@ -5,6 +5,7 @@ export {
   photosForRecords,
   setRecordPhotoVisibility,
   type PhotoPurpose,
+  type PhotoRecordType,
   type PhotosDeps,
   type PhotoVisibility,
   type RecordPhoto,

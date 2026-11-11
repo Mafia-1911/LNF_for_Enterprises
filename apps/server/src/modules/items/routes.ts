@@ -9,7 +9,6 @@ import {
   DeskFoundItemSchema,
   DeskItemListSchema,
   DeskSearchQuerySchema,
-  DeskTodaySchema,
   FoundItemLabelSchema,
   FoundPostListSchema,
   FoundPostSchema,
@@ -30,12 +29,17 @@ import { CATEGORY_CODES, normaliseId } from '@lf/domain';
 import type { Guards } from '../../platform/http/middleware';
 import { createRoute, createRouter, errorResponses, z } from '../../platform/http/router';
 import { NotFound } from '../../platform/errors';
-import { getLostReport, listMyLostReports, submitLostReport, type ItemsDeps } from './service';
+import {
+  getLostReport,
+  listMyLostReports,
+  renewLostReport,
+  submitLostReport,
+  type ItemsDeps,
+} from './service';
 import {
   binSuggestion,
   correctFoundItem,
   deskSearch,
-  deskToday,
   gallery,
   getDeskItem,
   getFoundPost,
@@ -116,6 +120,31 @@ export function itemsRoutes(guards: Guards, deps: ItemsDeps) {
     const id = normaliseId(c.req.valid('param').id);
     if (!id) throw new NotFound("That isn't a valid report ID; check it and try again.");
     return c.json(await getLostReport(c.var.ctx, id), 200);
+  });
+
+  const renew = createRoute({
+    method: 'post',
+    path: '/api/lost-reports/{id}/renew',
+    tags: ['items'],
+    summary: 'Keep my report open another 30 days (twice at most)',
+    middleware: [guards.requireRole(...REPORTERS)] as const,
+    request: { params: z.object({ id: z.string().min(1).max(32) }) },
+    responses: {
+      200: {
+        description: 'The renewed report.',
+        content: { 'application/json': { schema: LostReportSchema } },
+      },
+      400: errorResponses[400],
+      401: errorResponses[401],
+      403: errorResponses[403],
+      404: errorResponses[404],
+      409: errorResponses[409],
+    },
+  });
+  router.openapi(renew, async (c) => {
+    const id = normaliseId(c.req.valid('param').id);
+    if (!id) throw new NotFound("That isn't a valid report ID; check it and try again.");
+    return c.json(await renewLostReport(c.var.ctx, id), 200);
   });
 
   return router;
@@ -233,25 +262,6 @@ export function foundItemsRoutes(guards: Guards, deps: FoundItemsDeps) {
   );
 
   // ── Desk ──────────────────────────────────────────────────────────────────────────────────
-
-  router.openapi(
-    createRoute({
-      method: 'get',
-      path: '/api/desk/today',
-      tags: ['desk'],
-      summary: 'The desk "Today" list',
-      middleware: [guards.requireRole(...DESK)] as const,
-      responses: {
-        200: {
-          description: 'Items to shelve, claims, pickups and items expiring this week.',
-          content: json(DeskTodaySchema),
-        },
-        401: errorResponses[401],
-        403: errorResponses[403],
-      },
-    }),
-    async (c) => c.json(await deskToday(c.var.ctx), 200),
-  );
 
   router.openapi(
     createRoute({

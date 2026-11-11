@@ -26,6 +26,8 @@ const EXPECTED: {
   { from: null, event: 'SUBMIT', to: 'OPEN', who: OWNERS_AND_DESK },
   { from: 'OPEN', event: 'MATCH_FOUND', to: 'POSSIBLE_MATCH', who: ['system'] },
   { from: 'POSSIBLE_MATCH', event: 'CLAIM', to: 'CLAIMED', who: OWNERS_AND_DESK },
+  { from: 'OPEN', event: 'CLAIM', to: 'CLAIMED', who: OWNERS_AND_DESK },
+  { from: 'CLAIMED', event: 'CLAIM_ENDED', to: 'POSSIBLE_MATCH', who: ['system'] },
   {
     from: 'CLAIMED',
     event: 'RESOLVE',
@@ -49,8 +51,8 @@ const cases = [null, ...LOST_REPORT_STATES].flatMap((from) =>
 );
 
 describe('lost report transitions', () => {
-  it('covers 7 starting points × 7 events × 6 actors', () => {
-    expect(cases).toHaveLength(7 * 7 * 6);
+  it('covers 7 starting points × 8 events × 6 actors', () => {
+    expect(cases).toHaveLength(7 * 8 * 6);
   });
 
   it.each(cases)('$from --$event--> as $who', ({ from, event, who }) => {
@@ -80,6 +82,7 @@ describe('lost report transitions', () => {
 
   it('lists what a student can do with an open report', () => {
     expect(availableEvents(lostReportMachine, 'OPEN', { kind: 'user', role: 'student' })).toEqual([
+      'CLAIM',
       'RENEW',
       'WITHDRAW',
     ]);

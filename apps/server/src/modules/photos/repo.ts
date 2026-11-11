@@ -5,7 +5,7 @@ import { photos } from './schema';
 
 export type PhotoRow = typeof photos.$inferSelect;
 export type PhotoVisibility = 'private' | 'public' | 'staff';
-export type PhotoPurpose = 'item' | 'condition';
+export type PhotoPurpose = 'item' | 'condition' | 'proof' | 'signature';
 
 export async function insertPhoto(tx: Tx, tenantId: string, row: Omit<PhotoRow, 'tenantId'>) {
   await tx.db.insert(photos).values({ ...row, tenantId });

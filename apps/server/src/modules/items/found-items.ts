@@ -6,7 +6,6 @@ import type {
   CreateFoundPostParsed,
   DeskFoundItem,
   DeskItemRow,
-  DeskToday,
   FoundItemLabel,
   FoundPost,
   GalleryItem,
@@ -39,6 +38,7 @@ import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
 import { Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
+import { JOB, type MatchFoundItemData } from '../../platform/jobs/names';
 import type { Registrar } from '../../platform/registrar';
 import { tenantEmailDomain } from '../../platform/tenancy';
 import { bindTransition, getRecordHistory, recordAuditEvent } from '../audit';
@@ -57,6 +57,7 @@ import {
   countItemsPerBin,
   countPings,
   findFoundItem,
+  findFoundItems,
   findLostReports,
   findPrivateDetails,
   insertFoundItem,
@@ -65,6 +66,7 @@ import {
   listCustodyItems,
   listExpiringSoon,
   listFoundItemsByFinder,
+  listLostReportsByOwner,
   listOpenLostReports,
   listPingedReports,
   listPostsDueReminder,
@@ -643,6 +645,7 @@ export async function logFoundItem(
     const lane = await idCardFastLane(deps, tx, row, input.idNumber);
     if (Object.keys(lane).length > 0)
       row = await patchFoundItem(tx, tx.tenantId, newId, 'IN_CUSTODY', lane);
+    await queueMatch(deps, tx, row.id);
     return row.id;
   });
   return { item: await getDeskItem(deps, ctx, id), label: await getLabel(deps, ctx, id) };
@@ -718,6 +721,7 @@ export async function receiveFoundItem(
     const lane = await idCardFastLane(deps, tx, row, input.idNumber);
     if (Object.keys(lane).length > 0)
       row = await patchFoundItem(tx, tx.tenantId, id, 'IN_CUSTODY', lane);
+    await queueMatch(deps, tx, id);
 
     for (const report of await findLostReports(
       tx,
@@ -869,25 +873,6 @@ export async function deskSearch(
       return toRows(tx, rows, (r) =>
         r.state === 'REPORTED_BY_FINDER' ? r.handInDeadline : r.retentionEndsAt,
       );
-    },
-    { readOnly: true },
-  );
-}
-
-/** The desk's "Today" list. Claims and pickups arrive with phase 3. */
-export async function deskToday(ctx: RequestCtx): Promise<DeskToday> {
-  if (!isDesk(ctx)) throw new Forbidden();
-  return withTx(
-    ctx,
-    async (tx) => {
-      const toShelve = await listAwaitingHandIn(tx, tx.tenantId);
-      const expiring = await listExpiringSoon(tx, tx.tenantId, addDaysToInstant(tx.now, 7));
-      return {
-        toShelve: await toRows(tx, toShelve, (r) => r.handInDeadline),
-        claimsToReview: [],
-        pickupsDue: [],
-        expiringThisWeek: await toRows(tx, expiring, (r) => r.retentionEndsAt),
-      };
     },
     { readOnly: true },
   );
@@ -1109,4 +1094,142 @@ export async function runHandInTimer(
 /** How many found items this tenant has (seed: only add samples to an empty tenant). */
 export function countFoundItems(ctx: RequestCtx): Promise<number> {
   return withTx(ctx, (tx) => countAllFoundItems(tx, tx.tenantId), { readOnly: true });
+}
+
+/** Matching runs after commit (job), so a slow scan never holds the desk's transaction. */
+async function queueMatch(deps: FoundItemsDeps, tx: Tx, foundItemId: string) {
+  const data: MatchFoundItemData = { tenantId: tx.tenantId, foundItemId };
+  await deps.boss.send(JOB.matchFoundItem, data, { db: tx.jobs });
+}
+
+// ── For other modules (matching, claims, dispatch): reads inside the caller's transaction ─────
+
+export type { FoundItemRow, LostReportRow };
+export const NEVER_PUBLIC_CATEGORIES: readonly string[] = NEVER_PUBLIC;
+
+export function foundItemFor(tx: Tx, id: string): Promise<FoundItemRow | null> {
+  return findFoundItem(tx, tx.tenantId, id);
+}
+
+export async function lostReportFor(tx: Tx, id: string): Promise<LostReportRow | null> {
+  return (await findLostReports(tx, tx.tenantId, [id]))[0] ?? null;
+}
+
+export function openLostReportsIn(tx: Tx, category: string): Promise<LostReportRow[]> {
+  return listOpenLostReports(tx, tx.tenantId, category, null);
+}
+
+export function custodyItemsIn(tx: Tx, category: string): Promise<FoundItemRow[]> {
+  return listCustodyItems(tx, tx.tenantId, category);
+}
+
+export function foundItemsFor(tx: Tx, ids: string[]): Promise<FoundItemRow[]> {
+  return findFoundItems(tx, tx.tenantId, ids);
+}
+
+/** Ticks and the decrypted note recorded for a found item (desk staff only, FR-06). */
+export async function foundItemPrivateDetails(
+  deps: { crypto: PrivateDetailsCrypto },
+  tx: Tx,
+  id: string,
+): Promise<{ ticks: string[]; note: string | null }> {
+  const details = await findPrivateDetails(tx, tx.tenantId, 'found_item', id);
+  const note =
+    details?.noteCiphertext && details.keyVersion !== null
+      ? deps.crypto.decrypt(
+          { ciphertext: details.noteCiphertext, keyVersion: details.keyVersion },
+          noteAad(tx.tenantId, id),
+        )
+      : null;
+  return { ticks: details?.ticks ?? [], note };
+}
+
+/** FR-07 score of one lost report against one found item. */
+export function scorePair(lost: LostReportRow, found: FoundItemRow) {
+  return scoreMatch(
+    {
+      category: lost.category,
+      colour: lost.colour,
+      brand: lost.brand,
+      buildingCode: lost.buildingCode,
+      floorId: lost.floorId,
+      zoneId: lost.zoneId,
+      words: [lost.shortName, lost.publicDescription].filter(Boolean).join(' '),
+      timeFrom: lost.timeFrom,
+      timeTo: lost.timeTo,
+    },
+    {
+      category: found.category,
+      colour: found.colour,
+      brand: found.brand,
+      buildingCode: found.buildingCode,
+      floorId: found.floorId,
+      zoneId: found.zoneId,
+      words: [found.shortName, found.model, found.publicDescription].filter(Boolean).join(' '),
+      foundAt: found.foundAt,
+    },
+  );
+}
+
+/** Desk list rows (title, bin, photo) for found items. */
+export function deskRowsFor(
+  tx: Tx,
+  rows: FoundItemRow[],
+  due: (r: FoundItemRow) => Date | null,
+): Promise<DeskItemRow[]> {
+  return toRows(tx, rows, due);
+}
+
+export async function toShelveRows(tx: Tx): Promise<DeskItemRow[]> {
+  return toRows(tx, await listAwaitingHandIn(tx, tx.tenantId), (r) => r.handInDeadline);
+}
+
+export async function expiringRows(tx: Tx, until: Date): Promise<DeskItemRow[]> {
+  return toRows(tx, await listExpiringSoon(tx, tx.tenantId, until), (r) => r.retentionEndsAt);
+}
+
+/** Gallery-style cards (public photo only, never for sensitive items), by item id. */
+export async function itemCards(tx: Tx, rows: FoundItemRow[]): Promise<Map<string, GalleryItem>> {
+  const place = await placeNamesFor(tx, rows);
+  const photos = await photosForRecords(
+    tx,
+    'found_item',
+    rows.map((r) => r.id),
+  );
+  const out = new Map<string, GalleryItem>();
+  for (const r of rows) {
+    const sensitive = categoryOf(r.category)?.sensitive ?? false;
+    const photo = (photos.get(r.id) ?? []).find(
+      (p) => p.purpose === 'item' && p.visibility === 'public',
+    );
+    out.set(r.id, {
+      id: r.id,
+      state: r.state as FoundItemState,
+      category: r.category,
+      colour: r.colour,
+      title: itemTitle(r),
+      place: place(r),
+      foundAt: r.foundAt.toISOString(),
+      sensitive,
+      photoId: sensitive ? null : (photo?.id ?? null),
+    });
+  }
+  return out;
+}
+
+/** The first item photo, public or not (desk views). */
+export async function firstPhotoOf(tx: Tx, id: string): Promise<string | null> {
+  const photos = (await photosForRecords(tx, 'found_item', [id])).get(id) ?? [];
+  return photos.find((p) => p.purpose === 'item')?.id ?? null;
+}
+
+/** The owner's open lost reports in one category (to link a claim to). */
+export async function openReportsOf(
+  tx: Tx,
+  ownerId: string,
+  category: string,
+): Promise<LostReportRow[]> {
+  return (await listLostReportsByOwner(tx, tx.tenantId, ownerId)).filter(
+    (r) => r.category === category && (r.state === 'OPEN' || r.state === 'POSSIBLE_MATCH'),
+  );
 }

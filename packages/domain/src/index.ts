@@ -10,3 +10,4 @@ export * from './catalog';
 export * from './custody';
 export * from './matching';
 export * from './private-details';
+export * from './claims';

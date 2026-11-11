@@ -326,3 +326,10 @@ export function idFromScan(value: string): string | null {
   const fromLink = /\/i\/([A-Za-z0-9-]+)\/?$/.exec(trimmed)?.[1];
   return normaliseId(fromLink ?? trimmed);
 }
+
+/** "Likely matches in custody" on a lost report (Figma 39:6605). */
+export const LikelyMatchSchema = GalleryItemSchema.extend({
+  score: z.number(),
+  reasons: z.array(z.string()),
+}).meta({ id: 'LikelyMatch' });
+export type LikelyMatch = z.infer<typeof LikelyMatchSchema>;

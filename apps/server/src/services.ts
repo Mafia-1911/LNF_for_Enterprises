@@ -15,6 +15,7 @@ import { createStorage, type Storage } from './platform/storage';
 import { createTenantResolver, type TenantResolver } from './platform/tenancy';
 import { auditJobs } from './modules/audit/jobs';
 import { createAuthPolicy } from './modules/identity';
+import { claimsJobs } from './modules/claims/jobs';
 import { itemsJobs } from './modules/items/jobs';
 import { matchingJobs } from './modules/matching/jobs';
 import { notificationsJobs } from './modules/notifications/jobs';
@@ -85,10 +86,11 @@ export function createServices(
     tenants: createTenantResolver(db, () => clock.now().getTime()),
     jobs: [
       ...auditJobs({ db, clock, logger }),
-      ...matchingJobs({ db, clock, logger }),
+      ...matchingJobs({ ...itemDeps, db, clock, logger }),
       ...notificationsJobs({ email, logger }),
       ...photosJobs({ storage, db, clock, logger }),
       ...itemsJobs({ ...itemDeps, db, clock, logger }),
+      ...claimsJobs({ ...itemDeps, db, clock, logger }),
     ],
   };
 }

@@ -193,3 +193,18 @@ export async function memberByEmail(
   const m = await findMemberByEmail(tx, tx.tenantId, email.toLowerCase());
   return m && m.role ? { userId: m.userId, name: m.name } : null;
 }
+
+export type MemberProfile = { name: string; title: string | null; role: string };
+
+/** Name, title and role of members of this tenant (claim review, handover). */
+export async function memberProfiles(
+  tx: Tx,
+  userIds: string[],
+): Promise<Map<string, MemberProfile>> {
+  const out = new Map<string, MemberProfile>();
+  for (const id of [...new Set(userIds)]) {
+    const m = await findMember(tx, tx.tenantId, id);
+    if (m) out.set(id, { name: m.name, title: m.title, role: m.role ?? 'none' });
+  }
+  return out;
+}

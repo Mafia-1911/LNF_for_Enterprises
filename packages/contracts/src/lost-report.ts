@@ -82,6 +82,8 @@ export const LostReportSchema = z
     /** True when private details were recorded. Their content is never returned to the owner. */
     hasPrivateDetails: z.boolean(),
     photoIds: z.array(z.string()),
+    /** Renewals used (two allowed, SRS lifecycles.lost_report). */
+    renewCount: z.number(),
   })
   .meta({ id: 'LostReport' });
 export type LostReport = z.infer<typeof LostReportSchema>;

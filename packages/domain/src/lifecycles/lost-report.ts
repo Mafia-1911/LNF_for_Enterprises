@@ -8,6 +8,9 @@
 //   checked by the service (renew_count), not by the table.
 //   WITHDRAW is also allowed from POSSIBLE_MATCH and CLAIMED, because CC-16 says withdrawing cancels
 //   open claims and alerts.
+//   CLAIM is also allowed from OPEN: an owner can claim from the gallery before any match alert.
+//   CLAIM_ENDED (system) returns a CLAIMED report to POSSIBLE_MATCH when its claim is rejected,
+//   withdrawn or lapses, so the owner keeps getting alerts (CC-01, CC-11).
 import { DESK_ROLES, OWNER_ROLES } from '../roles';
 import { defineMachine } from './machine';
 
@@ -25,6 +28,7 @@ export const LOST_REPORT_EVENTS = [
   'SUBMIT',
   'MATCH_FOUND',
   'CLAIM',
+  'CLAIM_ENDED',
   'RESOLVE',
   'EXPIRE',
   'RENEW',
@@ -48,6 +52,8 @@ export const lostReportMachine = defineMachine<LostReportState, LostReportEvent>
     { from: null, event: 'SUBMIT', to: 'OPEN', by: ownersAndDesk },
     { from: 'OPEN', event: 'MATCH_FOUND', to: 'POSSIBLE_MATCH', by: { system: true } },
     { from: 'POSSIBLE_MATCH', event: 'CLAIM', to: 'CLAIMED', by: ownersAndDesk },
+    { from: 'OPEN', event: 'CLAIM', to: 'CLAIMED', by: ownersAndDesk },
+    { from: 'CLAIMED', event: 'CLAIM_ENDED', to: 'POSSIBLE_MATCH', by: { system: true } },
     { from: 'CLAIMED', event: 'RESOLVE', to: 'RESOLVED', by: { roles: DESK_ROLES, system: true } },
     { from: 'OPEN', event: 'EXPIRE', to: 'EXPIRED', by: { system: true } },
     { from: 'OPEN', event: 'RENEW', to: 'OPEN', by: ownersAndDesk },

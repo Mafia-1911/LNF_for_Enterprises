@@ -19,10 +19,10 @@ export const photos = pgTable(
       .references(() => users.id),
     /** unattached | attached */
     status: text('status').notNull(),
-    /** lost_report | found_item, once attached. */
+    /** lost_report | found_item | claim | dispatch, once attached. */
     recordType: text('record_type'),
     recordId: text('record_id'),
-    /** item (shown with the record) | condition (damage at intake, staff only, CC-13). */
+    /** item | condition (damage at intake, CC-13) | proof (claim receipt) | signature (handover). */
     purpose: text('purpose').notNull(),
     /** private (uploader + desk) | public (signed-in students and staff) | staff (desk only). */
     visibility: text('visibility').notNull(),

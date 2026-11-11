@@ -53,7 +53,7 @@ test('a student posts a found item and the desk receives it by its ID', async ({
   // It shows in My activity under Found.
   await page.goto('/activity');
   await page.getByRole('tab', { name: /^Found/ }).click();
-  await expect(page.getByRole('link', { name: new RegExp(name) })).toBeVisible();
+  await expect(page.getByRole('link', { name })).toBeVisible();
   await expectAccessible(page, 'my activity');
 
   // The desk types the ID (any case, no dashes), checks the details and shelves it.
@@ -77,7 +77,7 @@ test('a student posts a found item and the desk receives it by its ID', async ({
   await page.getByRole('button', { name: 'Save and print label' }).click();
 
   await expect(page.getByRole('heading', { name: 'Saved' })).toBeVisible();
-  await expect(page.getByText(new RegExp(`Saved as ${id}`))).toBeVisible();
+  await expect(page.getByText(`Saved as ${id}.`, { exact: false })).toBeVisible();
   await expectAccessible(page, 'label');
   const state = await query<{ state: string }>(
     `select f.state from found_items f join tenants t on t.id = f.tenant_id where t.slug = 'nsu' and f.id = $1`,
@@ -124,7 +124,7 @@ test('the desk logs a walk-in item in four steps, finds it and corrects it with 
 
   await page.goto('/desk/find');
   await page.getByLabel('ID or words').fill(id.toLowerCase());
-  await page.getByRole('link', { name: new RegExp(name) }).click();
+  await page.getByRole('link', { name }).click();
   await expect(page.getByRole('heading', { name })).toBeVisible();
   await expectAccessible(page, 'item record');
   await page.getByRole('button', { name: 'Correct' }).click();

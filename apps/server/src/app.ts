@@ -31,6 +31,9 @@ import { catalogRoutes } from './modules/catalog/routes';
 import { createSessionUserResolver } from './modules/identity';
 import { identityRoutes } from './modules/identity/routes';
 import { foundItemsRoutes, itemsRoutes } from './modules/items/routes';
+import { claimsRoutes } from './modules/claims/routes';
+import { dispatchRoutes } from './modules/dispatch/routes';
+import { matchingRoutes } from './modules/matching/routes';
 import { notificationsRoutes } from './modules/notifications/routes';
 import { photosRoutes } from './modules/photos/routes';
 import type { Services } from './services';
@@ -142,6 +145,9 @@ export function createApp(services: Services, options: AppOptions) {
   app.route('/', foundItemsRoutes(guards, itemDeps));
   app.route('/', photosRoutes(guards, { storage: services.storage }));
   app.route('/', notificationsRoutes(guards));
+  app.route('/', matchingRoutes(guards));
+  app.route('/', claimsRoutes(guards, itemDeps));
+  app.route('/', dispatchRoutes(guards, itemDeps));
   app.route('/', auditRoutes(guards));
   if (config.devTools && services.devClock)
     app.route('/', devRoutes(guards, { clock: services.devClock, sms: services.sms }));

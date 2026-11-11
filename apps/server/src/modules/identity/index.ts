@@ -5,6 +5,8 @@ export {
   getMe,
   memberByEmail,
   memberNames,
+  memberProfiles,
+  type MemberProfile,
   seedMember,
   type IdentityDeps,
   type Me,

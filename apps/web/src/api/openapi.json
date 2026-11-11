@@ -646,6 +646,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "renewCount": {
+            "type": "number"
           }
         },
         "required": [
@@ -662,7 +665,8 @@
           "expiresAt",
           "createdAt",
           "hasPrivateDetails",
-          "photoIds"
+          "photoIds",
+          "renewCount"
         ]
       },
       "LostReportState": {
@@ -1597,90 +1601,6 @@
           "photoId"
         ]
       },
-      "DeskToday": {
-        "type": "object",
-        "properties": {
-          "toShelve": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DeskItemRow"
-            }
-          },
-          "claimsToReview": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DeskItemRow"
-            }
-          },
-          "pickupsDue": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DeskItemRow"
-            }
-          },
-          "expiringThisWeek": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DeskItemRow"
-            }
-          }
-        },
-        "required": [
-          "toShelve",
-          "claimsToReview",
-          "pickupsDue",
-          "expiringThisWeek"
-        ]
-      },
-      "DeskItemRow": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/FoundItemState"
-          },
-          "category": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "binCode": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "photoId": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "sensitive": {
-            "type": "boolean"
-          },
-          "due": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "state",
-          "category",
-          "title",
-          "binCode",
-          "photoId",
-          "sensitive",
-          "due"
-        ]
-      },
       "BinSuggestion": {
         "type": "object",
         "properties": {
@@ -2192,6 +2112,55 @@
           "items"
         ]
       },
+      "DeskItemRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "binCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photoId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "due": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "title",
+          "binCode",
+          "photoId",
+          "sensitive",
+          "due"
+        ]
+      },
       "ReceiveFoundItem": {
         "type": "object",
         "properties": {
@@ -2510,6 +2479,863 @@
             "maxItems": 100
           }
         }
+      },
+      "LikelyMatch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FoundItemState"
+          },
+          "category": {
+            "type": "string"
+          },
+          "colour": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "place": {
+            "type": "object",
+            "properties": {
+              "buildingCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "buildingName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "zoneName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "buildingCode",
+              "buildingName",
+              "floorName",
+              "zoneName"
+            ]
+          },
+          "foundAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sensitive": {
+            "type": "boolean"
+          },
+          "photoId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score": {
+            "type": "number"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "category",
+          "colour",
+          "title",
+          "place",
+          "foundAt",
+          "sensitive",
+          "photoId",
+          "score",
+          "reasons"
+        ]
+      },
+      "ClaimStart": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/GalleryItem"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimQuestion"
+            }
+          },
+          "myClaim": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "state": {
+                "$ref": "#/components/schemas/ClaimState"
+              }
+            },
+            "required": [
+              "id",
+              "state"
+            ]
+          },
+          "myLostReports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "title"
+              ]
+            }
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "item",
+          "questions",
+          "myClaim",
+          "myLostReports",
+          "blockedReason"
+        ]
+      },
+      "ClaimQuestion": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "question"
+        ]
+      },
+      "ClaimState": {
+        "type": "string",
+        "enum": [
+          "SUBMITTED",
+          "MORE_INFO_REQUESTED",
+          "APPROVED",
+          "REJECTED",
+          "COLLECTED",
+          "LAPSED",
+          "WITHDRAWN",
+          "CANCELLED"
+        ]
+      },
+      "Claim": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ClaimState"
+          },
+          "item": {
+            "$ref": "#/components/schemas/GalleryItem"
+          },
+          "lostReportId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "answer": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "question",
+                "answer"
+              ]
+            }
+          },
+          "moreInfoRequest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decisionNote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pickupCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pickupEndsAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reviewDueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "desk": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "hours": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "location",
+              "hours"
+            ]
+          },
+          "canReRequest": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "item",
+          "lostReportId",
+          "answers",
+          "moreInfoRequest",
+          "decisionNote",
+          "pickupCode",
+          "pickupEndsAt",
+          "reviewDueAt",
+          "createdAt",
+          "desk",
+          "canReRequest"
+        ]
+      },
+      "SubmitClaim": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                "answer": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 300
+                }
+              },
+              "required": [
+                "key",
+                "answer"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "lostReportId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 32,
+            "default": null
+          },
+          "proofPhotoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 3,
+            "default": []
+          }
+        },
+        "required": [
+          "answers"
+        ]
+      },
+      "ClaimList": {
+        "type": "object",
+        "properties": {
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Claim"
+            }
+          }
+        },
+        "required": [
+          "claims"
+        ]
+      },
+      "ProvideMore": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "answer"
+        ]
+      },
+      "DeskToday": {
+        "type": "object",
+        "properties": {
+          "toShelve": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          },
+          "claimsToReview": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          },
+          "pickupsDue": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          },
+          "expiringThisWeek": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskItemRow"
+            }
+          }
+        },
+        "required": [
+          "toShelve",
+          "claimsToReview",
+          "pickupsDue",
+          "expiringThisWeek"
+        ]
+      },
+      "DeskClaimQueue": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "$ref": "#/components/schemas/DeskItemRow"
+                },
+                "claims": {
+                  "type": "number"
+                },
+                "dueAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "item",
+                "claims",
+                "dueAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "DeskItemClaims": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "binCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "photoId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "state",
+              "category",
+              "binCode",
+              "photoId"
+            ]
+          },
+          "recorded": {
+            "type": "object",
+            "properties": {
+              "ticks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "label"
+                  ]
+                }
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "ticks",
+              "note"
+            ]
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeskClaim"
+            }
+          }
+        },
+        "required": [
+          "item",
+          "recorded",
+          "claims"
+        ]
+      },
+      "DeskClaim": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ClaimState"
+          },
+          "claimant": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "title",
+              "role"
+            ]
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lostReportId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "failedVerifications": {
+            "type": "number"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "question": {
+                  "type": "string"
+                },
+                "answer": {
+                  "type": "string"
+                },
+                "verdict": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "pass",
+                    "fail",
+                    null
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "question",
+                "answer",
+                "verdict"
+              ]
+            }
+          },
+          "moreInfoRequest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decisionNote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "proofPhotoIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "claimant",
+          "submittedAt",
+          "dueAt",
+          "lostReportId",
+          "failedVerifications",
+          "answers",
+          "moreInfoRequest",
+          "decisionNote",
+          "proofPhotoIds"
+        ]
+      },
+      "ReviewClaim": {
+        "type": "object",
+        "properties": {
+          "verdicts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            }
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "reject",
+              "more"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "default": null
+          }
+        },
+        "required": [
+          "verdicts",
+          "decision"
+        ]
+      },
+      "Pickup": {
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "item": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "binCode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "photoId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "category",
+              "binCode",
+              "photoId"
+            ]
+          },
+          "claimant": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "title",
+              "role"
+            ]
+          },
+          "highValue": {
+            "type": "boolean"
+          },
+          "needsSupervisor": {
+            "type": "boolean"
+          },
+          "pickupEndsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "claimId",
+          "item",
+          "claimant",
+          "highValue",
+          "needsSupervisor",
+          "pickupEndsAt"
+        ]
+      },
+      "PickupLookup": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "Dispatch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "foundItemId": {
+            "type": "string"
+          },
+          "itemTitle": {
+            "type": "string"
+          },
+          "claimId": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": "string"
+          },
+          "idLast4": {
+            "type": "string"
+          },
+          "secondCheck": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "officerName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "locksAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "foundItemId",
+          "itemTitle",
+          "claimId",
+          "recipientName",
+          "idLast4",
+          "secondCheck",
+          "officerName",
+          "createdAt",
+          "locksAt"
+        ]
+      },
+      "HandOver": {
+        "type": "object",
+        "properties": {
+          "photoMatches": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "idLast4": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9]{4}$"
+          },
+          "secondCheck": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "device_unlocked",
+              "serial_matched",
+              "cash_recounted",
+              "supervisor_approved",
+              null
+            ],
+            "default": null
+          },
+          "signaturePhotoId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "photoMatches",
+          "idLast4",
+          "signaturePhotoId"
+        ]
       },
       "AuditEntry": {
         "type": "object",
@@ -2924,6 +3750,88 @@
         }
       }
     },
+    "/api/lost-reports/{id}/renew": {
+      "post": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Keep my report open another 30 days (twice at most)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The renewed report.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LostReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/found-items": {
       "post": {
         "tags": [
@@ -3241,46 +4149,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not signed in.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Signed in, but not allowed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/desk/today": {
-      "get": {
-        "tags": [
-          "desk"
-        ],
-        "summary": "The desk \"Today\" list",
-        "responses": {
-          "200": {
-            "description": "Items to shelve, claims, pickups and items expiring this week.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeskToday"
                 }
               }
             }
@@ -4241,6 +5109,1192 @@
           },
           "403": {
             "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lost-reports/{id}/matches": {
+      "get": {
+        "tags": [
+          "matching"
+        ],
+        "summary": "Likely matches in custody for my lost report",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Items at the desk, best match first, with plain reasons.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LikelyMatch"
+                      }
+                    }
+                  },
+                  "required": [
+                    "matches"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/found-items/{id}/claim": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "\"This is mine\": the questions to answer for an item",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item, questions and my open reports.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimStart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/found-items/{id}/claims": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Claim an item by answering its questions (WF-04, FR-11)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitClaim"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The claim, waiting for review.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "My claims, newest first",
+        "responses": {
+          "200": {
+            "description": "My claims.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "One of my claims (with the pickup code once approved)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The claim.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/withdraw": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Withdraw my claim",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The claim, now withdrawn.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/more": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Answer what the desk asked for",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvideMore"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The claim, back in review.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{id}/re-request": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Re-request a lapsed pickup (once, CC-11)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The claim, back in review.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Claim"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lost-reports/{id}/withdraw": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "\"I found it myself\": close my report and cancel its claims (US-12, CC-16)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Done.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/today": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "The desk \"Today\" list",
+        "responses": {
+          "200": {
+            "description": "To shelve, claims to review, pickups due, expiring.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskToday"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/claims": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "\"Check claims\": items with claims waiting",
+        "responses": {
+          "200": {
+            "description": "Items and how many claims, soonest deadline first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskClaimQueue"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/found-items/{id}/claims": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Every claim on one item, next to what was recorded at intake (FR-12)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Side by side.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskItemClaims"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/claims/{id}/review": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Approve, reject or ask for more (WF-04 step 3)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewClaim"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The item and its claims after the decision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskItemClaims"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/pickups/lookup": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Find the approved claim for a 6-digit pickup code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PickupLookup"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The item, its bin and the claimant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pickup"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/pickups/{id}/hand-over": {
+      "post": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "Record the handover: identity checked, signed (DSP record)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandOver"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The DSP record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with the current state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk/dispatches/{id}": {
+      "get": {
+        "tags": [
+          "desk"
+        ],
+        "summary": "A handover (DSP) record",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has invalid fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in, but not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found.",
             "content": {
               "application/json": {
                 "schema": {

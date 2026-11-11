@@ -490,3 +490,15 @@ export async function countAllFoundItems(tx: Tx, tenantId: string): Promise<numb
     .where(eq(foundItems.tenantId, tenantId));
   return row?.n ?? 0;
 }
+
+export async function findFoundItems(
+  tx: Tx,
+  tenantId: string,
+  ids: string[],
+): Promise<FoundItemRow[]> {
+  if (ids.length === 0) return [];
+  return tx.db
+    .select()
+    .from(foundItems)
+    .where(and(eq(foundItems.tenantId, tenantId), inArray(foundItems.id, ids)));
+}

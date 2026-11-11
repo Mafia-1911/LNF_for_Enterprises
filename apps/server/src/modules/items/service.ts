@@ -7,13 +7,14 @@ import type { CreateLostReportParsed, LostReport, LostReportCreated } from '@lf/
 import {
   addDaysToInstant,
   DESK_ROLES,
+  LOST_REPORT_MAX_RENEWALS,
   LOST_REPORT_OPEN_DAYS,
   lostReportMachine,
   type LostReportState,
 } from '@lf/domain';
 import { withTx } from '../../platform/db/tx';
 import type { RequestCtx, Tx } from '../../platform/db/types';
-import { Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
+import { Conflict, Forbidden, NotFound, ValidationFailed } from '../../platform/errors';
 import { nextId } from '../../platform/ids';
 import { bindTransition } from '../audit';
 import { resolvePlaceNames, resolveReportPlace } from '../catalog';
@@ -102,6 +103,7 @@ function toView(
     createdAt: row.createdAt.toISOString(),
     hasPrivateDetails: withPrivateDetails,
     photoIds,
+    renewCount: row.renewCount,
   };
 }
 
@@ -218,4 +220,36 @@ export async function listMyLostReports(ctx: RequestCtx): Promise<LostReport[]> 
     },
     { readOnly: true },
   );
+}
+
+/** One-tap renew (SRS: 30 days, up to twice). Works on an open or an expired report. */
+export async function renewLostReport(ctx: RequestCtx, id: string): Promise<LostReport> {
+  const actor = ctx.actor;
+  if (actor.kind !== 'user') throw new Forbidden();
+  return withTx(ctx, async (tx) => {
+    const row = await findLostReport(tx, tx.tenantId, id);
+    if (!row || !canRead(ctx, row))
+      throw new NotFound("We couldn't find that report; check the ID and try again.");
+    if (row.renewCount >= LOST_REPORT_MAX_RENEWALS)
+      throw new Conflict(
+        'This report was already renewed twice; report it again if you still need it.',
+      );
+    const renewed = await lostReportTransition(
+      tx,
+      { id, state: row.state as LostReportState },
+      'RENEW',
+      {
+        patch: {
+          expiresAt: addDaysToInstant(tx.now, LOST_REPORT_OPEN_DAYS),
+          renewCount: row.renewCount + 1,
+        },
+      },
+    );
+    return viewOf(tx, renewed);
+  });
+}
+
+/** Reads for other modules (claims, matching), inside their transaction. */
+export function lostReportView(tx: Tx, row: LostReportRow): Promise<LostReport> {
+  return viewOf(tx, row);
 }
