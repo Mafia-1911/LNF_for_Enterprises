@@ -21,7 +21,6 @@ import { AlertsPage } from './routes/student/AlertsPage';
 import { GalleryPage } from './routes/student/GalleryPage';
 import { DeskHome } from './features/desk/DeskHome';
 import { HomePage } from './routes/student/HomePage';
-import { StaffHome } from './routes/staff/StaffHome';
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -327,12 +326,42 @@ const deskLabelRoute = createRoute({
 const supervisorRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/supervisor',
-  staticData: { title: 'Overview' },
   beforeLoad: only('supervisor'),
-  component: function Supervisor() {
-    const { me } = appRoute.useRouteContext();
-    return <StaffHome me={me} title="Supervisor overview" />;
-  },
+  component: lazyRouteComponent(
+    () => import('./features/supervisor/SupervisorLayout'),
+    'SupervisorLayout',
+  ),
+});
+
+const supervisorOverviewRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/',
+  staticData: { title: 'Overview' },
+  component: lazyRouteComponent(() => import('./features/supervisor/OverviewPage'), 'OverviewPage'),
+});
+
+const supervisorRetentionRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/retention',
+  staticData: { title: 'Retention & disposal' },
+  component: lazyRouteComponent(
+    () => import('./features/supervisor/RetentionPage'),
+    'RetentionPage',
+  ),
+});
+
+const supervisorPoliciesRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/policies',
+  staticData: { title: 'Policies' },
+  component: lazyRouteComponent(() => import('./features/supervisor/PoliciesPage'), 'PoliciesPage'),
+});
+
+const supervisorStaffRoute = createRoute({
+  getParentRoute: () => supervisorRoute,
+  path: '/staff',
+  staticData: { title: 'Staff' },
+  component: lazyRouteComponent(() => import('./features/supervisor/StaffPage'), 'StaffPage'),
 });
 
 const adminRoute = createRoute({
@@ -392,7 +421,12 @@ const routeTree = rootRoute.addChildren([
     deskClaimReviewRoute,
     deskHandOverRoute,
     deskHandedOverRoute,
-    supervisorRoute,
+    supervisorRoute.addChildren([
+      supervisorOverviewRoute,
+      supervisorRetentionRoute,
+      supervisorPoliciesRoute,
+      supervisorStaffRoute,
+    ]),
     adminRoute,
   ]),
   ...devRoutes,
