@@ -139,3 +139,102 @@ describe('topMatches', () => {
     expect(topMatches([1], () => ({ score: 0, reasons: [] }))).toEqual([]);
   });
 });
+
+describe('scoreMatch edge cases', () => {
+  it('needs both sides to have a value, compared without case or spaces', () => {
+    expect(scoreMatch({ ...lost, colour: null }, found)?.reasons).not.toContain('same_colour');
+    expect(scoreMatch(lost, { ...found, colour: null })?.reasons).not.toContain('same_colour');
+    expect(
+      scoreMatch({ ...lost, brand: ' HERSCHEL' }, { ...found, brand: 'herschel' })?.reasons,
+    ).toContain('same_brand');
+    expect(
+      scoreMatch({ ...lost, brand: 'Herschel' }, { ...found, brand: 'JanSport' })?.reasons,
+    ).not.toContain('same_brand');
+  });
+
+  it('checks floor and zone separately inside the same building', () => {
+    const otherFloor = scoreMatch(lost, { ...found, floorId: 'f-3', zoneId: 'z-other' });
+    expect(otherFloor?.reasons).toContain('same_building');
+    expect(otherFloor?.reasons).not.toContain('same_floor');
+    expect(otherFloor?.reasons).not.toContain('same_zone');
+    const otherZone = scoreMatch(lost, { ...found, zoneId: 'z-other' });
+    expect(otherZone?.reasons).toContain('same_floor');
+    expect(otherZone?.reasons).not.toContain('same_zone');
+  });
+
+  it('uses exact time boundaries: 2 h early slack, 3 days soon, 14 days within two weeks', () => {
+    expect(scoreMatch(lost, { ...found, foundAt: hours(-2) })).not.toBeNull();
+    expect(scoreMatch(lost, { ...found, foundAt: new Date(hours(-2).getTime() - 1) })).toBeNull();
+    expect(scoreMatch(lost, { ...found, foundAt: hours(3 + 72) })?.reasons).toContain(
+      'found_soon_after',
+    );
+    expect(scoreMatch(lost, { ...found, foundAt: hours(3 + 72 + 1) })?.reasons).toContain(
+      'found_within_two_weeks',
+    );
+    expect(scoreMatch(lost, { ...found, foundAt: hours(3 + 24 * 14) })?.reasons).toContain(
+      'found_within_two_weeks',
+    );
+  });
+
+  it('only counts shared words when a word really appears on both sides', () => {
+    expect(
+      scoreMatch({ ...lost, words: 'Grey laptop sleeve' }, { ...found, words: 'Rucksack, zipped' })
+        ?.reasons,
+    ).not.toContain('shared_words');
+    expect(scoreMatch({ ...lost, words: null }, found)?.reasons).not.toContain('shared_words');
+  });
+
+  it('gives each reason its points', () => {
+    const base = {
+      colour: null,
+      brand: null,
+      buildingCode: null,
+      floorId: null,
+      zoneId: null,
+      words: null,
+    };
+    const late = hours(3 + 24 * 30);
+    const score = (l: Partial<LostSide>, f: Partial<FoundSide>) =>
+      scoreMatch({ ...lost, ...base, ...l }, { ...found, ...base, foundAt: late, ...f })?.score;
+    expect(score({}, {})).toBe(0);
+    expect(score({ colour: 'black' }, { colour: 'black' })).toBe(3);
+    expect(score({ brand: 'X' }, { brand: 'x' })).toBe(3);
+    expect(score({ buildingCode: 'LIB' }, { buildingCode: 'LIB' })).toBe(2);
+    expect(
+      score({ buildingCode: 'LIB', floorId: 'f' }, { buildingCode: 'LIB', floorId: 'f' }),
+    ).toBe(3);
+    expect(score({ buildingCode: 'LIB', zoneId: 'z' }, { buildingCode: 'LIB', zoneId: 'z' })).toBe(
+      4,
+    );
+    expect(score({ words: 'yellow logo' }, { words: 'logo' })).toBe(2);
+    expect(score({}, { foundAt: hours(4) })).toBe(2);
+    expect(score({}, { foundAt: hours(3 + 24 * 7) })).toBe(1);
+  });
+});
+
+describe('labels and words', () => {
+  it('has a plain label for every reason', () => {
+    const labels = Object.values(MATCH_REASON_LABEL);
+    expect(labels.every((l) => /^[A-Z][a-z ]+$/.test(l))).toBe(true);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(MATCH_REASON_LABEL.same_zone).toBe('Same room or zone');
+  });
+
+  it('drops filler words and colour names but keeps the rest', () => {
+    expect([
+      ...significantWords('The bag and the strap with a logo for the gym from its owner'),
+    ]).toEqual(['bag', 'strap', 'logo', 'gym', 'owner']);
+    expect([...significantWords('black white grey gray blue red green bottle')]).toEqual([
+      'bottle',
+    ]);
+    expect([...significantWords('ox,,  pen!!lid')]).toEqual(['pen', 'lid']);
+  });
+
+  it('keeps a candidate that scored exactly 1 and orders ties by input order', () => {
+    expect(topMatches(['a'], () => ({ score: 1, reasons: [] })).map((r) => r.candidate)).toEqual([
+      'a',
+    ]);
+    const ties = topMatches(['a', 'b', 'c', 'd'], () => ({ score: 2, reasons: [] }));
+    expect(ties.map((r) => r.candidate)).toEqual(['a', 'b', 'c', 'd']);
+  });
+});

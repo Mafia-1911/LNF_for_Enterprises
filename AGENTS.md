@@ -48,7 +48,9 @@ packages/contracts        Zod schemas shared by server routes, web forms and Ope
 packages/ui               tokens (8 colour modes) + base components
 ```
 
-Current modules: `identity` (roles, sign-in policy, `/api/me`, member lookups), `catalog` (places, desks, bins, categories, colours, policies such as appearance), `audit` (insert-only events, `bindTransition`, checkpoints), `items` (lost reports, found items, private details, finder pings, gallery and desk search, labels, the hand-in timer), `photos` (upload pipeline, permission-checked viewing, cleanup), `notifications` (in-app alerts + emails queued in the transaction), `matching` (match runs; real alerts in Phase 3). The FR-07 match score lives in `packages/domain/src/matching.ts`.
+Current modules: `identity` (roles, sign-in policy, `/api/me`, member lookups), `catalog` (places, desks, bins, categories, colours, policies such as appearance), `audit` (insert-only events, `bindTransition`, checkpoints), `items` (lost reports, found items, private details, finder pings, gallery and desk search, labels, the hand-in timer), `photos` (upload pipeline, permission-checked viewing, cleanup), `notifications` (in-app alerts + emails queued in the transaction), `matching` (scored pairs, one alert per owner per pair, likely matches), `claims` (questions, answers and pickup codes encrypted, side-by-side review, the desk Today list, the pickup timer), `dispatch` (pickup-code lookup, handover checks, DSP records). Dependencies point one way: `dispatch` → `claims` → `matching`/`items` → `photos`/`notifications`/`catalog`/`identity`. The FR-07 score is in `packages/domain/src/matching.ts`; claim questions and deadlines in `packages/domain/src/claims.ts`.
+
+When a module must move another module's record as a side effect (e.g. a claim moves the found item to CLAIM_PENDING), call that module's exported transition with `{ ...tx, actor: { kind: 'system', job: '<module>' } }` so the audit shows the system did it.
 
 ## Architecture rules (enforced)
 

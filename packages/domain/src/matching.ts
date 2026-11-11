@@ -57,22 +57,15 @@ const EARLY_SLACK_MS = 2 * HOUR;
 const SOON_AFTER_MS = 3 * DAY;
 const TWO_WEEKS_MS = 14 * DAY;
 
+/** Words of 3+ letters that say nothing about the item (shorter words are dropped anyway). */
 const STOP_WORDS = new Set([
-  'a',
-  'an',
   'and',
   'the',
   'with',
-  'of',
-  'in',
-  'on',
-  'my',
-  'it',
-  'is',
-  'to',
   'for',
-  'at',
   'from',
+  'its',
+  // Colour names: colour is scored on its own.
   'black',
   'white',
   'grey',

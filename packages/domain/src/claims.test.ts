@@ -93,3 +93,28 @@ describe('deadlines in working days', () => {
     );
   });
 });
+
+describe('question wording', () => {
+  it('words every question plainly, ending in a full stop or question mark', () => {
+    for (const q of Object.values(CLAIM_QUESTION)) expect(q).toMatch(/^[A-Z].{8,}[.?]$/);
+    expect(claimQuestions([]).map((q) => q.question)).toEqual([
+      'Describe something about it that is not in the public description.',
+      'Where and when did you last have it?',
+    ]);
+    expect(CLAIM_QUESTION['contents_listed']).toBe('What was inside?');
+    expect(CLAIM_QUESTION['amount_counted']).toBe('How much money was there, exactly?');
+    expect(CLAIM_QUESTION['number_recorded']).toBe(
+      'What are the last 4 digits of the number on it?',
+    );
+    expect(CLAIM_QUESTION['lock_screen']).toBe('What is on the lock screen?');
+    expect(CLAIM_QUESTION['name_tag']).toBe('Describe the keychain or name tag.');
+    expect(CLAIM_QUESTION['marks']).toBe('Describe any scratches, dents or marks.');
+    expect(CLAIM_QUESTION['cards_inside']).toBe('Which cards were inside?');
+    expect(CLAIM_QUESTION['name_on_it']).toBe('Whose name is printed on it?');
+    expect(CLAIM_QUESTION['key_count']).toBe(
+      'How many keys are there, and what else is on the ring?',
+    );
+    expect(CLAIM_QUESTION['name_inside']).toBe('What is written inside?');
+    expect(CLAIM_QUESTION['size_label']).toBe('What size or brand label does it have?');
+  });
+});
