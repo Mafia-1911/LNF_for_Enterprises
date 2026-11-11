@@ -28,6 +28,8 @@ describe('GET /api/tenant (public)', () => {
       location: 'Admin Building, Ground floor, Security Room',
       hours: 'Sun–Thu, 9:00 – 17:00',
     });
+    // Outside the public demo every sign-in method is on, and email codes are university-only.
+    expect(res.body.signIn).toEqual({ sso: true, phone: true, emailCodes: true, anyEmail: false });
   });
 
   it('serves the other university on its own address', async () => {

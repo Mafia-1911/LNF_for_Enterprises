@@ -6909,6 +6909,12 @@ export interface components {
         location: string;
         name: string;
       } | null;
+      signIn: {
+        anyEmail: boolean;
+        emailCodes: boolean;
+        phone: boolean;
+        sso: boolean;
+      };
       tenant: components['schemas']['TenantSummary'];
     };
     TenantSummary: {

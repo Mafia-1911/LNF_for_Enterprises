@@ -1,12 +1,15 @@
 // GET /api/tenant (public), GET /api/catalog (signed in), PUT /api/admin/appearance (IT admin).
-import { AppearanceSchema, CatalogSchema, TenantInfoSchema } from '@lf/contracts';
+import { AppearanceSchema, CatalogSchema, TenantInfoSchema, type TenantInfo } from '@lf/contracts';
 import type { Clock } from '../../platform/clock';
 import type { DatabaseHandle, RequestCtx } from '../../platform/db/types';
 import type { Guards } from '../../platform/http/middleware';
 import { createRoute, createRouter, errorResponses } from '../../platform/http/router';
 import { getCatalog, getTenantInfo, setAppearance } from './service';
 
-export function catalogRoutes(guards: Guards, deps: { clock: Clock; db: DatabaseHandle }) {
+export function catalogRoutes(
+  guards: Guards,
+  deps: { clock: Clock; db: DatabaseHandle; signIn: TenantInfo['signIn'] },
+) {
   const router = createRouter();
 
   const tenantInfo = createRoute({
@@ -30,7 +33,7 @@ export function catalogRoutes(guards: Guards, deps: { clock: Clock; db: Database
       clock: deps.clock,
       db: deps.db,
     };
-    return c.json(await getTenantInfo(ctx, c.var.tenant), 200);
+    return c.json(await getTenantInfo(ctx, c.var.tenant, deps.signIn), 200);
   });
 
   const catalog = createRoute({
@@ -71,7 +74,7 @@ export function catalogRoutes(guards: Guards, deps: { clock: Clock; db: Database
   });
   router.openapi(appearance, async (c) => {
     await setAppearance(c.var.ctx, c.req.valid('json'));
-    return c.json(await getTenantInfo(c.var.ctx, c.var.tenant), 200);
+    return c.json(await getTenantInfo(c.var.ctx, c.var.tenant, deps.signIn), 200);
   });
 
   return router;

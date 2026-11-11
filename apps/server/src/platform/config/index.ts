@@ -250,6 +250,22 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
   };
 }
 
+/**
+ * The sign-in methods this deployment offers. The public demo (APP_ENV=demo) has no SSO or SMS
+ * provider: with an SMTP service it signs anyone in by email code; without one no code can be
+ * delivered, and people pick a sample account on /dev/tools instead.
+ */
+export function signInMethods(config: Pick<Config, 'appEnv' | 'email'>): {
+  sso: boolean;
+  phone: boolean;
+  emailCodes: boolean;
+  anyEmail: boolean;
+} {
+  const demo = config.appEnv === 'demo';
+  const delivers = config.email.transport === 'smtp';
+  return { sso: !demo, phone: !demo, emailCodes: !demo || delivers, anyEmail: demo && delivers };
+}
+
 /** Finds the repository root (the folder with pnpm-workspace.yaml) from this file. */
 export function repoRoot(): string {
   let dir = import.meta.dirname;

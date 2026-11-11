@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, parseConfig } from './index';
+import { ConfigError, parseConfig, signInMethods } from './index';
 
 const KEY = Buffer.alloc(32, 7).toString('base64');
 const base: Record<string, string> = {
@@ -165,6 +165,29 @@ describe('parseConfig', () => {
     ]);
     expect(parseConfig({ ...env, STORAGE_DRIVER: 'database' }).storage).toEqual({
       driver: 'database',
+    });
+  });
+
+  it('offers email codes to anyone only in a demo that can send email', () => {
+    const smtp = parseConfig(base).email;
+    const memory = { transport: 'memory' as const, from: 'x' };
+    expect(signInMethods({ appEnv: 'demo', email: smtp })).toEqual({
+      sso: false,
+      phone: false,
+      emailCodes: true,
+      anyEmail: true,
+    });
+    expect(signInMethods({ appEnv: 'demo', email: memory })).toEqual({
+      sso: false,
+      phone: false,
+      emailCodes: false,
+      anyEmail: false,
+    });
+    expect(signInMethods({ appEnv: 'production', email: smtp })).toEqual({
+      sso: true,
+      phone: true,
+      emailCodes: true,
+      anyEmail: false,
     });
   });
 });

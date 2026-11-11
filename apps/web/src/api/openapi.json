@@ -129,12 +129,36 @@
               "location",
               "hours"
             ]
+          },
+          "signIn": {
+            "type": "object",
+            "properties": {
+              "sso": {
+                "type": "boolean"
+              },
+              "phone": {
+                "type": "boolean"
+              },
+              "emailCodes": {
+                "type": "boolean"
+              },
+              "anyEmail": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "sso",
+              "phone",
+              "emailCodes",
+              "anyEmail"
+            ]
           }
         },
         "required": [
           "tenant",
           "appearance",
-          "office"
+          "office",
+          "signIn"
         ]
       },
       "TenantSummary": {

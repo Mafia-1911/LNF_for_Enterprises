@@ -219,6 +219,39 @@ describe('sign-in policy (staff SSO only, university domain, visitors by phone)'
     ).resolves.toBeUndefined();
   });
 
+  it('in the public demo, signs anyone in by email code: outsiders as visitors, staff too', async () => {
+    const demo = createAuthPolicy({ db: ctx.services.db, clock: ctx.clock, openEmailSignIn: true });
+    await expect(demo.checkEmailCode('someone@gmail.com', tenant())).resolves.toBeUndefined();
+    await expect(
+      demo.beforeUserCreate('someone@gmail.com', 'email_otp', tenant()),
+    ).resolves.toBeUndefined();
+    await expect(demo.checkEmailCode(email.desk, tenant())).resolves.toBeUndefined();
+    await expect(
+      demo.beforeSession(await userId(email.desk), 'email_otp', tenant()),
+    ).resolves.toBeUndefined();
+    // Single sign-on keeps its domain rule even in the demo.
+    await expect(
+      demo.beforeUserCreate('someone@gmail.com', 'sso', tenant()),
+    ).rejects.toBeInstanceOf(SignInRefused);
+
+    const id =
+      (
+        await ctx.owner.query<{ id: string }>(
+          `insert into users (email, name, email_verified, created_at, updated_at) values ('guest.demo@gmail.com', 'Guest', true, now(), now()) returning id`,
+        )
+      ).rows[0]?.id ?? '';
+    await demo.afterSession(id, 'email_otp', tenant());
+    const { rows } = await ctx.owner.query(
+      'select role, title from role_assignments where user_id = $1 and tenant_id = $2',
+      [id, ctx.tenantA],
+    );
+    expect(rows).toEqual([{ role: 'visitor', title: 'Visitor' }]);
+    // Outside the demo the same address is refused.
+    await expect(policy().checkEmailCode('someone@gmail.com', tenant())).rejects.toBeInstanceOf(
+      SignInRefused,
+    );
+  });
+
   it('gives a first-time university sign-in the student role', async () => {
     const id =
       (

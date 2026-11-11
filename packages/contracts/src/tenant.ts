@@ -78,6 +78,17 @@ export const TenantInfoSchema = z
     appearance: AppearanceSchema,
     /** Where found items are kept and when the desk is open. */
     office: z.object({ name: z.string(), location: z.string(), hours: z.string() }).nullable(),
+    /**
+     * Sign-in methods offered here. The public demo has no SSO or SMS: with an email service any
+     * address gets a code (anyEmail); without one there are no codes and visitors pick a sample
+     * account instead.
+     */
+    signIn: z.object({
+      sso: z.boolean(),
+      phone: z.boolean(),
+      emailCodes: z.boolean(),
+      anyEmail: z.boolean(),
+    }),
   })
   .meta({ id: 'TenantInfo' });
 export type TenantInfo = z.infer<typeof TenantInfoSchema>;

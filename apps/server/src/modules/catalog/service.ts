@@ -89,7 +89,11 @@ async function readAppearance(tx: Tx): Promise<Appearance> {
 }
 
 /** What the sign-in page and the app shell need before anyone signs in. */
-export async function getTenantInfo(ctx: RequestCtx, tenant: Tenant): Promise<TenantInfo> {
+export async function getTenantInfo(
+  ctx: RequestCtx,
+  tenant: Tenant,
+  signIn: TenantInfo['signIn'],
+): Promise<TenantInfo> {
   return withTx(
     ctx,
     async (tx) => ({
@@ -101,6 +105,7 @@ export async function getTenantInfo(ctx: RequestCtx, tenant: Tenant): Promise<Te
       },
       appearance: await readAppearance(tx),
       office: await findMainDesk(tx, ctx.tenantId),
+      signIn,
     }),
     { readOnly: true },
   );

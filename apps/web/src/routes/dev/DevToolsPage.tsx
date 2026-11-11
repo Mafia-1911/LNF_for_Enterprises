@@ -1,7 +1,7 @@
 // Development only (/dev/tools): sign in as a seeded person and move the server clock. This replaces
 // the old prototype toolbar, so nothing dev-only sits on the app's top bar. Not in production builds.
 import { dhakaParts } from '@lf/domain';
-import { Button, Card } from '@lf/ui';
+import { Button, Card, TextField } from '@lf/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Clock, RotateCcw } from 'lucide-react';
@@ -28,6 +28,8 @@ export function DevToolsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [serverNow, setServerNow] = useState<Date | null>(null);
+  const [other, setOther] = useState('');
+  const [otherError, setOtherError] = useState<string | undefined>();
 
   useEffect(() => {
     void syncWithServerClock().then(setServerNow);
@@ -45,12 +47,16 @@ export function DevToolsPage() {
   }
 
   async function signInAs(email: string) {
-    await fetch('/api/auth/dev/sign-in-as', {
+    const res = await fetch('/api/auth/dev/sign-in-as', {
       method: 'POST',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
     });
+    if (!res.ok) {
+      setOtherError('There is no account with that email yet; check it, or pick one above.');
+      return;
+    }
     queryClient.clear();
     await navigate({ to: '/' });
   }
@@ -74,6 +80,28 @@ export function DevToolsPage() {
             </Button>
           ))}
         </div>
+        <form
+          className="flex flex-col gap-3 sm:flex-row sm:items-end"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setOtherError(undefined);
+            void signInAs(other);
+          }}
+        >
+          <div className="flex-1">
+            <TextField
+              label="Or any other account's email"
+              type="email"
+              autoComplete="off"
+              value={other}
+              onChange={(e) => setOther(e.target.value)}
+              error={otherError}
+            />
+          </div>
+          <Button type="submit" variant="secondary" disabled={other.trim().length < 3}>
+            Sign in
+          </Button>
+        </form>
       </Card>
 
       <Card className="flex flex-col gap-3">

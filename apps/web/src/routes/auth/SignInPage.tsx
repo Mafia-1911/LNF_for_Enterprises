@@ -1,6 +1,9 @@
 // Sign in (Figma 39:283) and Visitor sign up (Figma 39:582): one page, two tabs.
 //   Student or staff: NSU single sign-on, or a 6-digit code by email (students; staff use SSO).
 //   Visitor: name + Bangladesh mobile number, 6-digit code by SMS.
+// The public demo has no SSO or SMS provider (/api/tenant says so): there the page is one email
+// form for everyone; university addresses sign in as students, any other address as a visitor.
+// A demo without an email service can't send codes at all, so it points to the sample accounts.
 // After a code is sent the same column asks for the code (no Figma frame; built in the same style).
 import { BdMobileSchema, OtpCodeSchema, UniversityEmailSchema } from '@lf/contracts';
 import { Button, Logo, Notice, Segmented, TextField } from '@lf/ui';
@@ -27,9 +30,16 @@ export function SignInPage() {
   const navigate = useNavigate();
   const tenant = useTenant();
   const domain = tenant.data?.tenant.emailDomain ?? 'northsouth.edu';
+  const methods = tenant.data?.signIn ?? {
+    sso: true,
+    phone: true,
+    emailCodes: true,
+    anyEmail: false,
+  };
+  const noCodes = !methods.sso && !methods.phone && !methods.emailCodes;
   const [target, setTarget] = useState<CodeTarget | null>(null);
 
-  const visitor = tab === 'visitor';
+  const visitor = tab === 'visitor' && methods.phone;
   const title = target
     ? target.kind === 'email'
       ? 'Check your email'
@@ -67,6 +77,15 @@ export function SignInPage() {
               onBack={() => setTarget(null)}
               onSignedIn={() => void navigate({ to: '/' })}
             />
+          ) : noCodes ? (
+            <SampleAccounts />
+          ) : !methods.phone ? (
+            <StudentForm
+              domain={domain}
+              sso={methods.sso}
+              anyEmail={methods.anyEmail}
+              onCodeSent={setTarget}
+            />
           ) : (
             <Segmented
               className="mt-6"
@@ -83,7 +102,14 @@ export function SignInPage() {
                 {
                   value: 'student',
                   label: 'Student or staff',
-                  content: <StudentForm domain={domain} onCodeSent={setTarget} />,
+                  content: (
+                    <StudentForm
+                      domain={domain}
+                      sso={methods.sso}
+                      anyEmail={methods.anyEmail}
+                      onCodeSent={setTarget}
+                    />
+                  ),
                 },
                 {
                   value: 'visitor',
@@ -94,8 +120,10 @@ export function SignInPage() {
             />
           )}
 
-          <p className="mt-8 text-body text-muted">
-            Staff (desk officers, supervisors, IT) sign in with university single sign-on.
+          <p className={noCodes ? 'hidden' : 'mt-8 text-body text-muted'}>
+            {methods.anyEmail
+              ? `Use any email address you can open. An @${domain} address signs in as a student (or as staff, if the office added you); any other address signs in as a visitor.`
+              : 'Staff (desk officers, supervisors, IT) sign in with university single sign-on.'}
           </p>
         </div>
       </main>
@@ -142,11 +170,35 @@ function Hero() {
   );
 }
 
+/** The public demo without an email service: no code can be sent, so people use a sample account. */
+function SampleAccounts() {
+  return (
+    <div className="mt-6 flex flex-col gap-4">
+      <Notice tone="info">
+        This demo doesn’t send emails, so sign in with a sample account: a student, the desk
+        officer, a supervisor or the IT admin. Everything you do is saved in the demo.
+      </Notice>
+      {__PROTOTYPE__ ? (
+        <a
+          href="/dev/tools"
+          className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 text-body font-semibold text-on-primary hover:bg-primary-strong"
+        >
+          Choose a sample account
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
 function StudentForm({
   domain,
+  sso: ssoOffered,
+  anyEmail,
   onCodeSent,
 }: {
   domain: string;
+  sso: boolean;
+  anyEmail: boolean;
   onCodeSent: (t: CodeTarget) => void;
 }) {
   const [email, setEmail] = useState('');
@@ -169,8 +221,12 @@ function StudentForm({
   async function sendCode(e: FormEvent) {
     e.preventDefault();
     const parsed = UniversityEmailSchema.safeParse(email);
-    if (!parsed.success || !parsed.data.endsWith(`@${domain}`)) {
-      setError(`Enter your @${domain} email, or use single sign-on.`);
+    if (!parsed.success || (!anyEmail && !parsed.data.endsWith(`@${domain}`))) {
+      setError(
+        anyEmail
+          ? 'Enter your email address, for example name@gmail.com.'
+          : `Enter your @${domain} email, or use single sign-on.`,
+      );
       return;
     }
     setBusy('email');
@@ -186,27 +242,31 @@ function StudentForm({
 
   return (
     <div className="mt-6 flex flex-col">
-      <Button
-        size="lg"
-        icon={BuildingComplex}
-        className="w-full"
-        loading={busy === 'sso'}
-        onClick={() => void sso()}
-      >
-        Continue with NSU single sign-on
-      </Button>
-      <div className="my-6 flex items-center gap-3 text-body text-muted" aria-hidden="true">
-        <span className="h-px flex-1 bg-line" />
-        or use an email code
-        <span className="h-px flex-1 bg-line" />
-      </div>
+      {ssoOffered ? (
+        <>
+          <Button
+            size="lg"
+            icon={BuildingComplex}
+            className="w-full"
+            loading={busy === 'sso'}
+            onClick={() => void sso()}
+          >
+            Continue with NSU single sign-on
+          </Button>
+          <div className="my-6 flex items-center gap-3 text-body text-muted" aria-hidden="true">
+            <span className="h-px flex-1 bg-line" />
+            or use an email code
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      ) : null}
       <form noValidate onSubmit={(e) => void sendCode(e)} className="flex flex-col gap-4">
         <TextField
-          label="University email"
+          label={anyEmail ? 'Email' : 'University email'}
           type="email"
           inputMode="email"
           autoComplete="email"
-          placeholder={`name@${domain}`}
+          placeholder={anyEmail ? `name@${domain} or name@gmail.com` : `name@${domain}`}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={error}

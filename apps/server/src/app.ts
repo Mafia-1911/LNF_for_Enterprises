@@ -16,6 +16,7 @@ import { requestId } from 'hono/request-id';
 import { secureHeaders } from 'hono/secure-headers';
 import { devRoutes } from './dev-routes';
 import { CLIENT_IP_HEADER } from './platform/auth';
+import { signInMethods } from './platform/config';
 import { pingDatabase } from './platform/db/pool';
 import { AppError, toErrorBody } from './platform/errors';
 import type { AppEnv } from './platform/http/context';
@@ -140,7 +141,7 @@ export function createApp(services: Services, options: AppOptions) {
 
   const guards = createGuards({ clock, db });
   app.route('/', identityRoutes(guards));
-  app.route('/', catalogRoutes(guards, { clock, db }));
+  app.route('/', catalogRoutes(guards, { clock, db, signIn: signInMethods(config) }));
   const itemDeps = {
     boss: services.boss,
     crypto: services.crypto,

@@ -86,7 +86,8 @@ jobs:
       # Identifiers of the Vercel team and project (not credentials); the token is the secret.
       VERCEL_ORG_ID: team_kRkFCJbcHzzc6cd48DA2YszD
       VERCEL_PROJECT_ID: prj_WBGiSM4Y3A1PZjO3I9Dh2mDLnE4a
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # The repository secret may be named VERCEL_TOKEN or VERCEL_CI_TOKEN.
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_CI_TOKEN }}
       VERCEL_TELEMETRY_DISABLED: '1'
       VERCEL_CLI: vercel@65.14.0
     steps:
@@ -94,7 +95,7 @@ jobs:
         id: setup
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::warning title=Deploy skipped::Add a Vercel token as the repository secret VERCEL_TOKEN to deploy main automatically (docs/deploy-vercel.md#automatic-deploys)."
+            echo "::warning title=Deploy skipped::Add a Vercel token as the repository secret VERCEL_TOKEN (or VERCEL_CI_TOKEN) to deploy main automatically (docs/deploy-vercel.md#automatic-deploys)."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"

@@ -1,6 +1,6 @@
 // Composition root (plan §2): builds every dependency once from config. No DI container; tests call
 // createServices with a test config and replace what they need.
-import type { Config } from './platform/config';
+import { signInMethods, type Config } from './platform/config';
 import { createAuth, type Auth } from './platform/auth';
 import { createOffsetClock, systemClock, type AdjustableClock, type Clock } from './platform/clock';
 import { createPrivateDetailsCrypto, type PrivateDetailsCrypto } from './platform/crypto';
@@ -62,7 +62,7 @@ export function createServices(
     config,
     email,
     sms,
-    policy: createAuthPolicy({ db, clock }),
+    policy: createAuthPolicy({ db, clock, openEmailSignIn: signInMethods(config).anyEmail }),
     logger,
   });
   const boss = createBoss(config.database.url, logger, {

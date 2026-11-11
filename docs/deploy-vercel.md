@@ -18,7 +18,12 @@ A showable copy of the portal on Vercel's free (Hobby) plan, with sample data. I
 | SMS codes       | Shown on `/dev/tools` (dev adapter)                                                      | Provider (`todo#sms`)    |
 | `APP_ENV`       | `demo`: needs https and real secrets, allows the dev adapters                            | `production`             |
 
-Known limits: the SSO button doesn't work (there is no identity provider), and email codes aren't delivered, so use `/dev/tools`. Time travel on `/dev/tools` only moves the clock of the function instance that handles the request. Only the main tenant is reachable; the practice tenant needs a second domain.
+Known limits: there is no identity provider, so the demo hides single sign-on and phone codes.
+
+### Sign-in emails
+
+- **Without an email service** (today: `EMAIL_TRANSPORT=memory`), no code can be sent. The sign-in page says so and links to `/dev/tools` ("Choose a sample account"), where you sign in as a seeded person or as any account by its email.
+- **With an SMTP service**, the page becomes one email form: any address gets a code, `@northsouth.edu` addresses sign in as students (or as staff, if the Staff page added them), and any other address signs in as a visitor. Run `bash scripts/demo-email-setup.sh` yourself: it asks for the SMTP server, login and password (hidden), stores them in Vercel and redeploys. With Brevo, turn off "Authorized IPs" (Vercel has no fixed IPs) and send from a verified sender address. Time travel on `/dev/tools` only moves the clock of the function instance that handles the request. Only the main tenant is reachable; the practice tenant needs a second domain.
 
 ## Automatic deploys (CI/CD)
 
