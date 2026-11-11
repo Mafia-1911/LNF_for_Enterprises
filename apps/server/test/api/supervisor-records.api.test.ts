@@ -17,6 +17,7 @@ import type {
 } from '@lf/contracts';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { runHandInTimer } from '../../src/modules/items';
 import { DAY_MS } from '../../src/platform/clock';
 import { createTestContext, type TestContext } from '../harness';
 import { email, TEST_NOW } from '../fixtures';
@@ -312,5 +313,52 @@ describe('flags for paused claimants (CC-15)', () => {
     await sup.post(`/api/supervisor/flags/${flag?.userId ?? ''}/clear`);
     const open = await student.get<ClaimStart>(`/api/found-items/${next}/claim`);
     expect(open.body.blockedReason).toBeNull();
+  });
+});
+
+describe('repeat no-show finders (CC-03)', () => {
+  it('flags a finder whose posts were never handed in, twice', async () => {
+    const finder = await as(email.student);
+    for (const name of ['Grey charger', 'White charger'])
+      expect(
+        (
+          await finder.post('/api/found-items', {
+            category: 'charger',
+            colour: 'grey',
+            shortName: name,
+            brand: null,
+            model: null,
+            publicDescription: null,
+            place: { buildingCode: 'LIB', floorId: null, zoneId: null },
+            foundAt: hourAgo(),
+            privateTicks: [],
+            privateNote: null,
+            photoIds: [],
+            pingReportIds: [],
+          })
+        ).status,
+      ).toBe(201);
+    ctx.clock.advance(49 * 3_600_000);
+    const result = await runHandInTimer(
+      {
+        boss: ctx.services.boss,
+        crypto: ctx.services.crypto,
+        registrar: ctx.services.registrar,
+        appOrigin: ctx.services.config.appOrigin,
+      },
+      {
+        tenantId: ctx.tenantA,
+        actor: { kind: 'system', job: 'found-item-hand-in-timer' },
+        requestId: 'test',
+        clock: ctx.clock,
+        db: ctx.services.db,
+      },
+    );
+    expect(result.notReceived).toBeGreaterThanOrEqual(2);
+    const flags = await (await as(email.supervisor)).get<FlagList>('/api/supervisor/flags');
+    const flag = flags.body.flags.find((f) => f.name === 'Rafiq Ahmed');
+    expect(flag?.kinds).toContain('no_show_finder');
+    expect(flag?.reasons.join(' ')).toMatch(/never handed in/);
+    ctx.clock.reset();
   });
 });
