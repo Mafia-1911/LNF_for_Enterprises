@@ -6,7 +6,7 @@ A web portal where North South University students, staff and visitors report lo
 - Decisions: [docs/adr/](docs/adr/README.md)
 - Rules for anyone (or any agent) writing code here: [AGENTS.md](AGENTS.md)
 - Known follow-ups: [docs/todo.md](docs/todo.md)
-- Public demo on Vercel (sample data, "sign in as" any role): [docs/deploy-vercel.md](docs/deploy-vercel.md)
+- Public demo (sample data, "sign in as" any role): **https://lnf-for-enterprises.vercel.app/dev/tools**. It deploys from `main` automatically once CI passes ([docs/deploy-vercel.md](docs/deploy-vercel.md))
 
 ## Run it locally
 

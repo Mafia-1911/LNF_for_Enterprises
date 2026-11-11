@@ -2,7 +2,7 @@
 
 Date: 12 Nov 2026 · Scope: plan v0.3 §14 phase 5 (accessibility audit, practice mode, monitoring, restore test, NFR-01 officer trial), plus a public demo · Previous: [phase 4](phase-4-report.md)
 
-**Summary.** The build is showable end to end. Every screen has a help how-to for a new officer (NFR-01), the desk has the daily shelf check (FR-15, left over from phase 4), and the app can run as a public demo on Vercel's free plan ([deploy-vercel.md](../deploy-vercel.md)). As asked, this phase is **showable first**: the officer trial and the restore drill need people and a real server, so they are listed below rather than faked.
+**Summary.** The build is showable end to end. Every screen has a help how-to for a new officer (NFR-01), the desk has the daily shelf check (FR-15, left over from phase 4), and the app runs as a public demo on Vercel's free plan at **https://lnf-for-enterprises.vercel.app**, deployed automatically from `main` once CI passes ([deploy-vercel.md](../deploy-vercel.md)). As asked, this phase is **showable first**: the officer trial and the restore drill need people and a real server, so they are listed below rather than faked.
 
 ## What was built
 
@@ -14,6 +14,7 @@ Date: 12 Nov 2026 · Scope: plan v0.3 §14 phase 5 (accessibility audit, practic
 | Practice mode             | The practice tenant (`practice.localhost:5173`) has the same people and catalog with sample records, so officers can rehearse without touching real data.                                         |
 | Monitoring                | `/healthz` reports database, jobs and storage (503 when the database or jobs are down).                                                                                                           |
 | Public demo (Vercel)      | `pnpm build:vercel` builds the web app in demo mode and bundles the server into one Node function. Photos can live in Postgres, queued jobs run after requests, and a daily cron runs the timers. |
+| CI/CD                     | `verify` runs every gate on each push and pull request; `deploy` (main only, after `verify` passes) migrates and seeds the demo database, builds, deploys to Vercel and checks `/healthz`.        |
 
 ## Decisions and deviations
 
@@ -23,6 +24,9 @@ Date: 12 Nov 2026 · Scope: plan v0.3 §14 phase 5 (accessibility audit, practic
 - **Client IP behind a proxy.** `TRUSTED_CLIENT_IP_HEADER=x-real-ip` makes rate limits use the visitor's address on Vercel instead of the proxy's.
 - **Generated API client is formatted.** `pnpm gen:api` now runs prettier on its output, so the "client up to date" check compares content rather than whitespace (it failed on every fresh run before).
 - **Sign-in in the demo** is only "sign in as" on `/dev/tools`. There is no identity provider for SSO, and no email service for codes.
+- **Supply-chain policy decided** (open since phase 0, and it kept CI red, so no deploy could follow): `minimumReleaseAge: 10080` (7 days) and `trustPolicy: no-downgrade`, as semgrep recommends. The exceptions are exact versions already in the lockfile: 74 releases younger than 7 days (they can go after 2026-11-19), and `undici-types@6.21.0` (type declarations only, needed by `@types/node@22`). This is stricter than before; to undo it, go back to `minimumReleaseAge: 1440` and accept the semgrep finding.
+- **CI start-up diagnosis.** The first GitHub run failed while starting the local services, and its log needs admin rights to read. `scripts/infra-up.sh` now polls the one-shot bucket container instead of `compose wait` (which differs across Compose versions), and on failure prints each container's state and logs, also as a run annotation.
+- **Deploys only from `main` after CI**, with no preview deploys: a preview would share the one demo database. Migrations run as Neon's owner role; the app connects as `lf_app`.
 
 ## Not done yet
 

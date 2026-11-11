@@ -1,5 +1,7 @@
 # Public demo on Vercel
 
+**Live: https://lnf-for-enterprises.vercel.app** (start at [/dev/tools](https://lnf-for-enterprises.vercel.app/dev/tools) to pick an account).
+
 A showable copy of the portal on Vercel's free (Hobby) plan, with sample data. It is **not** the production setup in the plan (one VM, Cloudflare, real SSO); it exists so people can click through every role.
 
 ## How it runs
@@ -18,7 +20,23 @@ A showable copy of the portal on Vercel's free (Hobby) plan, with sample data. I
 
 Known limits: the SSO button doesn't work (there is no identity provider), and email codes aren't delivered, so use `/dev/tools`. Time travel on `/dev/tools` only moves the clock of the function instance that handles the request. Only the main tenant is reachable; the practice tenant needs a second domain.
 
-## One-time setup
+## Automatic deploys (CI/CD)
+
+`.github/workflows/ci.yml` has two jobs:
+
+1. **`verify`** runs on every push and pull request: every `pnpm verify` gate (format, types, lint, unit, API, end-to-end with axe, mutation, migrations, secrets, semgrep) against the local stand-ins.
+2. **`deploy`** runs only for `main`, and only after `verify` passes (also from the Actions tab with "Run workflow"). It pulls the production settings from Vercel, runs `pnpm db:migrate` (as Neon's owner role) and `pnpm db:seed` (idempotent: it refreshes the catalog, people and tenant hosts and adds sample records only when they are missing), runs `pnpm build:vercel`, deploys with `vercel deploy --prebuilt --prod`, then checks `/healthz`. Deploys run one at a time in order, and the repo's "demo" environment shows the latest one.
+
+So deepening the project needs no deploy steps: merge to `main`, and a new migration, seed change or screen goes live once the checks pass. Pull requests get CI only; there is no preview deploy, because a preview would share the demo database.
+
+**To turn it on**, add one repository secret (until then the deploy job skips with a warning):
+
+1. Vercel → Account Settings → Tokens → Create: name `github-actions`, scope the `nsu-232` team.
+2. GitHub → the repo → Settings → Secrets and variables → Actions → New repository secret: name `VERCEL_TOKEN`, value the token.
+
+The workflow holds the team and project IDs; they identify the project but grant nothing without the token.
+
+## One-time setup (done for the live demo)
 
 The project `lnf-for-enterprises` (team `nsu-232`) is linked in `.vercel/project.json` (git-ignored).
 
@@ -56,7 +74,9 @@ The project `lnf-for-enterprises` (team `nsu-232`) is linked in `.vercel/project
 
 4. **Migrate and seed** from your machine with the same values (the seed encrypts private details, so it must use the same key ring). Set `DATABASE_OWNER_URL` to the unpooled owner URL, then run `pnpm db:migrate` and `pnpm db:seed`. The seed adds `APP_ORIGIN`'s host to the main tenant.
 
-## Deploy
+## Deploy by hand
+
+CI does this for you (above). From your machine, with `vercel login`:
 
 ```bash
 pnpm build:vercel                         # writes .vercel/output (git-ignored)
