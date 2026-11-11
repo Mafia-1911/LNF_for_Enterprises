@@ -13,6 +13,7 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
+      '.vercel/**', // build output for the Vercel demo (pnpm build:vercel)
       '**/coverage/**',
       '**/reports/**',
       '**/.stryker-tmp/**',

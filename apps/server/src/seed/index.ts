@@ -300,7 +300,13 @@ export async function runSeed(): Promise<string> {
     appOrigin: config.appOrigin,
   };
   try {
-    const main = await seedTenant(services.db, services.clock, NSU_TENANT);
+    // A deployed copy (e.g. the public demo) is reached on APP_ORIGIN's host, so the main tenant
+    // answers there too.
+    const host = new URL(config.appOrigin).hostname;
+    const main = await seedTenant(services.db, services.clock, {
+      ...NSU_TENANT,
+      hostnames: [...new Set([...NSU_TENANT.hostnames, host])],
+    });
     const practice = await seedTenant(services.db, services.clock, NSU_PRACTICE_TENANT);
     await services.boss.start();
     await ensureQueues(services.boss, services.jobs);

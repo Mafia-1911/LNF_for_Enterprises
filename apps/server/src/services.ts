@@ -43,7 +43,11 @@ export type Services = {
 export function createServices(
   config: Config,
   logger: Logger,
-  overrides: { clock?: AdjustableClock } = {},
+  overrides: {
+    clock?: AdjustableClock;
+    /** On a serverless host: no pg-boss cron monitor or supervisor (see platform/jobs drainJobs). */
+    serverless?: boolean;
+  } = {},
 ): Services {
   const devClock = overrides.clock ?? (config.devTools ? createOffsetClock() : null);
   const clock: Clock = devClock ?? systemClock;
@@ -61,8 +65,10 @@ export function createServices(
     policy: createAuthPolicy({ db, clock }),
     logger,
   });
-  const boss = createBoss(config.database.url, logger, { schedule: config.nodeEnv !== 'test' });
-  const storage = createStorage(config.storage);
+  const boss = createBoss(config.database.url, logger, {
+    schedule: config.nodeEnv !== 'test' && !overrides.serverless,
+  });
+  const storage = createStorage(config.storage, db);
   const crypto = createPrivateDetailsCrypto(
     config.privateDetails.keys,
     config.privateDetails.activeVersion,

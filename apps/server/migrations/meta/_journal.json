@@ -71,6 +71,13 @@
       "when": 1794418222417,
       "tag": "0009_proxy_merge",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794432927613,
+      "tag": "0010_stored_objects",
+      "breakpoints": true
     }
   ]
 }

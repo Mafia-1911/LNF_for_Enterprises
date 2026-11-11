@@ -71,7 +71,12 @@ export function createApp(services: Services, options: AppOptions) {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'blob:', new URL(config.storage.endpoint).origin],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'blob:',
+          ...(config.storage.driver === 's3' ? [new URL(config.storage.endpoint).origin] : []),
+        ],
         fontSrc: ["'self'"],
         connectSrc: ["'self'"],
         formAction: ["'self'"],
@@ -121,7 +126,7 @@ export function createApp(services: Services, options: AppOptions) {
   app.on(['GET', 'POST'], '/api/auth/*', (c) => {
     const headers = new Headers(c.req.raw.headers);
     headers.delete(CLIENT_IP_HEADER);
-    const address = clientAddress(c);
+    const address = clientAddress(c, config.clientIpHeader);
     if (address) headers.set(CLIENT_IP_HEADER, address);
     return services.auth
       .handler(new Request(c.req.raw, { headers }))
@@ -183,8 +188,15 @@ function fromHttpException(err: HTTPException): AppError {
   return new AppError('internal', undefined, { cause: err });
 }
 
-/** The TCP peer address; undefined for in-process requests (tests use app.request without a socket). */
-function clientAddress(c: Context<AppEnv>): string | undefined {
+/**
+ * The visitor's address: from the hosting proxy's header when one is configured (it overwrites
+ * whatever the visitor sent), else the TCP peer; undefined for in-process requests (tests).
+ */
+function clientAddress(
+  c: Context<AppEnv>,
+  header: Services['config']['clientIpHeader'],
+): string | undefined {
+  if (header) return c.req.header(header)?.split(',')[0]?.trim() || undefined;
   const env = c.env as { incoming?: unknown } | undefined;
   return env?.incoming ? getConnInfo(c).remote.address : undefined;
 }

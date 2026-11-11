@@ -15,9 +15,13 @@ const KEY_RING = /^(\d+:[A-Za-z0-9+/]+={0,2})(,\d+:[A-Za-z0-9+/]+={0,2})*$/;
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production'], 'Use development, test or production.'),
+  /**
+   * demo: a public showcase on a free host (seeded sample data, "sign in as" on /dev/tools). It
+   * needs https and real secrets like production, but allows the dev adapters.
+   */
   APP_ENV: z.enum(
-    ['development', 'test', 'staging', 'production'],
-    'Use development, test, staging or production.',
+    ['development', 'test', 'staging', 'demo', 'production'],
+    'Use development, test, staging, demo or production.',
   ),
   PORT: z.coerce.number('Must be a number.').int().min(1).max(65535),
   APP_ORIGIN: z.url('Must be a full URL such as http://localhost:5173.'),
@@ -43,12 +47,30 @@ const EnvSchema = z.object({
     emptyToUndefined,
     z.enum(['dev', 'none'], 'Use dev or none.').optional(),
   ),
-  STORAGE_ENDPOINT: z.url('Must be the S3-compatible endpoint URL.'),
+  /** s3: MinIO or any S3-compatible bucket. database: photos in Postgres, for hosts without one. */
+  STORAGE_DRIVER: z.enum(['s3', 'database'], 'Use s3 or database.').default('s3'),
+  STORAGE_ENDPOINT: z.preprocess(
+    emptyToUndefined,
+    z.url('Must be the S3-compatible endpoint URL.').optional(),
+  ),
   STORAGE_REGION: z.string().min(1).default('auto'),
-  STORAGE_BUCKET: z.string('Required.').min(3, 'Required.'),
-  STORAGE_ACCESS_KEY_ID: z.string('Required.').min(1, 'Required.'),
-  STORAGE_SECRET_ACCESS_KEY: z.string('Required.').min(1, 'Required.'),
+  STORAGE_BUCKET: z.preprocess(emptyToUndefined, z.string().min(3, 'Too short.').optional()),
+  STORAGE_ACCESS_KEY_ID: optionalString,
+  STORAGE_SECRET_ACCESS_KEY: optionalString,
   STORAGE_FORCE_PATH_STYLE: bool.default(true),
+  /**
+   * Behind a proxy that sets the visitor's address (e.g. Vercel's x-real-ip), read it from this
+   * header for rate limits. Leave empty when the server faces visitors directly.
+   */
+  TRUSTED_CLIENT_IP_HEADER: z.preprocess(
+    emptyToUndefined,
+    z.enum(['x-real-ip', 'x-forwarded-for'], 'Use x-real-ip or x-forwarded-for.').optional(),
+  ),
+  /** Vercel sends it as a bearer token on its scheduled calls to /api/cron/tick (the demo). */
+  CRON_SECRET: z.preprocess(
+    emptyToUndefined,
+    z.string().min(32, 'Must be at least 32 characters.').optional(),
+  ),
   PRIVATE_DETAILS_KEYS: z
     .string('Required.')
     .regex(KEY_RING, 'Use "1:<base64 key>,2:<base64 key>".'),
@@ -79,14 +101,21 @@ export type Config = {
       };
   sms: { provider: 'dev' };
   registrar: { provider: 'dev' | 'none' };
-  storage: {
-    endpoint: string;
-    region: string;
-    bucket: string;
-    accessKeyId: string;
-    secretAccessKey: string;
-    forcePathStyle: boolean;
-  };
+  storage:
+    | { driver: 'database' }
+    | {
+        driver: 's3';
+        endpoint: string;
+        region: string;
+        bucket: string;
+        accessKeyId: string;
+        secretAccessKey: string;
+        forcePathStyle: boolean;
+      };
+  /** Header the hosting proxy puts the visitor's address in, or undefined to use the socket. */
+  clientIpHeader: 'x-real-ip' | 'x-forwarded-for' | undefined;
+  /** Bearer token for the serverless timer tick; undefined turns the tick endpoint off. */
+  cronSecret: string | undefined;
   privateDetails: { keys: ReadonlyMap<number, Buffer>; activeVersion: number };
 };
 
@@ -134,7 +163,23 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     problems.push('SMTP_HOST and SMTP_PORT: required when EMAIL_TRANSPORT=smtp.');
   }
 
-  const production = e.NODE_ENV === 'production' || e.APP_ENV === 'production';
+  if (e.STORAGE_DRIVER === 's3') {
+    for (const name of [
+      'STORAGE_ENDPOINT',
+      'STORAGE_BUCKET',
+      'STORAGE_ACCESS_KEY_ID',
+      'STORAGE_SECRET_ACCESS_KEY',
+    ] as const) {
+      if (!e[name]) problems.push(`${name}: required when STORAGE_DRIVER=s3.`);
+    }
+  }
+
+  // A demo runs the production build on a public host, so it gets the https and real-secret
+  // checks below, but keeps the dev adapters and dev tools that make it showable.
+  const demo = e.APP_ENV === 'demo';
+  const production = e.APP_ENV === 'production' || (e.NODE_ENV === 'production' && !demo);
+  if (demo && !e.APP_ORIGIN.startsWith('https://'))
+    problems.push('APP_ORIGIN: must use https for a public demo.');
   if (production) {
     if (e.SMS_PROVIDER === 'dev')
       problems.push('SMS_PROVIDER: the dev adapter is not allowed in production.');
@@ -144,6 +189,8 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     if (e.EMAIL_TRANSPORT === 'memory') problems.push('EMAIL_TRANSPORT: memory is for tests only.');
     if (!e.APP_ORIGIN.startsWith('https://'))
       problems.push('APP_ORIGIN: must use https in production.');
+  }
+  if (production || demo) {
     for (const [name, value] of Object.entries(env)) {
       if (
         value?.includes('dev-only') ||
@@ -185,14 +232,20 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
           },
     sms: { provider: e.SMS_PROVIDER },
     registrar: { provider: e.REGISTRAR_PROVIDER ?? (production ? 'none' : 'dev') },
-    storage: {
-      endpoint: e.STORAGE_ENDPOINT,
-      region: e.STORAGE_REGION,
-      bucket: e.STORAGE_BUCKET,
-      accessKeyId: e.STORAGE_ACCESS_KEY_ID,
-      secretAccessKey: e.STORAGE_SECRET_ACCESS_KEY,
-      forcePathStyle: e.STORAGE_FORCE_PATH_STYLE,
-    },
+    storage:
+      e.STORAGE_DRIVER === 'database'
+        ? { driver: 'database' }
+        : {
+            driver: 's3',
+            endpoint: e.STORAGE_ENDPOINT ?? '',
+            region: e.STORAGE_REGION,
+            bucket: e.STORAGE_BUCKET ?? '',
+            accessKeyId: e.STORAGE_ACCESS_KEY_ID ?? '',
+            secretAccessKey: e.STORAGE_SECRET_ACCESS_KEY ?? '',
+            forcePathStyle: e.STORAGE_FORCE_PATH_STYLE,
+          },
+    clientIpHeader: e.TRUSTED_CLIENT_IP_HEADER,
+    cronSecret: e.CRON_SECRET,
     privateDetails: { keys, activeVersion: e.PRIVATE_DETAILS_KEY_VERSION },
   };
 }

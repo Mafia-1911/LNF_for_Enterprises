@@ -122,4 +122,49 @@ describe('parseConfig', () => {
       'PRIVATE_DETAILS_KEYS: still has the development placeholder from .env.example.',
     );
   });
+
+  it('runs a public demo with the dev adapters but still needs https and real secrets', () => {
+    const demo = {
+      ...base,
+      NODE_ENV: 'production',
+      APP_ENV: 'demo',
+      APP_ORIGIN: 'https://lostfound-demo.example.app',
+      EMAIL_TRANSPORT: 'memory',
+      STORAGE_DRIVER: 'database',
+      STORAGE_ENDPOINT: '',
+      TRUSTED_CLIENT_IP_HEADER: 'x-real-ip',
+    };
+    const config = parseConfig(demo);
+    expect(config).toMatchObject({
+      appEnv: 'demo',
+      devTools: true,
+      sms: { provider: 'dev' },
+      registrar: { provider: 'dev' },
+      storage: { driver: 'database' },
+      clientIpHeader: 'x-real-ip',
+    });
+    expect(
+      problems({
+        ...demo,
+        APP_ORIGIN: 'http://lostfound-demo.example.app',
+        BETTER_AUTH_SECRET: 'dev-only-better-auth-secret-change-me-0000',
+      }),
+    ).toEqual([
+      'APP_ORIGIN: must use https for a public demo.',
+      'BETTER_AUTH_SECRET: still has the development placeholder from .env.example.',
+    ]);
+  });
+
+  it('needs the bucket settings only for the s3 storage driver', () => {
+    const env = { ...base };
+    delete env['STORAGE_ENDPOINT'];
+    delete env['STORAGE_ACCESS_KEY_ID'];
+    expect(problems(env)).toEqual([
+      'STORAGE_ENDPOINT: required when STORAGE_DRIVER=s3.',
+      'STORAGE_ACCESS_KEY_ID: required when STORAGE_DRIVER=s3.',
+    ]);
+    expect(parseConfig({ ...env, STORAGE_DRIVER: 'database' }).storage).toEqual({
+      driver: 'database',
+    });
+  });
 });
