@@ -66,7 +66,7 @@ export function DevToolsPage() {
       <div>
         <h1 className="font-display text-display-m font-semibold text-ink">Dev tools</h1>
         <p className="text-body text-muted">
-          Development builds only. Signed in as{' '}
+          Sample accounts and the server clock (not in production builds). Signed in as{' '}
           <span className="font-semibold text-ink">{me.data?.name ?? 'nobody'}</span>.
         </p>
       </div>
