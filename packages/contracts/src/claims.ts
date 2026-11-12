@@ -172,6 +172,8 @@ export const DeskClaimSchema = z
         verdict: z.enum(VERDICTS).nullable(),
       }),
     ),
+    /** CC-02: why only a supervisor may approve this claim (one sentence), or null. */
+    supervisorOnly: z.string().nullable(),
     moreInfoRequest: z.string().nullable(),
     decisionNote: z.string().nullable(),
     proofPhotoIds: z.array(z.string()),

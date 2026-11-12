@@ -6,7 +6,7 @@ import { getRouteApi } from '@tanstack/react-router';
 import { Check, Lock, ShieldAlert, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '../../api/client';
-import { photoUrl, useDeskItemClaims, useReviewClaim } from '../../api/hooks';
+import { photoUrl, useDeskItemClaims, useMe, useReviewClaim } from '../../api/hooks';
 import { PageHeader } from '../../components/PageHeader';
 import { dhakaDateTime, now } from '../../lib/clock';
 import { CLAIM_STATE } from '../items/labels';
@@ -99,6 +99,10 @@ export function ClaimReviewPage() {
 
 function ClaimColumn({ itemId, claim }: { itemId: string; claim: DeskClaim }) {
   const review = useReviewClaim(itemId);
+  const me = useMe();
+  // CC-02: a look-alike claim with no distinguishing mark is the supervisor's call.
+  const isSupervisor = me.data?.role === 'supervisor';
+  const needsSupervisor = claim.supervisorOnly !== null && !isSupervisor;
   const [verdicts, setVerdicts] = useState<Record<string, 'pass' | 'fail'>>(
     Object.fromEntries(
       claim.answers.filter((a) => a.verdict).map((a) => [a.key, a.verdict as 'pass' | 'fail']),
@@ -207,6 +211,14 @@ function ClaimColumn({ itemId, claim }: { itemId: string; claim: DeskClaim }) {
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
+        {claim.supervisorOnly ? (
+          <Notice tone="warning" className="mt-3">
+            {claim.supervisorOnly}{' '}
+            {isSupervisor
+              ? 'Check it with the claimant before you approve.'
+              : 'Ask a supervisor to open this claim; you can still reject it or ask for more.'}
+          </Notice>
+        ) : null}
         {error ? (
           <Notice tone="danger" live="assertive" className="mt-3">
             {error}
@@ -216,6 +228,7 @@ function ClaimColumn({ itemId, claim }: { itemId: string; claim: DeskClaim }) {
           <Button
             variant="success"
             loading={review.isPending}
+            disabled={needsSupervisor || review.isPending}
             onClick={() => void decide('approve')}
           >
             Approve

@@ -27,8 +27,20 @@ const GENERIC = [
 
 export type ClaimQuestion = { key: string; question: string };
 
-/** 2–3 questions built from the ticked private details, topped up with general ones (WF-04). */
-export function claimQuestions(ticks: readonly string[]): ClaimQuestion[] {
+/** CC-02: the key of the question a look-alike item asks first. */
+export const DISTINGUISHING_MARK = 'distinguishing_mark';
+const MARK_QUESTION =
+  'What mark makes it yours (a sticker, scratch, name or keyring)? Write “none” if there isn’t one.';
+
+/**
+ * 2–3 questions built from the ticked private details, topped up with general ones (WF-04). A
+ * look-alike item (umbrellas, bottles, chargers… see retention.ts) asks first for the mark that
+ * tells the owner's one apart (CC-02), and keeps three questions in all.
+ */
+export function claimQuestions(
+  ticks: readonly string[],
+  opts: { lookAlike?: boolean } = {},
+): ClaimQuestion[] {
   const fromTicks = ticks
     .flatMap((t) => {
       const question = CLAIM_QUESTION[t];
@@ -36,7 +48,26 @@ export function claimQuestions(ticks: readonly string[]): ClaimQuestion[] {
     })
     .slice(0, 3);
   const generic = GENERIC.map((q, i) => ({ key: `general_${i + 1}`, question: q }));
-  return [...fromTicks, ...generic].slice(0, Math.max(2, Math.min(3, fromTicks.length + 1)));
+  const usual = [...fromTicks, ...generic].slice(0, Math.max(2, Math.min(3, fromTicks.length + 1)));
+  if (opts.lookAlike !== true) return usual;
+  return [{ key: DISTINGUISHING_MARK, question: MARK_QUESTION }, ...usual].slice(0, 3);
+}
+
+const NO_MARK =
+  /^(none|no|nope|nothing|nil|n\/?a|no marks?|no mark at all|not really|not sure|don'?t know|do not know|idk|no idea|-+)$/;
+
+/**
+ * CC-02: whether a distinguishing-mark answer says there is none ("none", "no", "n/a", "don't
+ * know"…). Then the desk can't tell look-alikes apart, so only a supervisor may approve.
+ */
+export function namesNoMark(answer: string): boolean {
+  const plain = answer
+    .trim()
+    .toLowerCase()
+    .replace(/[’‘`]/g, "'")
+    .replace(/[.!\s]+$/, '')
+    .replace(/\s+/g, ' ');
+  return NO_MARK.test(plain);
 }
 
 /** Items that need a second check at handover: device unlock, serial or IMEI, or a supervisor (CC-08). */

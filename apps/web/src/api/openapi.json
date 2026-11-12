@@ -3724,6 +3724,12 @@
               ]
             }
           },
+          "supervisorOnly": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "moreInfoRequest": {
             "type": [
               "string",
@@ -3752,6 +3758,7 @@
           "lostReportId",
           "failedVerifications",
           "answers",
+          "supervisorOnly",
           "moreInfoRequest",
           "decisionNote",
           "proofPhotoIds"

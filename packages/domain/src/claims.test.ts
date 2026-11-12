@@ -4,7 +4,9 @@ import { createWorkingCalendar } from './calendar';
 import {
   claimQuestions,
   CLAIM_QUESTION,
+  DISTINGUISHING_MARK,
   isHighValue,
+  namesNoMark,
   isPickupCode,
   pickupWindowEnd,
   PICKUP_WINDOW_DAYS,
@@ -12,6 +14,71 @@ import {
 } from './claims';
 import { CATEGORIES, CATEGORY_CODES } from './catalog';
 import { privateTicksFor } from './private-details';
+
+describe('look-alike claims (CC-02)', () => {
+  it('asks for the distinguishing mark first and keeps three questions', () => {
+    const questions = claimQuestions(['marks', 'stickers_engraving'], { lookAlike: true });
+    expect(questions.map((q) => q.key)).toEqual([
+      DISTINGUISHING_MARK,
+      'marks',
+      'stickers_engraving',
+    ]);
+    expect(questions[0]?.question).toBe(
+      'What mark makes it yours (a sticker, scratch, name or keyring)? Write “none” if there isn’t one.',
+    );
+    expect(claimQuestions([], { lookAlike: true }).map((q) => q.key)).toEqual([
+      DISTINGUISHING_MARK,
+      'general_1',
+      'general_2',
+    ]);
+    expect(
+      claimQuestions(['marks', 'in_case', 'serial_recorded'], { lookAlike: true }).map(
+        (q) => q.key,
+      ),
+    ).toEqual([DISTINGUISHING_MARK, 'marks', 'in_case']);
+  });
+
+  it('asks the usual questions for other items', () => {
+    expect(claimQuestions(['marks'], { lookAlike: false })).toEqual(claimQuestions(['marks']));
+    expect(claimQuestions(['marks']).map((q) => q.key)).not.toContain(DISTINGUISHING_MARK);
+  });
+
+  it('recognises an answer that names no mark', () => {
+    for (const none of [
+      'none',
+      'None.',
+      '  NO ',
+      'nope',
+      'nothing!',
+      'nil',
+      'n/a',
+      'NA',
+      'no mark',
+      'No marks',
+      'no mark at all',
+      'not really',
+      'not sure',
+      'don’t know',
+      'dont know',
+      'do not know',
+      'idk',
+      'no idea',
+      '-',
+      '---',
+    ])
+      expect(namesNoMark(none), none).toBe(true);
+    for (const mark of [
+      'A cat sticker on the handle',
+      'no scratches but a blue keyring',
+      'Name RAFIQ written inside',
+      'nonetheless a dent',
+      'nothing much, a small chip on the lid',
+      'N',
+      '',
+    ])
+      expect(namesNoMark(mark), mark).toBe(false);
+  });
+});
 
 describe('claimQuestions', () => {
   it('asks about each ticked detail, up to three', () => {

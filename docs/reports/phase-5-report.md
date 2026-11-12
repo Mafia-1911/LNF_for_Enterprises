@@ -16,6 +16,7 @@ Date: 12 Nov 2026 · Scope: plan v0.3 §14 phase 5 (accessibility audit, practic
 | Public demo (Vercel)      | `pnpm build:vercel` builds the web app in demo mode and bundles the server into one Node function. Photos can live in Postgres, queued jobs run after requests, and a daily cron runs the timers.                                                          |
 | CI/CD                     | `verify` runs every gate on each push and pull request; `deploy` (main only, after `verify` passes) migrates and seeds the demo database, builds, deploys to Vercel and checks `/healthz`.                                                                 |
 | Walk-in claim (US-10)     | Desk → More → Help a walk-in student → "They're claiming an item we hold": type the FND ID and the student's email, ask the questions shown, file the claim. It is the student's (their 3-claim cap, alerts and pickup code); the audit names the officer. |
+| Look-alike claims (CC-02) | Umbrellas, bottles, chargers, keys and calculators ask first for the mark that makes it yours. If the answer names none ("none", "n/a", "don't know"…), the review shows why and only a supervisor can approve; the desk can still reject or ask for more. |
 
 ## Decisions and deviations
 

@@ -36,25 +36,25 @@ As asked, this phase was built **showable first**: every feature works end to en
 
 ## Corner cases (Phase 4 "done when")
 
-| CC    | Test                                                                                                                                               |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CC-01 | `claims.api` (side-by-side review, losing claimants told), `supervisor-records.api` (dispute within 7 days)                                        |
-| CC-02 | `supervisor.api` and `found-items.api` (look-alikes: 30-day retention). Partial: a distinguishing mark isn't required yet (`todo#look-alike-mark`) |
-| CC-03 | `found-items-timers.api` (24 h reminder, 48 h NOT_RECEIVED, pinged owners told), `supervisor-records.api` (repeat no-shows flagged)                |
-| CC-04 | `desk-extras.api` (duplicate listed and merged, old ID points to the kept record)                                                                  |
-| CC-05 | `claims.api` (a new report is matched against items already in custody)                                                                            |
-| CC-06 | `found-items.api` (sensitive photo hidden, number masked to the last 4)                                                                            |
-| CC-07 | `claims.api` (cash: amount question and recount second check)                                                                                      |
-| CC-08 | `claims.api` (second check required), `supervisor-records.api` (supervisor approval)                                                               |
-| CC-09 | `desk-extras.api` (proxy nominated, ID checked, both on the DSP; refused when the policy is off)                                                   |
-| CC-10 | `claims.api`, `supervisor-records.api` (visitor plus high-value item needs a supervisor)                                                           |
-| CC-11 | `claims-timers.api` (one reminder, lapse, back in custody, one re-request)                                                                         |
-| CC-12 | `found-items.api` (restricted items transferred, never shelved)                                                                                    |
-| CC-13 | `found-items.api` (condition note and photos at intake)                                                                                            |
-| CC-14 | `supervisor-records.api` (wrong handover dispute, recipient flagged)                                                                               |
-| CC-15 | `claims.api` (3-claim cap, pause), `supervisor-records.api` (flagged; clearing lifts the pause)                                                    |
-| CC-16 | `claims.api` (withdraw cancels open claims)                                                                                                        |
-| CC-17 | `supervisor-reports.api` (entered later under the printed ID with the original intake time)                                                        |
+| CC    | Test                                                                                                                                                                                                 |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CC-01 | `claims.api` (side-by-side review, losing claimants told), `supervisor-records.api` (dispute within 7 days)                                                                                          |
+| CC-02 | `supervisor.api` and `found-items.api` (look-alikes: 30-day retention), `desk-extras.api` (look-alike claims ask for a distinguishing mark; with none, only a supervisor approves; added in phase 5) |
+| CC-03 | `found-items-timers.api` (24 h reminder, 48 h NOT_RECEIVED, pinged owners told), `supervisor-records.api` (repeat no-shows flagged)                                                                  |
+| CC-04 | `desk-extras.api` (duplicate listed and merged, old ID points to the kept record)                                                                                                                    |
+| CC-05 | `claims.api` (a new report is matched against items already in custody)                                                                                                                              |
+| CC-06 | `found-items.api` (sensitive photo hidden, number masked to the last 4)                                                                                                                              |
+| CC-07 | `claims.api` (cash: amount question and recount second check)                                                                                                                                        |
+| CC-08 | `claims.api` (second check required), `supervisor-records.api` (supervisor approval)                                                                                                                 |
+| CC-09 | `desk-extras.api` (proxy nominated, ID checked, both on the DSP; refused when the policy is off)                                                                                                     |
+| CC-10 | `claims.api`, `supervisor-records.api` (visitor plus high-value item needs a supervisor)                                                                                                             |
+| CC-11 | `claims-timers.api` (one reminder, lapse, back in custody, one re-request)                                                                                                                           |
+| CC-12 | `found-items.api` (restricted items transferred, never shelved)                                                                                                                                      |
+| CC-13 | `found-items.api` (condition note and photos at intake)                                                                                                                                              |
+| CC-14 | `supervisor-records.api` (wrong handover dispute, recipient flagged)                                                                                                                                 |
+| CC-15 | `claims.api` (3-claim cap, pause), `supervisor-records.api` (flagged; clearing lifts the pause)                                                                                                      |
+| CC-16 | `claims.api` (withdraw cancels open claims)                                                                                                                                                          |
+| CC-17 | `supervisor-reports.api` (entered later under the printed ID with the original intake time)                                                                                                          |
 
 ## Decisions and deviations
 
@@ -81,6 +81,6 @@ As asked, this phase was built **showable first**: every feature works end to en
 
 ## Open questions
 
-1. Should look-alike claims require a distinguishing mark, with the supervisor deciding when there is none (CC-02)?
+1. ~~Should look-alike claims require a distinguishing mark (CC-02)?~~ Built in phase 5: yes, and a supervisor decides when there is none.
 2. Retention for paper-register items starts on the logbook date, so old items go straight to "Awaiting decision". Is that what the office wants on the first import?
 3. Should staff deactivation also sign the person out immediately? Today their next request is refused.

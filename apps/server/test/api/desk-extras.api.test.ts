@@ -205,6 +205,82 @@ describe('walk-in claim (US-10)', () => {
   });
 });
 
+describe('look-alike claims (CC-02)', () => {
+  async function claimUmbrella(who: string, mark: string) {
+    const desk = await as(email.desk);
+    const logged = await desk.post<LoggedFoundItem>(
+      '/api/desk/found-items',
+      intake({
+        category: 'umbrella',
+        shortName: `Black umbrella ${mark.slice(0, 4)}`,
+        privateTicks: ['marks'],
+      }),
+    );
+    expect(logged.status).toBe(201);
+    const itemId = logged.body.item.id;
+    const student = await as(who);
+    const start = await student.get<ClaimStart>(`/api/found-items/${itemId}/claim`);
+    expect(start.body.questions[0]?.key).toBe('distinguishing_mark');
+    const claim = await student.post<Claim>(`/api/found-items/${itemId}/claims`, {
+      answers: start.body.questions.map((q) => ({
+        key: q.key,
+        answer: q.key === 'distinguishing_mark' ? mark : 'A bent spoke',
+      })),
+    });
+    expect(claim.status).toBe(201);
+    const side = await desk.get<DeskItemClaims>(`/api/desk/found-items/${itemId}/claims`);
+    const verdicts = Object.fromEntries(
+      (side.body.claims[0]?.answers ?? []).map((a) => [a.key, 'pass']),
+    );
+    return { itemId, claimId: claim.body.id, side: side.body, verdicts };
+  }
+
+  it('lets only a supervisor approve a look-alike claim that names no mark', async () => {
+    const { claimId, side, verdicts } = await claimUmbrella(email.student, 'None.');
+    expect(side.claims[0]?.supervisorOnly).toMatch(/supervisor decides/);
+    const review = { verdicts, decision: 'approve', note: null };
+    const desk = await as(email.desk);
+    const refused = await desk.post<{ error: { kind: string; message: string } }>(
+      `/api/desk/claims/${claimId}/review`,
+      review,
+    );
+    expect(refused.status).toBe(403);
+    expect(refused.body.error.message).toMatch(/only a supervisor can approve/);
+    expect(
+      (await desk.post(`/api/desk/claims/${claimId}/review`, { ...review, decision: 'reject' }))
+        .status,
+    ).not.toBe(403);
+  });
+
+  it('lets the supervisor approve it, and the desk approve one that names a mark', async () => {
+    const none = await claimUmbrella(email.student2, 'no idea');
+    const sup = await as(email.supervisor);
+    expect(
+      (
+        await sup.post(`/api/desk/claims/${none.claimId}/review`, {
+          verdicts: none.verdicts,
+          decision: 'approve',
+          note: 'Checked with the claimant in person.',
+        })
+      ).status,
+    ).toBe(200);
+
+    const marked = await claimUmbrella(email.student, 'A red ribbon tied to the handle');
+    expect(marked.side.claims[0]?.supervisorOnly).toBeNull();
+    expect(
+      (
+        await (
+          await as(email.desk)
+        ).post(`/api/desk/claims/${marked.claimId}/review`, {
+          verdicts: marked.verdicts,
+          decision: 'approve',
+          note: null,
+        })
+      ).status,
+    ).toBe(200);
+  });
+});
+
 describe('proxy pickup (CC-09)', () => {
   it('records the proxy, checks their ID at the desk, and keeps both names on the DSP', async () => {
     const desk = await as(email.desk);

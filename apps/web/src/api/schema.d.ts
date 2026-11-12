@@ -5986,6 +5986,7 @@ export interface components {
       state: components['schemas']['ClaimState'];
       /** Format: date-time */
       submittedAt: string;
+      supervisorOnly: string | null;
     };
     DeskClaimQueue: {
       items: {

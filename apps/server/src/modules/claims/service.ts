@@ -22,10 +22,13 @@ import {
   claimMachine,
   claimQuestions,
   DESK_ROLES,
+  DISTINGUISHING_MARK,
   DISPUTE_WINDOW_DAYS,
   FAILED_VERIFICATION_LIMIT,
   FAILED_VERIFICATION_WINDOW_DAYS,
   isHighValue,
+  isLookAlike,
+  namesNoMark,
   pickupWindowEnd,
   privateTicksFor,
   reviewDue,
@@ -199,7 +202,7 @@ export async function startClaim(
       const reports = await myOpenReports(tx, actor.userId, item.category);
       return {
         item: card,
-        questions: claimQuestions(details.ticks),
+        questions: claimQuestions(details.ticks, { lookAlike: isLookAlike(item.category) }),
         myClaim: mine ? { id: mine.id, state: mine.state as ClaimState } : null,
         myLostReports: reports,
         blockedReason: await blockedReason(tx, item, actor.userId, mine),
@@ -253,7 +256,7 @@ async function createClaim(
   if (blocked) throw new Conflict(blocked);
 
   const details = await foundItemPrivateDetails(deps, tx, item.id);
-  const questions = claimQuestions(details.ticks);
+  const questions = claimQuestions(details.ticks, { lookAlike: isLookAlike(item.category) });
   const byKey = new Map(input.answers.map((a) => [a.key, a.answer]));
   const missing = questions.find((q) => !byKey.get(q.key));
   if (missing)
@@ -357,7 +360,7 @@ export async function startWalkInClaim(
       );
       return {
         item: card,
-        questions: claimQuestions(details.ticks),
+        questions: claimQuestions(details.ticks, { lookAlike: isLookAlike(item.category) }),
         claimant: { name: claimant.name },
         blockedReason: await blockedReason(tx, item, claimant.userId, mine),
       };
@@ -703,6 +706,7 @@ export async function deskItemClaims(
               ...a,
               verdict: c.verdicts[a.key] ?? null,
             })),
+            supervisorOnly: supervisorOnlyReason(item.category, readAnswers(deps, tx.tenantId, c)),
             moreInfoRequest: c.moreInfoRequest,
             decisionNote: c.decisionNote,
             proofPhotoIds: (proofs.get(c.id) ?? []).map((p) => p.id),
@@ -726,6 +730,18 @@ async function freshPickupCode(deps: ClaimsDeps, tx: Tx): Promise<string> {
 }
 
 /** Approve, reject or ask for more (WF-04 step 3). Approval cancels the other claims (CC-01). */
+/**
+ * CC-02: a claim on a look-alike item whose answer names no distinguishing mark can't be told
+ * apart from the other umbrellas or bottles, so a supervisor decides. Null when the desk may.
+ */
+function supervisorOnlyReason(category: string, answers: readonly Answer[]): string | null {
+  if (!isLookAlike(category)) return null;
+  const mark = answers.find((a) => a.key === DISTINGUISHING_MARK);
+  return mark && namesNoMark(mark.answer)
+    ? 'No distinguishing mark was named for this look-alike item, so a supervisor decides.'
+    : null;
+}
+
 export async function reviewClaim(
   deps: ClaimsDeps,
   ctx: RequestCtx,
@@ -751,6 +767,13 @@ export async function reviewClaim(
     };
 
     if (input.decision === 'approve') {
+      if (
+        actor.role !== 'supervisor' &&
+        supervisorOnlyReason(item.category, readAnswers(deps, tx.tenantId, claim))
+      )
+        throw new Forbidden(
+          'This look-alike claim names no distinguishing mark, so only a supervisor can approve it; ask a supervisor to review it.',
+        );
       if (keys.some((k) => verdicts[k] !== 'pass'))
         throw new ValidationFailed({
           verdicts: 'Mark every answer Pass before approving, or reject or ask for more.',
