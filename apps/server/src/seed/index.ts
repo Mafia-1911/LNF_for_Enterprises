@@ -307,7 +307,11 @@ export async function runSeed(): Promise<string> {
       ...NSU_TENANT,
       hostnames: [...new Set([...NSU_TENANT.hostnames, host])],
     });
-    const practice = await seedTenant(services.db, services.clock, NSU_PRACTICE_TENANT);
+    const practiceHost = config.practiceOrigin ? [new URL(config.practiceOrigin).hostname] : [];
+    const practice = await seedTenant(services.db, services.clock, {
+      ...NSU_PRACTICE_TENANT,
+      hostnames: [...new Set([...NSU_PRACTICE_TENANT.hostnames, ...practiceHost])],
+    });
     await services.boss.start();
     await ensureQueues(services.boss, services.jobs);
     let created = 0;

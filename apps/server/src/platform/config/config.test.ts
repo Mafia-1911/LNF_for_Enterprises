@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, parseConfig, signInMethods } from './index';
+import { ConfigError, parseConfig, signInMethods, trustedOrigins } from './index';
 
 const KEY = Buffer.alloc(32, 7).toString('base64');
 const base: Record<string, string> = {
@@ -189,5 +189,22 @@ describe('parseConfig', () => {
       emailCodes: true,
       anyEmail: false,
     });
+  });
+
+  it('trusts practice mode’s address next to the app, with https outside development', () => {
+    const config = parseConfig({ ...base, PRACTICE_ORIGIN: 'http://practice.localhost:5173/' });
+    expect(trustedOrigins(config)).toEqual([
+      'http://localhost:5173',
+      'http://practice.localhost:5173',
+    ]);
+    expect(trustedOrigins(parseConfig(base))).toEqual(['http://localhost:5173']);
+    expect(
+      problems({
+        ...base,
+        APP_ENV: 'demo',
+        APP_ORIGIN: 'https://demo.example.app',
+        PRACTICE_ORIGIN: 'http://practice.example.app',
+      }),
+    ).toEqual(['PRACTICE_ORIGIN: must use https outside development.']);
   });
 });

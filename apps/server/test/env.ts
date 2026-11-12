@@ -12,6 +12,7 @@ export function testEnv(db: string): Record<string, string> {
     APP_ENV: 'test',
     PORT: '3999',
     APP_ORIGIN: 'http://nsu.test',
+    PRACTICE_ORIGIN: 'http://practice.nsu.test',
     LOG_LEVEL: process.env['LOG_LEVEL'] ?? 'silent',
     ENABLE_DEV_TOOLS: 'true',
     DATABASE_URL: appUrl(db),

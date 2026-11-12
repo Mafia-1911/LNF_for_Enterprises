@@ -25,6 +25,11 @@ const EnvSchema = z.object({
   ),
   PORT: z.coerce.number('Must be a number.').int().min(1).max(65535),
   APP_ORIGIN: z.url('Must be a full URL such as http://localhost:5173.'),
+  /** Practice mode's own address (FR-21), e.g. http://practice.localhost:5173. Trusted like APP_ORIGIN. */
+  PRACTICE_ORIGIN: z.preprocess(
+    emptyToUndefined,
+    z.url('Must be a full URL such as http://practice.localhost:5173.').optional(),
+  ),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']).default('info'),
   ENABLE_DEV_TOOLS: bool,
   DATABASE_URL: postgresUrl,
@@ -84,6 +89,8 @@ export type Config = {
   appEnv: Env['APP_ENV'];
   port: number;
   appOrigin: string;
+  /** Practice mode's address, or undefined when it has none. */
+  practiceOrigin: string | undefined;
   logLevel: Env['LOG_LEVEL'];
   devTools: boolean;
   database: { url: string; ownerUrl: string | undefined; poolMax: number };
@@ -180,6 +187,8 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
   const production = e.APP_ENV === 'production' || (e.NODE_ENV === 'production' && !demo);
   if (demo && !e.APP_ORIGIN.startsWith('https://'))
     problems.push('APP_ORIGIN: must use https for a public demo.');
+  if ((demo || production) && e.PRACTICE_ORIGIN && !e.PRACTICE_ORIGIN.startsWith('https://'))
+    problems.push('PRACTICE_ORIGIN: must use https outside development.');
   if (production) {
     if (e.SMS_PROVIDER === 'dev')
       problems.push('SMS_PROVIDER: the dev adapter is not allowed in production.');
@@ -207,6 +216,7 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     appEnv: e.APP_ENV,
     port: e.PORT,
     appOrigin: e.APP_ORIGIN.replace(/\/$/, ''),
+    practiceOrigin: e.PRACTICE_ORIGIN?.replace(/\/$/, ''),
     logLevel: e.LOG_LEVEL,
     devTools: e.ENABLE_DEV_TOOLS,
     database: { url: e.DATABASE_URL, ownerUrl: e.DATABASE_OWNER_URL, poolMax: e.DATABASE_POOL_MAX },
@@ -264,6 +274,11 @@ export function signInMethods(config: Pick<Config, 'appEnv' | 'email'>): {
   const demo = config.appEnv === 'demo';
   const delivers = config.email.transport === 'smtp';
   return { sso: !demo, phone: !demo, emailCodes: !demo || delivers, anyEmail: demo && delivers };
+}
+
+/** The addresses browsers may send requests from: the app, and practice mode's own address. */
+export function trustedOrigins(config: Pick<Config, 'appOrigin' | 'practiceOrigin'>): string[] {
+  return config.practiceOrigin ? [config.appOrigin, config.practiceOrigin] : [config.appOrigin];
 }
 
 /** Finds the repository root (the folder with pnpm-workspace.yaml) from this file. */

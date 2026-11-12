@@ -16,7 +16,7 @@ import { requestId } from 'hono/request-id';
 import { secureHeaders } from 'hono/secure-headers';
 import { devRoutes } from './dev-routes';
 import { CLIENT_IP_HEADER } from './platform/auth';
-import { signInMethods } from './platform/config';
+import { signInMethods, trustedOrigins } from './platform/config';
 import { pingDatabase } from './platform/db/pool';
 import { AppError, toErrorBody } from './platform/errors';
 import type { AppEnv } from './platform/http/context';
@@ -91,8 +91,9 @@ export function createApp(services: Services, options: AppOptions) {
       crossOriginEmbedderPolicy: false,
     }),
   );
-  app.use('/api/*', cors({ origin: config.appOrigin, credentials: true }));
-  app.use('/api/*', csrf({ origin: config.appOrigin }));
+  const origins = trustedOrigins(config);
+  app.use('/api/*', cors({ origin: origins, credentials: true }));
+  app.use('/api/*', csrf({ origin: origins }));
   // 1 MB for JSON everywhere; photo uploads get 10 MB (plan §6.1; the browser resizes first).
   const jsonLimit = bodyLimit({
     maxSize: 1024 * 1024,

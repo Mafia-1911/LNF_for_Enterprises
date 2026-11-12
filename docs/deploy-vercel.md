@@ -23,7 +23,15 @@ Known limits: there is no identity provider, so the demo hides single sign-on an
 ### Sign-in emails
 
 - **Without an email service** (today: `EMAIL_TRANSPORT=memory`), no code can be sent. The sign-in page says so and links to `/dev/tools` ("Choose a sample account"), where you sign in as a seeded person or as any account by its email.
-- **With an SMTP service**, the page becomes one email form: any address gets a code, `@northsouth.edu` addresses sign in as students (or as staff, if the Staff page added them), and any other address signs in as a visitor. Run `bash scripts/demo-email-setup.sh` yourself: it asks for the SMTP server, login and password (hidden), stores them in Vercel and redeploys. With Brevo, turn off "Authorized IPs" (Vercel has no fixed IPs) and send from a verified sender address. Time travel on `/dev/tools` only moves the clock of the function instance that handles the request. Only the main tenant is reachable; the practice tenant needs a second domain.
+- **With an SMTP service**, the page becomes one email form: any address gets a code, `@northsouth.edu` addresses sign in as students (or as staff, if the Staff page added them), and any other address signs in as a visitor. Run `bash scripts/demo-email-setup.sh` yourself: it asks for the SMTP server, login and password (hidden), stores them in Vercel and redeploys. With Brevo, turn off "Authorized IPs" (Vercel has no fixed IPs) and send from a verified sender address. Time travel on `/dev/tools` only moves the clock of the function instance that handles the request. Practice mode has its own address (below).
+
+## Practice mode (FR-21)
+
+Practice mode is the second tenant, with the same people and catalog and its own sample records, so officers can rehearse without touching the main demo. It needs its own address: `PRACTICE_ORIGIN=https://lnf-for-enterprises-practice.vercel.app` is set in Vercel, the app trusts it for sign-in and forms, and the seed (run by every deploy) adds its host to the practice tenant.
+
+**One step for you** (domain changes are yours to make): Vercel → `lnf-for-enterprises` → Settings → Domains → add `lnf-for-enterprises-practice.vercel.app`, or run `npx vercel@65.14.0 domains add lnf-for-enterprises-practice.vercel.app` in the repo folder. Then open `https://lnf-for-enterprises-practice.vercel.app/dev/tools`; a banner on every screen says it is practice mode.
+
+Locally, add `PRACTICE_ORIGIN=http://practice.localhost:5173` to `.env` (new copies of `.env.example` have it) so writes work on `http://practice.localhost:5173`.
 
 ## Automatic deploys (CI/CD)
 

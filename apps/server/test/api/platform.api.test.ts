@@ -65,11 +65,15 @@ describe('security headers and request limits', () => {
     expect(res.headers.get('strict-transport-security')).toBeNull();
   });
 
-  it('allows CORS only for the app origin', async () => {
+  it('allows CORS only for the app origin and practice mode', async () => {
     const ok = await ctx
       .anonymous()
       .request('GET', '/api/tenant', undefined, { origin: 'http://nsu.test' });
     expect(ok.headers.get('access-control-allow-origin')).toBe('http://nsu.test');
+    const practice = await ctx
+      .anonymous()
+      .request('GET', '/api/tenant', undefined, { origin: 'http://practice.nsu.test' });
+    expect(practice.headers.get('access-control-allow-origin')).toBe('http://practice.nsu.test');
     const other = await ctx
       .anonymous()
       .request('GET', '/api/tenant', undefined, { origin: 'https://evil.example' });
@@ -82,6 +86,15 @@ describe('security headers and request limits', () => {
       'content-type': 'application/x-www-form-urlencoded',
     });
     expect(res.status).toBe(403);
+  });
+
+  it('accepts form posts from practice mode’s own address (FR-21)', async () => {
+    const res = await ctx.anonymous().request('POST', '/api/lost-reports', undefined, {
+      origin: 'http://practice.nsu.test',
+      'content-type': 'application/x-www-form-urlencoded',
+    });
+    // Past the CSRF check: refused only because nobody is signed in.
+    expect(res.status).toBe(401);
   });
 
   it('rejects bodies over 1 MB with a plain message', async () => {

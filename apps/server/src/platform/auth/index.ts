@@ -7,7 +7,7 @@ import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { emailOTP } from 'better-auth/plugins/email-otp';
 import { genericOAuth } from 'better-auth/plugins/generic-oauth';
 import { phoneNumber } from 'better-auth/plugins/phone-number';
-import type { Config } from '../config';
+import { trustedOrigins, type Config } from '../config';
 import { drizzleOf } from '../db/pool';
 import type { DatabaseHandle } from '../db/types';
 import type { EmailSender } from '../email';
@@ -94,7 +94,7 @@ export function createAuth(deps: AuthDeps) {
     baseURL: config.appOrigin,
     basePath: '/api/auth',
     secret: config.auth.secret,
-    trustedOrigins: [config.appOrigin],
+    trustedOrigins: trustedOrigins(config),
     database: drizzleAdapter(drizzleOf(deps.db), { provider: 'pg', schema: authSchema }),
     telemetry: { enabled: false },
     logger: {
